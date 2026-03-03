@@ -1,0 +1,18 @@
+name: schema-contract
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  verify-schema-contract:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Verify remote schema sync
+        run: sh scripts/ci/check-remote-schema-sync.sh
