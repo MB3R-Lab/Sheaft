@@ -88,6 +88,7 @@ func (r Runner) runDiscover(args []string) int {
 		return ExitError
 	}
 
+	r.printf("warning: discover is experimental; production discovery is expected to run in Bering\n")
 	r.printf("model written: %s\n", *out)
 	return ExitOK
 }
@@ -172,7 +173,7 @@ func (r Runner) runGate(args []string) int {
 func (r Runner) runPipeline(args []string) int {
 	fs := flag.NewFlagSet("run", flag.ContinueOnError)
 	fs.SetOutput(io.Discard)
-	input := fs.String("input", "", "Path to OTel trace file or directory")
+	modelPath := fs.String("model", "", "Path to Bering model JSON")
 	policyPath := fs.String("policy", "", "Path to policy YAML/JSON")
 	outDir := fs.String("out-dir", "", "Output directory")
 	seed := fs.Int64("seed", 42, "Random seed for Monte Carlo")
@@ -180,12 +181,12 @@ func (r Runner) runPipeline(args []string) int {
 		r.printfErr("run flag parse error: %v\n", err)
 		return ExitError
 	}
-	if *input == "" || *policyPath == "" || *outDir == "" {
-		r.printfErr("run requires --input, --policy, and --out-dir\n")
+	if *modelPath == "" || *policyPath == "" || *outDir == "" {
+		r.printfErr("run requires --model, --policy, and --out-dir\n")
 		return ExitError
 	}
 
-	modelPath := filepath.Join(*outDir, "model.json")
+	outputModelPath := filepath.Join(*outDir, "model.json")
 	reportPath := filepath.Join(*outDir, "report.json")
 	summaryPath := filepath.Join(*outDir, "summary.md")
 
@@ -194,40 +195,15 @@ func (r Runner) runPipeline(args []string) int {
 		return ExitError
 	}
 
-	mdl, err := otel.Discover(*input)
+	mdl, policy, rep, eval, err := executeSimulation(*modelPath, *policyPath, *seed, "")
 	if err != nil {
-		r.printfErr("discover error: %v\n", err)
+		r.printfErr("run error: %v\n", err)
 		return ExitError
 	}
-	if err := model.WriteToFile(modelPath, mdl); err != nil {
+	if err := model.WriteToFile(outputModelPath, mdl); err != nil {
 		r.printfErr("write model: %v\n", err)
 		return ExitError
 	}
-
-	policy, err := config.LoadPolicy(*policyPath)
-	if err != nil {
-		r.printfErr("read policy: %v\n", err)
-		return ExitError
-	}
-
-	params := simulation.Params{
-		Trials:             policy.Trials,
-		Seed:               *seed,
-		FailureProbability: policy.FailureProbability,
-	}
-	simOutput, err := simulation.Run(mdl, params)
-	if err != nil {
-		r.printfErr("simulation error: %v\n", err)
-		return ExitError
-	}
-
-	eval, err := gate.Evaluate(simOutput.EndpointAvailability, policy, "")
-	if err != nil {
-		r.printfErr("policy evaluation error: %v\n", err)
-		return ExitError
-	}
-
-	rep := report.Compose(simOutput, eval, params, mdl.Metadata.Confidence)
 	if err := report.WriteJSON(reportPath, rep); err != nil {
 		r.printfErr("write report: %v\n", err)
 		return ExitError
@@ -237,10 +213,12 @@ func (r Runner) runPipeline(args []string) int {
 		return ExitError
 	}
 
-	r.printf("model written: %s\n", modelPath)
+	r.printf("model written: %s\n", outputModelPath)
 	r.printf("report written: %s\n", reportPath)
 	r.printf("summary written: %s\n", summaryPath)
 	r.printf("decision: %s\n", eval.Decision)
+	r.printf("contract: %s@%s\n", mdl.Metadata.Schema.Name, mdl.Metadata.Schema.Version)
+	r.printf("policy mode: %s\n", policy.Mode)
 	return decisionExitCode(eval.Decision)
 }
 
@@ -286,10 +264,10 @@ func (r Runner) printUsage() {
 	fmt.Fprintln(r.stdout, "Sheaft CLI")
 	fmt.Fprintln(r.stdout, "")
 	fmt.Fprintln(r.stdout, "Usage:")
-	fmt.Fprintln(r.stdout, "  sheaft discover --input <trace-file|dir> --out <model.json>")
+	fmt.Fprintln(r.stdout, "  sheaft discover --input <trace-file|dir> --out <model.json>    # experimental local discovery")
 	fmt.Fprintln(r.stdout, "  sheaft simulate --model <model.json> --policy <policy.yaml> --out <report.json> --seed <int>")
 	fmt.Fprintln(r.stdout, "  sheaft gate --report <report.json> --policy <policy.yaml> --mode warn|fail|report")
-	fmt.Fprintln(r.stdout, "  sheaft run --input <trace-file|dir> --policy <policy.yaml> --out-dir <dir> --seed <int>")
+	fmt.Fprintln(r.stdout, "  sheaft run --model <model.json> --policy <policy.yaml> --out-dir <dir> --seed <int>")
 }
 
 func (r Runner) printf(format string, args ...any) {

@@ -27,14 +27,14 @@ func TestRunFailsOnInvalidPolicy(t *testing.T) {
 	t.Parallel()
 
 	root := filepath.Clean(filepath.Join("..", ".."))
-	tracePath := filepath.Join(root, "test", "fixtures", "traces.fixture.json")
+	modelPath := filepath.Join(root, "test", "fixtures", "model.disconnected.json")
 	policyPath := filepath.Join(root, "test", "fixtures", "policy.invalid.yaml")
 	outDir := t.TempDir()
 
 	var stdout bytes.Buffer
 	var stderr bytes.Buffer
 	runner := app.NewRunner(&stdout, &stderr)
-	if code := runner.Run([]string{"run", "--input", tracePath, "--policy", policyPath, "--out-dir", outDir}); code != app.ExitError {
+	if code := runner.Run([]string{"run", "--model", modelPath, "--policy", policyPath, "--out-dir", outDir}); code != app.ExitError {
 		t.Fatalf("expected run failure code=%d stderr=%s", code, stderr.String())
 	}
 }
@@ -52,5 +52,21 @@ func TestSimulateWorksWithDisconnectedGraph(t *testing.T) {
 	runner := app.NewRunner(&stdout, &stderr)
 	if code := runner.Run([]string{"simulate", "--model", modelPath, "--policy", policyPath, "--out", reportOut, "--seed", "7"}); code != app.ExitOK {
 		t.Fatalf("simulate on disconnected graph failed code=%d stderr=%s", code, stderr.String())
+	}
+}
+
+func TestSimulateFailsOnSchemaVersionMismatch(t *testing.T) {
+	t.Parallel()
+
+	root := filepath.Clean(filepath.Join("..", ".."))
+	modelPath := filepath.Join(root, "test", "fixtures", "model.bad-schema-version.json")
+	policyPath := filepath.Join(root, "test", "fixtures", "policy.fixture.yaml")
+	reportOut := filepath.Join(t.TempDir(), "report.json")
+
+	var stdout bytes.Buffer
+	var stderr bytes.Buffer
+	runner := app.NewRunner(&stdout, &stderr)
+	if code := runner.Run([]string{"simulate", "--model", modelPath, "--policy", policyPath, "--out", reportOut, "--seed", "7"}); code != app.ExitError {
+		t.Fatalf("expected strict schema mismatch failure code=%d stderr=%s", code, stderr.String())
 	}
 }

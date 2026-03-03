@@ -13,14 +13,14 @@ func TestRunPipelineGeneratesArtifacts(t *testing.T) {
 	t.Parallel()
 
 	root := filepath.Clean(filepath.Join("..", ".."))
-	tracePath := filepath.Join(root, "test", "fixtures", "traces.fixture.json")
+	modelPath := filepath.Join(root, "test", "fixtures", "model.disconnected.json")
 	policyPath := filepath.Join(root, "test", "fixtures", "policy.fixture.yaml")
 	outDir := t.TempDir()
 
 	var stdout bytes.Buffer
 	var stderr bytes.Buffer
 	runner := app.NewRunner(&stdout, &stderr)
-	if code := runner.Run([]string{"run", "--input", tracePath, "--policy", policyPath, "--out-dir", outDir, "--seed", "42"}); code != app.ExitOK {
+	if code := runner.Run([]string{"run", "--model", modelPath, "--policy", policyPath, "--out-dir", outDir, "--seed", "42"}); code != app.ExitOK {
 		t.Fatalf("run failed code=%d stderr=%s", code, stderr.String())
 	}
 

@@ -2,8 +2,8 @@
 
 This repository follows a connectivity-first resilience estimation method:
 
-1. Build dependency graph from artifacts already available to teams (v0: OTel traces).
-2. Mark entry endpoints and their entry services.
+1. Receive a model artifact from Bering.
+2. Enforce strict contract binding by schema metadata (`name/version/uri/digest` exact match).
 3. Assume independent fail-stop crashes with per-service replica modeling.
 4. Estimate endpoint availability as success rate across Monte Carlo trials.
 5. Use policy thresholds to gate release risk.
@@ -19,4 +19,4 @@ This repository follows a connectivity-first resilience estimation method:
 - Fixed random `seed`.
 - Explicit simulation parameters (`trials`, `failure_probability`).
 - Stable JSON outputs suitable for versioned CI artifacts.
-
+- Pinned external model schema version and digest.

@@ -1,5 +1,5 @@
 # Sheaft runtime config (MVP)
-input: examples/otel/traces.sample.json
+model: examples/outputs/model.sample.json
 output_dir: out
 seed: 42
 
@@ -9,4 +9,3 @@ simulation:
 
 policy:
   file: configs/gate.policy.example.yaml
-

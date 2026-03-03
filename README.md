@@ -1,5 +1,17 @@
 # Sheaft
 
+![Sheaft logo](docs/assets/sheaft_logo2-removebg-preview.png)
+
+## Name meaning
+
+**Sheaft** (pronounced **/ʃiːft/**) is a composite name: **sheaf** ~~theory~~ **+** ~~shif~~**t**.
+
+- **sheaf-**: the long-term analysis direction includes sheaf theory.
+- **-t**: the product drives a shift-left posture for earlier incident risk detection and mitigation.
+
+Current status: sheaf-based capabilities are not implemented yet in this MVP.  
+Roadmap: https://mb3r-lab.github.io/
+
 ## Research basis
 
 1. [**Model Discovery and Graph Simulation: A Lightweight Gateway to Chaos Engineering**](https://www.alphaxiv.org/abs/2506.11176)  
@@ -8,52 +20,70 @@
    The 40th International Conference on Advanced Information Networking and Applications (AINA-2026)
 
 Sheaft is a pre-release resilience gate for microservice systems.  
-It turns existing engineering artifacts into an explicit dependency model, runs fast graph-based availability simulation, and emits a release decision (`pass` / `warn` / `fail`) plus machine-readable artifacts.
+It consumes a model produced by [**Bering**](https://github.com/MB3R-Lab/Bering), runs graph-based availability simulation, and emits a release decision (`pass`/`warn`/`fail`) plus machine-readable artifacts.
 
 ## What it is
 
-Sheaft provides an MVP workflow for:
+Sheaft provides a model-consumer workflow:
 
-1. `discover`: OTel trace artifacts -> dependency model JSON.
-2. `simulate`: model + policy -> endpoint availability estimates.
-3. `gate`: compare estimates against policy thresholds.
-4. `run`: one-shot pipeline for CI/CD.
+1. `simulate`: Bering model + policy -> endpoint availability estimates.
+2. `gate`: compare estimates against policy thresholds.
+3. `run`: one-shot CI pipeline (`model -> report -> decision`).
 
-This is an artifact-derived, low-risk complement to live chaos engineering, not a replacement for all live validation.
+`discover` exists only as an experimental local helper and is not the production discovery path.
+
+## Bering integration
+
+Sheaft is a downstream client of [Bering](https://github.com/MB3R-Lab/Bering).
+
+1. **Bering** performs discovery and emits `bering-model.json`.
+2. CI/CD fetches that artifact into the workspace (for example: `artifacts/bering-model.json`).
+3. **Sheaft** runs simulation and gate decision on top of that model.
+
+Example:
+
+```bash
+sheaft run --model artifacts/bering-model.json --policy configs/gate.policy.example.yaml --out-dir out --seed 42
+```
+
+If model schema metadata does not match the pinned contract, Sheaft fails fast before simulation.
 
 ## Why this exists
 
 Live chaos campaigns are valuable but expensive and operationally constrained when used broadly and continuously.  
 Sheaft focuses on making resilience checks:
 
-- cheap (uses existing traces/configured policy),
+- cheap (uses Bering model artifacts + policy),
 - safe (no direct production fault injection),
 - regular (CI-friendly, repeatable in minutes).
 
 ## How it works
 
-`discover -> model -> simulate -> gate`
+`Bering discovery -> model artifact -> Sheaft simulate -> Sheaft gate`
 
-- **Discover**: infer service graph and endpoints from OTel traces.
-- **Model**: normalize to typed schema with metadata/confidence.
+- **Bering**: discovers topology and produces canonical model artifact.
+- **Model contract**: strict schema metadata binding (`name/version/uri/digest` exact match).
 - **Simulate**: run fail-stop Monte Carlo over blocking synchronous dependencies.
 - **Gate**: evaluate availability thresholds and emit decision.
 
-## MVP scope (v0)
+## Contract ownership and strict version pinning
 
-- OTel-first input (`.json`) for model discovery.
-- Fail-stop, independent crash approximation.
-- Sync/blocking path emphasis for immediate HTTP success.
-- Async semantics are present but not primary for v0 gate decisions.
-- Default policy behavior is `warn` (non-blocking).
+- Canonical schema is owned by [**Bering**](https://github.com/MB3R-Lab/Bering).
+- Sheaft enforces exact-match schema metadata in model file:
+  - `metadata.schema.name = io.mb3r.bering.model`
+  - `metadata.schema.version = 1.0.0`
+  - `metadata.schema.uri = https://schemas.mb3r.dev/bering/model/v1.0.0/model.schema.json`
+  - `metadata.schema.digest = sha256:7dc733936a9d3f94ab92f46a30d4c8d0f5c05d60670c4247786c59a3fe7630f7`
+- Any mismatch fails fast before simulation.
 
 ## Repository layout
 
 ```text
 cmd/sheaft                 CLI entrypoint
 internal/app               command orchestration
-internal/discovery/otel    OTel trace -> graph discovery
+internal/discovery/otel    experimental local discovery helper
 internal/model             domain model + validation + IO
+internal/modelcontract     strict Bering schema pinning (name/version/uri/digest)
 internal/simulation        Monte Carlo availability engine
 internal/gate              policy evaluation
 internal/report            JSON/markdown reporting
@@ -78,7 +108,7 @@ docker build -f build/Dockerfile -t sheaft:dev .
 
 ```bash
 docker run --rm -v "$PWD:/workspace" -w /workspace sheaft:dev run \
-  --input examples/otel/traces.sample.json \
+  --model examples/outputs/model.sample.json \
   --policy configs/gate.policy.example.yaml \
   --out-dir examples/outputs/generated \
   --seed 42
@@ -94,10 +124,10 @@ cat examples/outputs/generated/summary.md
 ## CLI
 
 ```bash
-sheaft discover --input <trace-file|dir> --out <model.json>
+sheaft discover --input <trace-file|dir> --out <model.json>   # experimental only
 sheaft simulate --model <model.json> --policy <policy.yaml> --out <report.json> --seed <int>
 sheaft gate --report <report.json> --policy <policy.yaml> --mode warn|fail|report
-sheaft run --input <trace-file|dir> --policy <policy.yaml> --out-dir <dir> --seed <int>
+sheaft run --model <model.json> --policy <policy.yaml> --out-dir <dir> --seed <int>
 ```
 
 Exit codes:
@@ -116,7 +146,7 @@ Minimal GitHub Actions step:
 - name: Run Sheaft gate
   run: |
     docker run --rm -v "$PWD:/workspace" -w /workspace sheaft:dev run \
-      --input examples/otel/traces.sample.json \
+      --model artifacts/bering-model.json \
       --policy configs/gate.policy.example.yaml \
       --out-dir out \
       --seed 42
@@ -137,6 +167,7 @@ Current MVP limitations are explicit:
 - connectivity-first approximation (graph + replicas);
 - no correlated or gray-failure modeling in v0;
 - async edge treatment has limited effect for immediate HTTP SLO in the studied benchmark case.
+- Sheaft does not own model discovery in production flow; [Bering](https://github.com/MB3R-Lab/Bering) is required upstream.
 
 See [docs/assumptions-and-limitations.md](docs/assumptions-and-limitations.md).
 

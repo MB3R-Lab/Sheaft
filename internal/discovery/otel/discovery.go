@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/MB3R-Lab/Sheaft/internal/model"
+	"github.com/MB3R-Lab/Sheaft/internal/modelcontract"
 	"github.com/MB3R-Lab/Sheaft/internal/provenance"
 )
 
@@ -133,6 +134,12 @@ func Discover(inputPath string) (model.ResilienceModel, error) {
 			SourceRef:    inputPath,
 			DiscoveredAt: time.Now().UTC().Format(time.RFC3339),
 			Confidence:   provenance.DefaultConfidence(provenance.SourceTypeOTelTraces),
+			Schema: model.Schema{
+				Name:    modelcontract.ExpectedSchemaName,
+				Version: modelcontract.ExpectedSchemaVersion,
+				URI:     modelcontract.ExpectedSchemaURI,
+				Digest:  modelcontract.ExpectedSchemaDigest,
+			},
 		},
 	}
 	if err := mdl.Validate(); err != nil {

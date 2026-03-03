@@ -19,4 +19,4 @@ Project roadmap is tracked in GitHub issues:
 MVP code in this repository is centered on R1/R2/R3/R5.
 R4 is represented via external benchmark contract documentation.
 R6+ are represented through schemas, docs, and issue-level planning hooks.
-
+Model discovery ownership is externalized to Bering; Sheaft is a strict model consumer.

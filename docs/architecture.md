@@ -2,8 +2,8 @@
 
 Sheaft v0 is a pre-release resilience gate built around a simple, explicit pipeline:
 
-1. **Discovery**: parse OTel trace artifacts and infer a directed service dependency graph.
-2. **Modeling**: normalize discovered services, edges, and entry endpoints into a typed model JSON.
+1. **Discovery (external)**: Bering produces a typed model JSON.
+2. **Contract check**: Sheaft validates exact schema binding (`name/version/uri/digest`).
 3. **Simulation**: run Monte Carlo fail-stop availability estimation over blocking synchronous paths.
 4. **Policy gate**: compare estimated availabilities with thresholds and emit pass/warn/fail decision.
 5. **Reporting**: write machine-readable report JSON and a concise markdown summary.
@@ -12,8 +12,9 @@ Sheaft v0 is a pre-release resilience gate built around a simple, explicit pipel
 
 - `cmd/sheaft`: CLI entrypoint.
 - `internal/app`: command orchestration and exit code mapping.
-- `internal/discovery/otel`: OTel trace ingestion and graph extraction.
+- `internal/discovery/otel`: experimental local discovery helper.
 - `internal/model`: model types, validation, and model file IO.
+- `internal/modelcontract`: strict Bering schema pinning and vendored snapshot.
 - `internal/simulation`: deterministic Monte Carlo engine (`seed` + fixed params).
 - `internal/gate`: policy evaluation (`warn` / `fail` / `report`).
 - `internal/report`: report composition + JSON/markdown output.
@@ -25,5 +26,5 @@ Sheaft v0 is a pre-release resilience gate built around a simple, explicit pipel
 - `api/schema/policy.schema.json`
 - `api/schema/report.schema.json`
 
-The schemas are intentionally minimal but stable for MVP workflows and CI usage.
-
+Model schema ownership is external (Bering).  
+This repository keeps a pinned snapshot for strict consumer-side validation.

@@ -25,6 +25,12 @@ func TestRun_DeterministicWithSameSeed(t *testing.T) {
 			SourceRef:    "fixture",
 			DiscoveredAt: "2026-03-03T00:00:00Z",
 			Confidence:   0.7,
+			Schema: model.Schema{
+				Name:    "io.mb3r.bering.model",
+				Version: "1.0.0",
+				URI:     "https://schemas.mb3r.dev/bering/model/v1.0.0/model.schema.json",
+				Digest:  "sha256:7dc733936a9d3f94ab92f46a30d4c8d0f5c05d60670c4247786c59a3fe7630f7",
+			},
 		},
 	}
 	params := Params{

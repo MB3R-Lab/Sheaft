@@ -7,6 +7,8 @@ import (
 	"os"
 	"slices"
 	"strings"
+
+	"github.com/MB3R-Lab/Sheaft/internal/modelcontract"
 )
 
 type EdgeKind string
@@ -40,6 +42,14 @@ type Metadata struct {
 	SourceRef    string  `json:"source_ref"`
 	DiscoveredAt string  `json:"discovered_at"`
 	Confidence   float64 `json:"confidence"`
+	Schema       Schema  `json:"schema"`
+}
+
+type Schema struct {
+	Name    string `json:"name"`
+	Version string `json:"version"`
+	URI     string `json:"uri"`
+	Digest  string `json:"digest"`
 }
 
 type ResilienceModel struct {
@@ -100,6 +110,14 @@ func (m ResilienceModel) Validate() error {
 	}
 	if m.Metadata.Confidence < 0 || m.Metadata.Confidence > 1 {
 		return errors.New("metadata.confidence must be in range [0,1]")
+	}
+	if err := modelcontract.ValidateStrict(modelcontract.SchemaRef{
+		Name:    m.Metadata.Schema.Name,
+		Version: m.Metadata.Schema.Version,
+		URI:     m.Metadata.Schema.URI,
+		Digest:  m.Metadata.Schema.Digest,
+	}); err != nil {
+		return fmt.Errorf("strict bering contract validation failed: %w", err)
 	}
 
 	return nil

@@ -27,10 +27,9 @@ docker-build:
 
 docker-run-sample:
 	mkdir -p examples/outputs/generated
-	docker run --rm -v "$$(pwd):/workspace" -w /workspace $(IMAGE) run --input examples/otel/traces.sample.json --policy configs/gate.policy.example.yaml --out-dir examples/outputs/generated --seed 42
+	docker run --rm -v "$$(pwd):/workspace" -w /workspace $(IMAGE) run --model examples/outputs/model.sample.json --policy configs/gate.policy.example.yaml --out-dir examples/outputs/generated --seed 42
 
 sample: docker-run-sample
 
 clean:
 	rm -rf examples/outputs/generated
-

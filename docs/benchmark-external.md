@@ -1,6 +1,7 @@
 # External Benchmark Contract
 
 Heavy datasets and reproducibility bundles are intentionally out of scope for this repository.
+The model contract is also owned externally by Bering.
 
 ## Contract for External Benchmark Repository
 
@@ -16,5 +17,5 @@ The external benchmark repository should provide:
 
 - keep only small fixtures in `test/fixtures/`;
 - reference benchmark run IDs in PRs/releases;
-- keep schema compatibility (`api/schema/*.json`) as a stable interface.
-
+- keep consumer compatibility with Bering schema snapshot (`internal/modelcontract/schema/model.schema.json`).
+- fail CI if model metadata schema binding does not match pinned Bering contract.

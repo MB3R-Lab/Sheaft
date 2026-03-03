@@ -6,7 +6,7 @@ Use `sheaft run` in CI:
 
 ```bash
 sheaft run \
-  --input path/to/traces.json \
+  --model path/to/bering-model.json \
   --policy configs/gate.policy.example.yaml \
   --out-dir out \
   --seed 42
@@ -17,6 +17,8 @@ Generated artifacts:
 - `out/model.json`
 - `out/report.json`
 - `out/summary.md`
+
+`out/model.json` is a validated copy of the input Bering model.
 
 ## Exit Codes
 
@@ -36,10 +38,14 @@ jobs:
       - uses: actions/checkout@v4
       - name: Build image
         run: docker build -f build/Dockerfile -t sheaft:ci .
+      - name: Fetch model artifact from Bering step
+        run: |
+          mkdir -p artifacts
+          cp path/from/previous-step/bering-model.json artifacts/bering-model.json
       - name: Run Sheaft gate
         run: |
           docker run --rm -v "$PWD:/workspace" -w /workspace sheaft:ci run \
-            --input examples/otel/traces.sample.json \
+            --model artifacts/bering-model.json \
             --policy configs/gate.policy.example.yaml \
             --out-dir out \
             --seed 42
@@ -49,4 +55,3 @@ jobs:
           name: sheaft-report
           path: out/
 ```
-

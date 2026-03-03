@@ -9,12 +9,11 @@ services:
       - ./:/workspace
     command:
       - run
-      - --input
-      - examples/otel/traces.sample.json
+      - --model
+      - examples/outputs/model.sample.json
       - --policy
       - configs/gate.policy.example.yaml
       - --out-dir
       - examples/outputs/generated
       - --seed
       - "42"
-

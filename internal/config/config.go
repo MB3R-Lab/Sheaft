@@ -28,7 +28,7 @@ type Policy struct {
 }
 
 type RuntimeConfig struct {
-	Input      string `json:"input"`
+	Model      string `json:"model"`
 	OutputDir  string `json:"output_dir"`
 	Seed       int64  `json:"seed"`
 	Simulation struct {
@@ -235,8 +235,8 @@ func parseRuntimeYAML(data string) (RuntimeConfig, error) {
 				return RuntimeConfig{}, fmt.Errorf("invalid yaml line: %q", line)
 			}
 			switch key {
-			case "input":
-				cfg.Input = val
+			case "model":
+				cfg.Model = val
 			case "output_dir":
 				cfg.OutputDir = val
 			case "seed":
