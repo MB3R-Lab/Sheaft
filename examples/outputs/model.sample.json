@@ -1,0 +1,63 @@
+{
+  "services": [
+    {
+      "id": "frontend",
+      "name": "frontend",
+      "replicas": 1
+    },
+    {
+      "id": "checkout",
+      "name": "checkout",
+      "replicas": 1
+    },
+    {
+      "id": "payment",
+      "name": "payment",
+      "replicas": 1
+    },
+    {
+      "id": "inventory",
+      "name": "inventory",
+      "replicas": 1
+    }
+  ],
+  "edges": [
+    {
+      "from": "frontend",
+      "to": "checkout",
+      "kind": "sync",
+      "blocking": true
+    },
+    {
+      "from": "checkout",
+      "to": "payment",
+      "kind": "sync",
+      "blocking": true
+    },
+    {
+      "from": "checkout",
+      "to": "inventory",
+      "kind": "sync",
+      "blocking": true
+    }
+  ],
+  "endpoints": [
+    {
+      "id": "frontend:GET /checkout",
+      "entry_service": "frontend",
+      "success_predicate_ref": "frontend:GET /checkout"
+    },
+    {
+      "id": "frontend:GET /health",
+      "entry_service": "frontend",
+      "success_predicate_ref": "frontend:GET /health"
+    }
+  ],
+  "metadata": {
+    "source_type": "otel_traces",
+    "source_ref": "examples/otel/traces.sample.json",
+    "discovered_at": "2026-03-03T00:00:00Z",
+    "confidence": 0.72
+  }
+}
+

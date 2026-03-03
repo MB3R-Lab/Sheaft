@@ -1,0 +1,32 @@
+{
+  "spans": [
+    {
+      "service": "frontend",
+      "peer_service": "checkout",
+      "endpoint": "GET /checkout",
+      "kind": "sync",
+      "blocking": true
+    },
+    {
+      "service": "checkout",
+      "peer_service": "payment",
+      "endpoint": "POST /charge",
+      "kind": "sync",
+      "blocking": true
+    },
+    {
+      "service": "checkout",
+      "peer_service": "inventory",
+      "endpoint": "POST /reserve",
+      "kind": "sync",
+      "blocking": true
+    },
+    {
+      "service": "frontend",
+      "endpoint": "GET /health",
+      "kind": "sync",
+      "blocking": true
+    }
+  ]
+}
+

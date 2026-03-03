@@ -1,0 +1,116 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/MB3R-Lab/Sheaft/api/schema/model.schema.json",
+  "title": "SheaftModel",
+  "type": "object",
+  "required": [
+    "services",
+    "edges",
+    "endpoints",
+    "metadata"
+  ],
+  "properties": {
+    "services": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "replicas"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "replicas": {
+            "type": "integer",
+            "minimum": 0
+          }
+        }
+      }
+    },
+    "edges": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "from",
+          "to",
+          "kind",
+          "blocking"
+        ],
+        "properties": {
+          "from": {
+            "type": "string"
+          },
+          "to": {
+            "type": "string"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "sync",
+              "async"
+            ]
+          },
+          "blocking": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "endpoints": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "entry_service",
+          "success_predicate_ref"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "entry_service": {
+            "type": "string"
+          },
+          "success_predicate_ref": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "metadata": {
+      "type": "object",
+      "required": [
+        "source_type",
+        "source_ref",
+        "discovered_at",
+        "confidence"
+      ],
+      "properties": {
+        "source_type": {
+          "type": "string"
+        },
+        "source_ref": {
+          "type": "string"
+        },
+        "discovered_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "confidence": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        }
+      }
+    }
+  }
+}
+

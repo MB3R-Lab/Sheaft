@@ -1,0 +1,52 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/MB3R-Lab/Sheaft/api/schema/policy.schema.json",
+  "title": "SheaftPolicy",
+  "type": "object",
+  "required": [
+    "mode",
+    "default_action",
+    "global_threshold"
+  ],
+  "properties": {
+    "mode": {
+      "type": "string",
+      "enum": [
+        "warn",
+        "fail",
+        "report"
+      ]
+    },
+    "default_action": {
+      "type": "string",
+      "enum": [
+        "warn",
+        "fail",
+        "report"
+      ]
+    },
+    "global_threshold": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1
+    },
+    "failure_probability": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1
+    },
+    "trials": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "endpoint_thresholds": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "number",
+        "minimum": 0,
+        "maximum": 1
+      }
+    }
+  }
+}
+

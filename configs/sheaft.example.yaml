@@ -1,0 +1,12 @@
+# Sheaft runtime config (MVP)
+input: examples/otel/traces.sample.json
+output_dir: out
+seed: 42
+
+simulation:
+  trials: 10000
+  failure_probability: 0.05
+
+policy:
+  file: configs/gate.policy.example.yaml
+

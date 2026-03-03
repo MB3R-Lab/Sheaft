@@ -1,0 +1,35 @@
+{
+  "simulation": {
+    "trials": 10000,
+    "seed": 42,
+    "failure_probability": 0.05
+  },
+  "endpoint_results": [
+    {
+      "endpoint_id": "frontend:GET /checkout",
+      "availability": 0.8612,
+      "threshold": 0.98,
+      "status": "warn"
+    },
+    {
+      "endpoint_id": "frontend:GET /health",
+      "availability": 0.9498,
+      "threshold": 0.995,
+      "status": "warn"
+    }
+  ],
+  "summary": {
+    "overall_availability": 0.9055,
+    "risk_score": 0.0945,
+    "confidence": 0.72
+  },
+  "policy_evaluation": {
+    "mode": "warn",
+    "decision": "warn",
+    "failed_endpoints": [
+      "frontend:GET /checkout",
+      "frontend:GET /health"
+    ]
+  }
+}
+

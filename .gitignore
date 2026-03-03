@@ -1,0 +1,23 @@
+# Binaries
+bin/
+dist/
+*.exe
+*.dll
+*.so
+*.dylib
+
+# Build/test artifacts
+coverage.out
+*.test
+
+# Runtime outputs
+out/
+.sheaft/
+examples/outputs/generated/
+.tools/
+
+# IDE/OS
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db

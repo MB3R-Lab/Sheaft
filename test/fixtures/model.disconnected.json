@@ -1,0 +1,29 @@
+{
+  "services": [
+    {
+      "id": "frontend",
+      "name": "frontend",
+      "replicas": 1
+    },
+    {
+      "id": "checkout",
+      "name": "checkout",
+      "replicas": 1
+    }
+  ],
+  "edges": [],
+  "endpoints": [
+    {
+      "id": "frontend:GET /health",
+      "entry_service": "frontend",
+      "success_predicate_ref": "frontend:GET /health"
+    }
+  ],
+  "metadata": {
+    "source_type": "fixture",
+    "source_ref": "test/fixtures/model.disconnected.json",
+    "discovered_at": "2026-03-03T00:00:00Z",
+    "confidence": 0.8
+  }
+}
+

@@ -1,0 +1,9 @@
+mode: warn
+default_action: warn
+global_threshold: 0.985
+failure_probability: 0.05
+trials: 10000
+endpoint_thresholds:
+  frontend:GET /checkout: 0.98
+  frontend:GET /health: 0.995
+

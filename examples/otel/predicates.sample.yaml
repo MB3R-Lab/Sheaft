@@ -1,0 +1,9 @@
+# Endpoint success predicates used by simulation outputs.
+predicates:
+  frontend:GET /checkout:
+    type: immediate_http_success
+    description: Request path returns 2xx/3xx without transport timeout.
+  frontend:GET /health:
+    type: immediate_http_success
+    description: Health endpoint remains directly reachable.
+

@@ -1,0 +1,20 @@
+services:
+  sheaft:
+    build:
+      context: .
+      dockerfile: build/Dockerfile
+    image: sheaft:dev
+    working_dir: /workspace
+    volumes:
+      - ./:/workspace
+    command:
+      - run
+      - --input
+      - examples/otel/traces.sample.json
+      - --policy
+      - configs/gate.policy.example.yaml
+      - --out-dir
+      - examples/outputs/generated
+      - --seed
+      - "42"
+

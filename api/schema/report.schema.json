@@ -1,0 +1,125 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/MB3R-Lab/Sheaft/api/schema/report.schema.json",
+  "title": "SheaftReport",
+  "type": "object",
+  "required": [
+    "simulation",
+    "endpoint_results",
+    "summary",
+    "policy_evaluation"
+  ],
+  "properties": {
+    "simulation": {
+      "type": "object",
+      "required": [
+        "trials",
+        "seed",
+        "failure_probability"
+      ],
+      "properties": {
+        "trials": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "seed": {
+          "type": "integer"
+        },
+        "failure_probability": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        }
+      }
+    },
+    "endpoint_results": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "endpoint_id",
+          "availability",
+          "threshold",
+          "status"
+        ],
+        "properties": {
+          "endpoint_id": {
+            "type": "string"
+          },
+          "availability": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "threshold": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "pass",
+              "warn",
+              "fail"
+            ]
+          }
+        }
+      }
+    },
+    "summary": {
+      "type": "object",
+      "required": [
+        "overall_availability",
+        "risk_score",
+        "confidence"
+      ],
+      "properties": {
+        "overall_availability": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "risk_score": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "confidence": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        }
+      }
+    },
+    "policy_evaluation": {
+      "type": "object",
+      "required": [
+        "mode",
+        "decision",
+        "failed_endpoints"
+      ],
+      "properties": {
+        "mode": {
+          "type": "string"
+        },
+        "decision": {
+          "type": "string",
+          "enum": [
+            "pass",
+            "warn",
+            "fail",
+            "report"
+          ]
+        },
+        "failed_endpoints": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}
+

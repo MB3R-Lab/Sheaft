@@ -1,0 +1,6 @@
+mode: fail
+default_action: fail
+global_threshold: 1.2
+failure_probability: 0.05
+trials: 1000
+
