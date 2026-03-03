@@ -70,3 +70,37 @@ func TestSimulateFailsOnSchemaVersionMismatch(t *testing.T) {
 		t.Fatalf("expected strict schema mismatch failure code=%d stderr=%s", code, stderr.String())
 	}
 }
+
+func TestSimulateFailsOnInvalidJourneyOverrides(t *testing.T) {
+	t.Parallel()
+
+	root := filepath.Clean(filepath.Join("..", ".."))
+	modelPath := filepath.Join(root, "test", "fixtures", "model.disconnected.json")
+	policyPath := filepath.Join(root, "test", "fixtures", "policy.fixture.yaml")
+	journeysPath := filepath.Join(root, "test", "fixtures", "journeys.invalid-hop.json")
+	reportOut := filepath.Join(t.TempDir(), "report.json")
+
+	var stdout bytes.Buffer
+	var stderr bytes.Buffer
+	runner := app.NewRunner(&stdout, &stderr)
+	if code := runner.Run([]string{"simulate", "--model", modelPath, "--journeys", journeysPath, "--policy", policyPath, "--out", reportOut, "--seed", "7"}); code != app.ExitError {
+		t.Fatalf("expected simulate failure on invalid journeys code=%d stderr=%s", code, stderr.String())
+	}
+}
+
+func TestSimulateAcceptsValidJourneyOverrides(t *testing.T) {
+	t.Parallel()
+
+	root := filepath.Clean(filepath.Join("..", ".."))
+	modelPath := filepath.Join(root, "test", "fixtures", "model.disconnected.json")
+	policyPath := filepath.Join(root, "test", "fixtures", "policy.fixture.yaml")
+	journeysPath := filepath.Join(root, "test", "fixtures", "journeys.valid.json")
+	reportOut := filepath.Join(t.TempDir(), "report.json")
+
+	var stdout bytes.Buffer
+	var stderr bytes.Buffer
+	runner := app.NewRunner(&stdout, &stderr)
+	if code := runner.Run([]string{"simulate", "--model", modelPath, "--journeys", journeysPath, "--policy", policyPath, "--out", reportOut, "--seed", "7"}); code != app.ExitOK {
+		t.Fatalf("expected simulate success with valid journeys code=%d stderr=%s", code, stderr.String())
+	}
+}

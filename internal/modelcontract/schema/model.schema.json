@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://schemas.mb3r.dev/bering/model/v1.0.0/model.schema.json",
+  "$id": "https://mb3r-lab.github.io/Bering/schema/model/v1.0.0/model.schema.json",
   "title": "BeringResilienceModel",
   "type": "object",
   "required": [

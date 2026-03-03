@@ -21,8 +21,8 @@ func TestValidate_StrictSchemaBinding(t *testing.T) {
 			Schema: Schema{
 				Name:    "io.mb3r.bering.model",
 				Version: "1.0.0",
-				URI:     "https://schemas.mb3r.dev/bering/model/v1.0.0/model.schema.json",
-				Digest:  "sha256:7dc733936a9d3f94ab92f46a30d4c8d0f5c05d60670c4247786c59a3fe7630f7",
+				URI:     "https://mb3r-lab.github.io/Bering/schema/model/v1.0.0/model.schema.json",
+				Digest:  "sha256:272277c093f37580adcd2dded225bd37c86539d642d7910baad7e4228227d1a7",
 			},
 		},
 	}

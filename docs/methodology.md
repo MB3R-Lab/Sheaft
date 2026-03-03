@@ -12,7 +12,9 @@ This repository follows a connectivity-first resilience estimation method:
 
 - Blocking synchronous edges are part of required request paths.
 - Asynchronous/non-blocking edges are excluded from immediate HTTP success checks.
-- Endpoint succeeds when all required services in at least one discovered path are alive.
+- Endpoint succeeds when all services in at least one discovered path are alive (`OR` over paths, `AND` within a path).
+- Journey paths are discovered from each endpoint `entry_service` on the blocking synchronous subgraph.
+- Optional external journey contract can override auto-discovered paths (`--journeys`, schema in `api/schema/journeys.schema.json`).
 
 ## Reproducibility Controls
 

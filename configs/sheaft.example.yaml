@@ -1,5 +1,6 @@
 # Sheaft runtime config (MVP)
 model: examples/outputs/model.sample.json
+journeys: examples/otel/journeys.sample.json
 output_dir: out
 seed: 42
 

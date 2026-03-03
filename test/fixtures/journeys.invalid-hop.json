@@ -1,0 +1,11 @@
+{
+  "schema_version": "1.0",
+  "journeys": {
+    "frontend:GET /health": [
+      [
+        "frontend",
+        "payment"
+      ]
+    ]
+  }
+}

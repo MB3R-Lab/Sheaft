@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"math/rand"
 	"slices"
+	"strings"
 
 	"github.com/MB3R-Lab/Sheaft/internal/model"
 )
@@ -13,6 +14,7 @@ type Params struct {
 	Trials             int
 	Seed               int64
 	FailureProbability float64
+	JourneyOverrides   map[string][][]string
 }
 
 type Output struct {
@@ -49,11 +51,33 @@ func Run(mdl model.ResilienceModel, params Params) (Output, error) {
 		adj[edge.From] = append(adj[edge.From], edge.To)
 	}
 
-	requiredByEndpoint := make(map[string][]string, len(mdl.Endpoints))
+	for serviceID := range serviceReplicas {
+		if _, ok := adj[serviceID]; !ok {
+			adj[serviceID] = []string{}
+		}
+		slices.Sort(adj[serviceID])
+	}
+
+	journeysByEndpoint := make(map[string][][]string, len(mdl.Endpoints))
 	endpointIDs := make([]string, 0, len(mdl.Endpoints))
+	endpointSet := make(map[string]struct{}, len(mdl.Endpoints))
 	for _, ep := range mdl.Endpoints {
-		req := requiredServices(ep.EntryService, adj)
-		requiredByEndpoint[ep.ID] = req
+		endpointSet[ep.ID] = struct{}{}
+	}
+	for endpointID := range params.JourneyOverrides {
+		if _, ok := endpointSet[endpointID]; !ok {
+			return Output{}, fmt.Errorf("journey override endpoint not found in model: %s", endpointID)
+		}
+	}
+	for _, ep := range mdl.Endpoints {
+		if override, ok := params.JourneyOverrides[ep.ID]; ok {
+			if err := validateJourneyPaths(override); err != nil {
+				return Output{}, fmt.Errorf("invalid journey override for endpoint %s: %w", ep.ID, err)
+			}
+			journeysByEndpoint[ep.ID] = cloneAndNormalizeJourneys(override)
+		} else {
+			journeysByEndpoint[ep.ID] = discoverJourneys(ep.EntryService, adj)
+		}
 		endpointIDs = append(endpointIDs, ep.ID)
 	}
 	slices.Sort(endpointIDs)
@@ -75,15 +99,22 @@ func Run(mdl model.ResilienceModel, params Params) (Output, error) {
 		}
 
 		for _, endpointID := range endpointIDs {
-			required := requiredByEndpoint[endpointID]
-			ok := true
-			for _, serviceID := range required {
-				if !alive[serviceID] {
-					ok = false
+			journeys := journeysByEndpoint[endpointID]
+			endpointOK := false
+			for _, journey := range journeys {
+				journeyOK := true
+				for _, serviceID := range journey {
+					if !alive[serviceID] {
+						journeyOK = false
+						break
+					}
+				}
+				if journeyOK {
+					endpointOK = true
 					break
 				}
 			}
-			if ok {
+			if endpointOK {
 				successCount[endpointID]++
 			}
 		}
@@ -106,29 +137,90 @@ func Run(mdl model.ResilienceModel, params Params) (Output, error) {
 	}, nil
 }
 
-func requiredServices(entry string, adjacency map[string][]string) []string {
-	visited := map[string]struct{}{}
-	stack := []string{entry}
+func discoverJourneys(entry string, adjacency map[string][]string) [][]string {
+	visited := make(map[string]bool)
+	path := make([]string, 0, 8)
+	paths := make([][]string, 0, 8)
 
-	for len(stack) > 0 {
-		idx := len(stack) - 1
-		current := stack[idx]
-		stack = stack[:idx]
-		if _, ok := visited[current]; ok {
+	var dfs func(current string)
+	dfs = func(current string) {
+		visited[current] = true
+		path = append(path, current)
+
+		nexts := make([]string, 0, len(adjacency[current]))
+		for _, next := range adjacency[current] {
+			if !visited[next] {
+				nexts = append(nexts, next)
+			}
+		}
+		slices.Sort(nexts)
+
+		if len(nexts) == 0 {
+			paths = append(paths, slices.Clone(path))
+		} else {
+			for _, next := range nexts {
+				dfs(next)
+			}
+		}
+
+		path = path[:len(path)-1]
+		visited[current] = false
+	}
+
+	dfs(entry)
+
+	uniq := make(map[string][]string, len(paths))
+	keys := make([]string, 0, len(paths))
+	for _, p := range paths {
+		key := strings.Join(p, "->")
+		if _, ok := uniq[key]; ok {
 			continue
 		}
-		visited[current] = struct{}{}
-		for _, next := range adjacency[current] {
-			if _, ok := visited[next]; !ok {
-				stack = append(stack, next)
+		uniq[key] = p
+		keys = append(keys, key)
+	}
+	slices.Sort(keys)
+
+	out := make([][]string, 0, len(keys))
+	for _, key := range keys {
+		out = append(out, uniq[key])
+	}
+	return out
+}
+
+func cloneAndNormalizeJourneys(paths [][]string) [][]string {
+	uniq := make(map[string][]string, len(paths))
+	keys := make([]string, 0, len(paths))
+	for _, path := range paths {
+		key := strings.Join(path, "->")
+		if _, ok := uniq[key]; ok {
+			continue
+		}
+		uniq[key] = slices.Clone(path)
+		keys = append(keys, key)
+	}
+	slices.Sort(keys)
+
+	out := make([][]string, 0, len(keys))
+	for _, key := range keys {
+		out = append(out, uniq[key])
+	}
+	return out
+}
+
+func validateJourneyPaths(paths [][]string) error {
+	if len(paths) == 0 {
+		return errors.New("no paths defined")
+	}
+	for pathIdx, path := range paths {
+		if len(path) == 0 {
+			return fmt.Errorf("path %d is empty", pathIdx)
+		}
+		for nodeIdx, serviceID := range path {
+			if strings.TrimSpace(serviceID) == "" {
+				return fmt.Errorf("path %d has empty service id at index %d", pathIdx, nodeIdx)
 			}
 		}
 	}
-
-	out := make([]string, 0, len(visited))
-	for serviceID := range visited {
-		out = append(out, serviceID)
-	}
-	slices.Sort(out)
-	return out
+	return nil
 }

@@ -12,6 +12,12 @@ sheaft run \
   --seed 42
 ```
 
+Optional:
+
+```bash
+--journeys path/to/journeys.json
+```
+
 Generated artifacts:
 
 - `out/model.json`

@@ -22,7 +22,7 @@
     "schema": {
       "name": "io.mb3r.bering.model",
       "version": "1.0.1",
-      "uri": "https://schemas.mb3r.dev/bering/model/v1.0.1/model.schema.json",
+      "uri": "https://mb3r-lab.github.io/Bering/schema/model/v1.0.1/model.schema.json",
       "digest": "sha256:deadbeef"
     }
   }

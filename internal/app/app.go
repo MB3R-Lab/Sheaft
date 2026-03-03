@@ -12,6 +12,7 @@ import (
 	"github.com/MB3R-Lab/Sheaft/internal/config"
 	"github.com/MB3R-Lab/Sheaft/internal/discovery/otel"
 	"github.com/MB3R-Lab/Sheaft/internal/gate"
+	"github.com/MB3R-Lab/Sheaft/internal/journeys"
 	"github.com/MB3R-Lab/Sheaft/internal/model"
 	"github.com/MB3R-Lab/Sheaft/internal/report"
 	"github.com/MB3R-Lab/Sheaft/internal/simulation"
@@ -99,6 +100,7 @@ func (r Runner) runSimulate(args []string) int {
 	modelPath := fs.String("model", "", "Path to model JSON")
 	policyPath := fs.String("policy", "", "Path to policy YAML/JSON")
 	out := fs.String("out", "", "Path to output report JSON")
+	journeysPath := fs.String("journeys", "", "Path to journey override JSON")
 	seed := fs.Int64("seed", 42, "Random seed for Monte Carlo")
 	if err := fs.Parse(args); err != nil {
 		r.printfErr("simulate flag parse error: %v\n", err)
@@ -109,7 +111,7 @@ func (r Runner) runSimulate(args []string) int {
 		return ExitError
 	}
 
-	_, _, rep, eval, err := executeSimulation(*modelPath, *policyPath, *seed, "")
+	_, _, rep, eval, err := executeSimulation(*modelPath, *policyPath, *seed, *journeysPath)
 	if err != nil {
 		r.printfErr("simulate error: %v\n", err)
 		return ExitError
@@ -175,6 +177,7 @@ func (r Runner) runPipeline(args []string) int {
 	fs.SetOutput(io.Discard)
 	modelPath := fs.String("model", "", "Path to Bering model JSON")
 	policyPath := fs.String("policy", "", "Path to policy YAML/JSON")
+	journeysPath := fs.String("journeys", "", "Path to journey override JSON")
 	outDir := fs.String("out-dir", "", "Output directory")
 	seed := fs.Int64("seed", 42, "Random seed for Monte Carlo")
 	if err := fs.Parse(args); err != nil {
@@ -195,7 +198,7 @@ func (r Runner) runPipeline(args []string) int {
 		return ExitError
 	}
 
-	mdl, policy, rep, eval, err := executeSimulation(*modelPath, *policyPath, *seed, "")
+	mdl, policy, rep, eval, err := executeSimulation(*modelPath, *policyPath, *seed, *journeysPath)
 	if err != nil {
 		r.printfErr("run error: %v\n", err)
 		return ExitError
@@ -219,10 +222,13 @@ func (r Runner) runPipeline(args []string) int {
 	r.printf("decision: %s\n", eval.Decision)
 	r.printf("contract: %s@%s\n", mdl.Metadata.Schema.Name, mdl.Metadata.Schema.Version)
 	r.printf("policy mode: %s\n", policy.Mode)
+	if strings.TrimSpace(*journeysPath) != "" {
+		r.printf("journeys override: %s\n", *journeysPath)
+	}
 	return decisionExitCode(eval.Decision)
 }
 
-func executeSimulation(modelPath, policyPath string, seed int64, modeOverride string) (model.ResilienceModel, config.Policy, report.Report, gate.Evaluation, error) {
+func executeSimulation(modelPath, policyPath string, seed int64, journeysPath string) (model.ResilienceModel, config.Policy, report.Report, gate.Evaluation, error) {
 	mdl, err := model.LoadFromFile(modelPath)
 	if err != nil {
 		return model.ResilienceModel{}, config.Policy{}, report.Report{}, gate.Evaluation{}, err
@@ -232,16 +238,28 @@ func executeSimulation(modelPath, policyPath string, seed int64, modeOverride st
 		return model.ResilienceModel{}, config.Policy{}, report.Report{}, gate.Evaluation{}, err
 	}
 
+	var journeyOverrides map[string][][]string
+	if strings.TrimSpace(journeysPath) != "" {
+		journeyOverrides, err = journeys.Load(journeysPath)
+		if err != nil {
+			return model.ResilienceModel{}, config.Policy{}, report.Report{}, gate.Evaluation{}, err
+		}
+		if err := journeys.ValidateAgainstModel(journeyOverrides, mdl); err != nil {
+			return model.ResilienceModel{}, config.Policy{}, report.Report{}, gate.Evaluation{}, err
+		}
+	}
+
 	params := simulation.Params{
 		Trials:             policy.Trials,
 		Seed:               seed,
 		FailureProbability: policy.FailureProbability,
+		JourneyOverrides:   journeyOverrides,
 	}
 	simOutput, err := simulation.Run(mdl, params)
 	if err != nil {
 		return model.ResilienceModel{}, config.Policy{}, report.Report{}, gate.Evaluation{}, err
 	}
-	eval, err := gate.Evaluate(simOutput.EndpointAvailability, policy, modeOverride)
+	eval, err := gate.Evaluate(simOutput.EndpointAvailability, policy, "")
 	if err != nil {
 		return model.ResilienceModel{}, config.Policy{}, report.Report{}, gate.Evaluation{}, err
 	}
@@ -265,9 +283,9 @@ func (r Runner) printUsage() {
 	fmt.Fprintln(r.stdout, "")
 	fmt.Fprintln(r.stdout, "Usage:")
 	fmt.Fprintln(r.stdout, "  sheaft discover --input <trace-file|dir> --out <model.json>    # experimental local discovery")
-	fmt.Fprintln(r.stdout, "  sheaft simulate --model <model.json> --policy <policy.yaml> --out <report.json> --seed <int>")
+	fmt.Fprintln(r.stdout, "  sheaft simulate --model <model.json> --policy <policy.yaml> --out <report.json> [--journeys <journeys.json>] --seed <int>")
 	fmt.Fprintln(r.stdout, "  sheaft gate --report <report.json> --policy <policy.yaml> --mode warn|fail|report")
-	fmt.Fprintln(r.stdout, "  sheaft run --model <model.json> --policy <policy.yaml> --out-dir <dir> --seed <int>")
+	fmt.Fprintln(r.stdout, "  sheaft run --model <model.json> --policy <policy.yaml> --out-dir <dir> [--journeys <journeys.json>] --seed <int>")
 }
 
 func (r Runner) printf(format string, args ...any) {

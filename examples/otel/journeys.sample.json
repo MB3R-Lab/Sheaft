@@ -1,0 +1,22 @@
+{
+  "schema_version": "1.0",
+  "journeys": {
+    "frontend:GET /checkout": [
+      [
+        "frontend",
+        "checkout",
+        "payment"
+      ],
+      [
+        "frontend",
+        "checkout",
+        "inventory"
+      ]
+    ],
+    "frontend:GET /health": [
+      [
+        "frontend"
+      ]
+    ]
+  }
+}

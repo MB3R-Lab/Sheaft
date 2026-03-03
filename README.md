@@ -1,7 +1,5 @@
 # Sheaft
 
-![Sheaft logo](docs/assets/sheaft_logo2-removebg-preview.png)
-
 ## Name meaning
 
 **Sheaft** (pronounced **/ʃiːft/**) is a composite name: **sheaf** ~~theory~~ **+** ~~shif~~**t**.
@@ -47,6 +45,7 @@ sheaft run --model artifacts/bering-model.json --policy configs/gate.policy.exam
 ```
 
 If model schema metadata does not match the pinned contract, Sheaft fails fast before simulation.
+If `--journeys` is provided, Sheaft validates and applies the explicit journey contract before simulation.
 
 ## Why this exists
 
@@ -63,8 +62,16 @@ Sheaft focuses on making resilience checks:
 
 - **Bering**: discovers topology and produces canonical model artifact.
 - **Model contract**: strict schema metadata binding (`name/version/uri/digest` exact match).
-- **Simulate**: run fail-stop Monte Carlo over blocking synchronous dependencies.
+- **Simulate**: run fail-stop Monte Carlo with journey semantics over blocking synchronous dependencies.
 - **Gate**: evaluate availability thresholds and emit decision.
+
+### Journey semantics (v0)
+
+- Each `endpoint` is treated as a journey entry (`entry_service`).
+- Sheaft builds candidate journey paths from blocking `sync` edges.
+- Optional manual journey overrides can be provided via external JSON contract (`--journeys`).
+- Endpoint success is `OR` across paths, with `AND` across services inside each path.
+- `async` and non-blocking edges are excluded from immediate HTTP success in v0.
 
 ## Contract ownership and strict version pinning
 
@@ -72,8 +79,8 @@ Sheaft focuses on making resilience checks:
 - Sheaft enforces exact-match schema metadata in model file:
   - `metadata.schema.name = io.mb3r.bering.model`
   - `metadata.schema.version = 1.0.0`
-  - `metadata.schema.uri = https://schemas.mb3r.dev/bering/model/v1.0.0/model.schema.json`
-  - `metadata.schema.digest = sha256:7dc733936a9d3f94ab92f46a30d4c8d0f5c05d60670c4247786c59a3fe7630f7`
+  - `metadata.schema.uri = https://mb3r-lab.github.io/Bering/schema/model/v1.0.0/model.schema.json`
+  - `metadata.schema.digest = sha256:272277c093f37580adcd2dded225bd37c86539d642d7910baad7e4228227d1a7`
 - Any mismatch fails fast before simulation.
 
 ## Repository layout
@@ -82,6 +89,7 @@ Sheaft focuses on making resilience checks:
 cmd/sheaft                 CLI entrypoint
 internal/app               command orchestration
 internal/discovery/otel    experimental local discovery helper
+internal/journeys          external manual journey override contract
 internal/model             domain model + validation + IO
 internal/modelcontract     strict Bering schema pinning (name/version/uri/digest)
 internal/simulation        Monte Carlo availability engine
@@ -109,6 +117,7 @@ docker build -f build/Dockerfile -t sheaft:dev .
 ```bash
 docker run --rm -v "$PWD:/workspace" -w /workspace sheaft:dev run \
   --model examples/outputs/model.sample.json \
+  --journeys examples/otel/journeys.sample.json \
   --policy configs/gate.policy.example.yaml \
   --out-dir examples/outputs/generated \
   --seed 42
@@ -125,9 +134,9 @@ cat examples/outputs/generated/summary.md
 
 ```bash
 sheaft discover --input <trace-file|dir> --out <model.json>   # experimental only
-sheaft simulate --model <model.json> --policy <policy.yaml> --out <report.json> --seed <int>
+sheaft simulate --model <model.json> --policy <policy.yaml> --out <report.json> [--journeys <journeys.json>] --seed <int>
 sheaft gate --report <report.json> --policy <policy.yaml> --mode warn|fail|report
-sheaft run --model <model.json> --policy <policy.yaml> --out-dir <dir> --seed <int>
+sheaft run --model <model.json> --policy <policy.yaml> --out-dir <dir> [--journeys <journeys.json>] --seed <int>
 ```
 
 Exit codes:
@@ -135,6 +144,28 @@ Exit codes:
 - `0`: success / pass / warn / report
 - `2`: policy fail (when mode is `fail`)
 - `1`: runtime/config/input error
+
+## Journeys DSL (external contract)
+
+Manual journey overrides are defined in JSON:
+
+```json
+{
+  "schema_version": "1.0",
+  "journeys": {
+    "frontend:GET /checkout": [
+      ["frontend", "checkout", "payment"],
+      ["frontend", "checkout", "inventory"]
+    ]
+  }
+}
+```
+
+Rules:
+
+- endpoint key must exist in `model.endpoints[].id`;
+- each path must start with endpoint `entry_service`;
+- each hop must exist in model blocking sync graph.
 
 ## CI integration
 
@@ -155,10 +186,12 @@ Minimal GitHub Actions step:
 ## Outputs
 
 - Model schema: `api/schema/model.schema.json`
+- Journeys override schema: `api/schema/journeys.schema.json`
 - Policy schema: `api/schema/policy.schema.json`
 - Report schema: `api/schema/report.schema.json`
 - Sample model: `examples/outputs/model.sample.json`
 - Sample report: `examples/outputs/report.sample.json`
+- Sample journeys override: `examples/otel/journeys.sample.json`
 
 ## Limitations
 

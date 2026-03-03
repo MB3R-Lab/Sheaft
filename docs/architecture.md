@@ -13,6 +13,7 @@ Sheaft v0 is a pre-release resilience gate built around a simple, explicit pipel
 - `cmd/sheaft`: CLI entrypoint.
 - `internal/app`: command orchestration and exit code mapping.
 - `internal/discovery/otel`: experimental local discovery helper.
+- `internal/journeys`: external journey override contract loading/validation.
 - `internal/model`: model types, validation, and model file IO.
 - `internal/modelcontract`: strict Bering schema pinning and vendored snapshot.
 - `internal/simulation`: deterministic Monte Carlo engine (`seed` + fixed params).
@@ -23,6 +24,7 @@ Sheaft v0 is a pre-release resilience gate built around a simple, explicit pipel
 ## Data Contracts
 
 - `api/schema/model.schema.json`
+- `api/schema/journeys.schema.json`
 - `api/schema/policy.schema.json`
 - `api/schema/report.schema.json`
 
