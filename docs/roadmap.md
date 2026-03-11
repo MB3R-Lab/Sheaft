@@ -14,7 +14,7 @@ GitHub issues remain the source of truth for roadmap tracking:
 - R9: https://github.com/MB3R-Lab/Sheaft/issues/39
 - R10: https://github.com/MB3R-Lab/Sheaft/issues/40
 
-This file captures the repository-side audit performed on 2026-03-11: current GitHub issue state versus what is actually implemented in this repository.
+This file captures the repository-side audit performed on 2026-03-11 and synced with GitHub issue state on 2026-03-11: current GitHub issue state versus what is actually implemented in this repository.
 
 ## Audit Summary
 
@@ -37,7 +37,7 @@ This file captures the repository-side audit performed on 2026-03-11: current Gi
 
 | Issue | GitHub state | Repo reality | Notes |
 | --- | --- | --- | --- |
-| R1.1 | open | done locally | "Consumer Semantics v1" is now documented in-repo with version scope, precedence rules, and 15 expected behavior examples. |
+| R1.1 | closed | done | "Consumer Semantics v1" is documented in-repo with version scope, precedence rules, and 15 expected behavior examples. |
 | R1.2 | open | partial | Fail-stop semantics and three sampling modes are implemented and tested; timeout/partial/gray extension contract is still missing. |
 | R1.3 | open | gap | No input contract or end-to-end handling for retry/timeout/circuit-breaker/fallback/rate-limit annotations exists yet. |
 
@@ -56,7 +56,7 @@ This file captures the repository-side audit performed on 2026-03-11: current Gi
 | --- | --- | --- | --- |
 | R3.1 | closed | done | Deterministic Monte Carlo execution and stable config normalization are implemented. |
 | R3.2 | open | gap | There is no plugin interface or example plugin; all analyses are wired directly into the core pipeline. |
-| R3.3 | open | done locally | Reports now include resolved parameter values, source attribution (`default`/`policy`/`override`/`external`), and explicit fallback markers for missing calibration inputs. |
+| R3.3 | closed | done | Reports now include resolved parameter values, source attribution (`default`/`policy`/`override`/`external`), and explicit fallback markers for missing calibration inputs. |
 | R3.4 | open | gap | No published large-snapshot workload profile, SLA, or benchmark harness exists. |
 
 ### R4. Empirical validation and reproducibility
@@ -75,8 +75,8 @@ This file captures the repository-side audit performed on 2026-03-11: current Gi
 | R5.2 | closed | done | `serve`/`watch`, status endpoints, history, and metrics cover the observability workflow. |
 | R5.3 | open | gap | No chaos experiment suggestion engine or triage output exists yet. |
 | R5.4 | closed | done | `model.json`, `report.json`, and `summary.md` outputs are generated consistently. |
-| R5.5 | open | done locally | Example templates are now backed by a template convention checker, a native/docker smoke script, and a GitHub Actions smoke workflow. |
-| R5.6 | open | done locally | GitLab and Jenkins templates plus documented handoff/exit behavior now exist in-repo; GitHub issue can be closed after sync. |
+| R5.5 | closed | done | Example templates are now backed by a template convention checker, a native/docker smoke script, and a GitHub Actions smoke workflow. |
+| R5.6 | closed | done | GitLab and Jenkins templates plus documented handoff/exit behavior now exist in-repo and are covered by the shared smoke validation flow. |
 
 ### R6. Standardization and interoperability
 
@@ -85,8 +85,8 @@ This file captures the repository-side audit performed on 2026-03-11: current Gi
 | R6.1 | closed | done | Open schemas live under `api/schema` and are validated via tests. |
 | R6.2 | closed | done | Contract and integration tests cover model/snapshot consumption and output shape. |
 | R6.3 | closed | done | The repository already functions as the open reference consumer implementation. |
-| R6.4 | open | done locally | Contract release workflow, release checklist, and CI verification against published Bering release metadata are now in-repo. |
-| R6.5 | open | done locally | Compatibility matrix is now published in-repo, linked from `README.md`, and guarded in CI when contract pin files change. |
+| R6.4 | closed | done | Contract release workflow, release checklist, and CI verification against published Bering release metadata are now in-repo. |
+| R6.5 | closed | done | Compatibility matrix is now published in-repo, linked from `README.md`, and guarded in CI when contract pin files change. |
 | R6.6 | open | gap | Only a single supported schema version is pinned today; project-level multi-version pinning is absent. |
 
 ### R7. Commercialization without lock-in
@@ -129,9 +129,5 @@ This file captures the repository-side audit performed on 2026-03-11: current Gi
 
 ## Current Execution Note
 
-- `R5.5` is now implemented locally via template convention checks plus native/docker smoke validation.
-- `R6.5` is now implemented locally via the compatibility matrix plus CI guard.
-- `R6.4` is now implemented locally via the contract release workflow doc and Bering release metadata check.
-- `R1.1` is now implemented locally via the Consumer Semantics v1 document.
-- `R3.3` is now implemented locally via report parameter provenance and calibration fallback markers.
+- Synced GitHub closures on 2026-03-11: `R1.1`, `R3.3`, `R5.5`, `R5.6`, `R6.4`, `R6.5`.
 - The next highest-priority repo task is **R6.6: add multi-version schema contracts with project-level pinning**.
