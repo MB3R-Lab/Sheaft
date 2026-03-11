@@ -153,6 +153,9 @@
     "provenance": {
       "type": "object"
     },
+    "parameters": {
+      "type": "object"
+    },
     "profiles": {
       "type": "array"
     },

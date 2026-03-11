@@ -146,6 +146,7 @@ docs                       architecture, methodology, migration, and config docs
 - [Architecture](docs/architecture.md)
 - [Methodology](docs/methodology.md)
 - [Configuration and Schemas](docs/configuration.md)
+- [Consumer Semantics v1](docs/consumer-semantics-v1.md)
 - [CI Gate](docs/ci-gate.md)
 - [Compatibility Matrix](docs/compatibility-matrix.md)
 - [Contract Release Workflow](docs/contract-release-workflow.md)
@@ -165,6 +166,7 @@ docs                       architecture, methodology, migration, and config docs
 - GitHub Actions CI template: [examples/ci/github-actions.sheaft.yml](examples/ci/github-actions.sheaft.yml)
 - GitLab CI template: [examples/ci/gitlab-ci.sheaft.yml](examples/ci/gitlab-ci.sheaft.yml)
 - Jenkins CI template: [examples/ci/Jenkinsfile](examples/ci/Jenkinsfile)
+- CI template smoke scripts: [scripts/ci/check-ci-handoff-templates.sh](scripts/ci/check-ci-handoff-templates.sh) and [scripts/ci/smoke-ci-handoff.sh](scripts/ci/smoke-ci-handoff.sh)
 
 ## Exit Codes
 

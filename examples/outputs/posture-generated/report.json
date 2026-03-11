@@ -58,6 +58,116 @@
     "predicate_source": "external_overlay",
     "weights_source": "external_overlay"
   },
+  "parameters": {
+    "config_source": "override",
+    "profiles": [
+      {
+        "name": "steady-state",
+        "trials": {
+          "value": 12000,
+          "source": "override"
+        },
+        "seed": {
+          "value": -4514686470610927385,
+          "source": "override"
+        },
+        "sampling_mode": {
+          "value": "independent_replica",
+          "source": "override"
+        },
+        "failure_probability": {
+          "value": 0.03,
+          "source": "override"
+        },
+        "fixed_k_failures": {
+          "value": 0,
+          "source": "default"
+        },
+        "endpoint_weights": {
+          "active": true,
+          "source": "override"
+        }
+      },
+      {
+        "name": "service-fault",
+        "trials": {
+          "value": 12000,
+          "source": "override"
+        },
+        "seed": {
+          "value": 9183701956244008838,
+          "source": "override"
+        },
+        "sampling_mode": {
+          "value": "independent_service",
+          "source": "override"
+        },
+        "failure_probability": {
+          "value": 0.08,
+          "source": "override"
+        },
+        "fixed_k_failures": {
+          "value": 0,
+          "source": "default"
+        },
+        "endpoint_weights": {
+          "active": true,
+          "source": "override"
+        }
+      },
+      {
+        "name": "fixed-blast-radius",
+        "trials": {
+          "value": 12000,
+          "source": "override"
+        },
+        "seed": {
+          "value": 1381864373498677985,
+          "source": "override"
+        },
+        "sampling_mode": {
+          "value": "fixed_k_service_set",
+          "source": "override"
+        },
+        "failure_probability": {
+          "value": 0.05,
+          "source": "override"
+        },
+        "fixed_k_failures": {
+          "value": 1,
+          "source": "override"
+        },
+        "endpoint_weights": {
+          "active": true,
+          "source": "override"
+        }
+      }
+    ],
+    "calibration": {
+      "predicate_overlay": {
+        "active": true,
+        "source": "external",
+        "path": "configs/predicate-contract.example.yaml"
+      },
+      "journey_overrides": {
+        "active": false,
+        "source": "default",
+        "fallback": "using richer predicates or discovered journeys without manual journey override"
+      },
+      "baselines": {
+        "active": true,
+        "source": "external",
+        "names": [
+          "last-release"
+        ]
+      },
+      "historical_signals": {
+        "active": false,
+        "source": "default",
+        "fallback": "historical calibration inputs are not implemented; static configuration is used"
+      }
+    }
+  },
   "profiles": [
     {
       "name": "steady-state",
@@ -369,6 +479,6 @@
       }
     ]
   },
-  "generated_at": "2026-03-11T06:36:59.5331004Z",
-  "recompute_duration_ms": 46
+  "generated_at": "2026-03-11T14:27:18.5421084Z",
+  "recompute_duration_ms": 22
 }

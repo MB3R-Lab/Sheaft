@@ -1,0 +1,29 @@
+name: ci-template-smoke
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  verify-ci-template-smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
+      - name: Check CI template conventions
+        run: sh scripts/ci/check-ci-handoff-templates.sh
+
+      - name: Native handoff smoke
+        run: sh scripts/ci/smoke-ci-handoff.sh native
+
+      - name: Docker handoff smoke
+        run: sh scripts/ci/smoke-ci-handoff.sh docker

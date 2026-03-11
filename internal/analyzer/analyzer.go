@@ -93,7 +93,7 @@ func AnalyzeLoaded(loaded artifact.Loaded, cfg config.AnalysisConfig, previous *
 		return Result{}, err
 	}
 
-	rep := report.ComposeAnalysis(loaded, simOut, eval, loaded.Model.Metadata.Confidence, time.Now(), time.Since(started))
+	rep := report.ComposeAnalysis(loaded, simOut, eval, cfg, loaded.Model.Metadata.Confidence, time.Now(), time.Since(started))
 	rep.SetPreviousDiff(previous)
 
 	baselines, err := loadBaselines(cfg.Baselines)

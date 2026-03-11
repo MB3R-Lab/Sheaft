@@ -3,6 +3,7 @@ package report
 import (
 	"encoding/json"
 	"fmt"
+	"hash/fnv"
 	"os"
 	"path/filepath"
 	"slices"
@@ -10,6 +11,7 @@ import (
 	"time"
 
 	"github.com/MB3R-Lab/Sheaft/internal/artifact"
+	"github.com/MB3R-Lab/Sheaft/internal/config"
 	"github.com/MB3R-Lab/Sheaft/internal/gate"
 	"github.com/MB3R-Lab/Sheaft/internal/simulation"
 )
@@ -53,6 +55,52 @@ type InputArtifact struct {
 type Provenance struct {
 	PredicateSource string `json:"predicate_source"`
 	WeightsSource   string `json:"weights_source"`
+}
+
+type IntParameter struct {
+	Value  int64  `json:"value"`
+	Source string `json:"source"`
+}
+
+type FloatParameter struct {
+	Value  float64 `json:"value"`
+	Source string  `json:"source"`
+}
+
+type StringParameter struct {
+	Value  string `json:"value"`
+	Source string `json:"source"`
+}
+
+type ParameterStatus struct {
+	Active   bool     `json:"active"`
+	Source   string   `json:"source"`
+	Path     string   `json:"path,omitempty"`
+	Names    []string `json:"names,omitempty"`
+	Fallback string   `json:"fallback,omitempty"`
+}
+
+type ProfileParameters struct {
+	Name               string          `json:"name"`
+	Trials             IntParameter    `json:"trials"`
+	Seed               IntParameter    `json:"seed"`
+	SamplingMode       StringParameter `json:"sampling_mode"`
+	FailureProbability FloatParameter  `json:"failure_probability"`
+	FixedKFailures     IntParameter    `json:"fixed_k_failures"`
+	EndpointWeights    ParameterStatus `json:"endpoint_weights"`
+}
+
+type CalibrationParameters struct {
+	PredicateOverlay  ParameterStatus `json:"predicate_overlay"`
+	JourneyOverrides  ParameterStatus `json:"journey_overrides"`
+	Baselines         ParameterStatus `json:"baselines"`
+	HistoricalSignals ParameterStatus `json:"historical_signals"`
+}
+
+type Parameters struct {
+	ConfigSource string                `json:"config_source"`
+	Profiles     []ProfileParameters   `json:"profiles"`
+	Calibration  CalibrationParameters `json:"calibration"`
 }
 
 type ProfileSummary struct {
@@ -115,6 +163,7 @@ type Report struct {
 	PolicyEvaluation    PolicyEvaluation      `json:"policy_evaluation"`
 	InputArtifact       *InputArtifact        `json:"input_artifact,omitempty"`
 	Provenance          *Provenance           `json:"provenance,omitempty"`
+	Parameters          *Parameters           `json:"parameters,omitempty"`
 	Profiles            []ProfileSummary      `json:"profiles,omitempty"`
 	Diffs               Diffs                 `json:"diffs,omitempty"`
 	GeneratedAt         string                `json:"generated_at,omitempty"`
@@ -143,7 +192,7 @@ func Compose(simOut simulation.Output, eval gate.Evaluation, params simulation.P
 	}
 }
 
-func ComposeAnalysis(meta artifact.Loaded, simOut simulation.AnalysisOutput, eval gate.Evaluation, confidence float64, generatedAt time.Time, duration time.Duration) Report {
+func ComposeAnalysis(meta artifact.Loaded, simOut simulation.AnalysisOutput, eval gate.Evaluation, cfg config.AnalysisConfig, confidence float64, generatedAt time.Time, duration time.Duration) Report {
 	report := Report{
 		Simulation: SimulationInfo{},
 		Summary: Summary{
@@ -177,6 +226,7 @@ func ComposeAnalysis(meta artifact.Loaded, simOut simulation.AnalysisOutput, eva
 			PredicateSource: meta.PredicateSource,
 			WeightsSource:   meta.WeightsSource,
 		},
+		Parameters:          buildParameters(cfg, meta),
 		Profiles:            make([]ProfileSummary, 0, len(simOut.Profiles)),
 		GeneratedAt:         generatedAt.UTC().Format(time.RFC3339Nano),
 		RecomputeDurationMS: duration.Milliseconds(),
@@ -209,6 +259,129 @@ func ComposeAnalysis(meta artifact.Loaded, simOut simulation.AnalysisOutput, eva
 		})
 	}
 	return report
+}
+
+func buildParameters(cfg config.AnalysisConfig, meta artifact.Loaded) *Parameters {
+	profiles := make([]ProfileParameters, 0, len(cfg.Profiles))
+	for _, profile := range cfg.Profiles {
+		profileSources := cfg.Sources.Profiles[profile.Name]
+		profiles = append(profiles, ProfileParameters{
+			Name: profile.Name,
+			Trials: IntParameter{
+				Value:  int64(profile.Trials),
+				Source: string(profileSources.Trials),
+			},
+			Seed: IntParameter{
+				Value:  derivedProfileSeed(cfg, profile),
+				Source: string(cfg.Sources.Seed),
+			},
+			SamplingMode: StringParameter{
+				Value:  profile.SamplingMode,
+				Source: string(profileSources.SamplingMode),
+			},
+			FailureProbability: FloatParameter{
+				Value:  profile.FailureProbability,
+				Source: string(profileSources.FailureProbability),
+			},
+			FixedKFailures: IntParameter{
+				Value:  int64(profile.FixedKFailures),
+				Source: string(profileSources.FixedKFailures),
+			},
+			EndpointWeights: parameterStatusForWeights(profileSources.EndpointWeights, meta.WeightsSource),
+		})
+	}
+
+	return &Parameters{
+		ConfigSource: string(cfg.Sources.ConfigSource),
+		Profiles:     profiles,
+		Calibration: CalibrationParameters{
+			PredicateOverlay: parameterStatus(
+				cfg.PredicateContract != "",
+				config.ParameterSourceExternal,
+				cfg.PredicateContract,
+				nil,
+				"using artifact predicates or legacy path resolution without external predicate overlay",
+			),
+			JourneyOverrides: parameterStatus(
+				cfg.Journeys != "",
+				cfg.Sources.Journeys,
+				cfg.Journeys,
+				nil,
+				"using richer predicates or discovered journeys without manual journey override",
+			),
+			Baselines: parameterStatus(
+				len(cfg.Baselines) > 0,
+				config.ParameterSourceExternal,
+				"",
+				baselineNames(cfg.Baselines),
+				"no baseline reports configured",
+			),
+			HistoricalSignals: parameterStatus(
+				false,
+				config.ParameterSourceDefault,
+				"",
+				nil,
+				"historical calibration inputs are not implemented; static configuration is used",
+			),
+		},
+	}
+}
+
+func parameterStatus(active bool, source config.ParameterSource, path string, names []string, fallback string) ParameterStatus {
+	status := ParameterStatus{
+		Active: active,
+		Source: string(source),
+	}
+	if active {
+		status.Path = path
+		status.Names = slices.Clone(names)
+		return status
+	}
+	status.Fallback = fallback
+	return status
+}
+
+func parameterStatusForWeights(source config.ParameterSource, artifactSource string) ParameterStatus {
+	if source != config.ParameterSourceDefault {
+		return ParameterStatus{
+			Active: true,
+			Source: string(source),
+		}
+	}
+	if artifactSource != artifact.ProvenanceDefault {
+		return ParameterStatus{
+			Active: true,
+			Source: string(config.ParameterSourceExternal),
+		}
+	}
+	return ParameterStatus{
+		Active:   false,
+		Source:   string(config.ParameterSourceDefault),
+		Fallback: "no endpoint weights configured; weighted aggregate falls back to arithmetic mean",
+	}
+}
+
+func baselineNames(baselines []config.BaselineRef) []string {
+	names := make([]string, 0, len(baselines))
+	for _, baseline := range baselines {
+		names = append(names, baseline.Name)
+	}
+	slices.Sort(names)
+	return names
+}
+
+func derivedProfileSeed(cfg config.AnalysisConfig, profile config.Profile) int64 {
+	for idx, candidate := range cfg.Profiles {
+		if candidate.Name == profile.Name {
+			if cfg.Seed == 0 {
+				return 0
+			}
+			h := fnv.New64a()
+			_, _ = h.Write([]byte(fmt.Sprintf("%d:%s:%d", cfg.Seed, profile.Name, idx)))
+			return int64(h.Sum64())
+		}
+	}
+	return cfg.Seed
 }
 
 func (r Report) AvailabilityMap() map[string]float64 {

@@ -46,6 +46,11 @@ The overlay can also carry endpoint weights.
 - Snapshot envelope schema: [api/schema/snapshot.schema.json](../api/schema/snapshot.schema.json)
 - Report schema: [api/schema/report.schema.json](../api/schema/report.schema.json)
 
+Report output now carries both:
+
+- `provenance`: artifact/overlay origin for predicates and weights
+- `parameters`: resolved simulation inputs plus source attribution (`default`, `policy`, `override`, `external`) and calibration fallback markers
+
 ## Migration Rule of Thumb
 
 - keep `--policy` when one profile and simple thresholds are enough

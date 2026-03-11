@@ -304,6 +304,7 @@ func (r Runner) runServe(args []string) int {
 			analysisCfg, err = config.LoadAnalysis(serveCfg.AnalysisFile)
 		} else {
 			analysisCfg = serveCfg.Analysis.Normalized()
+			analysisCfg.Sources = config.BuildAnalysisParameterSources(serveCfg.Analysis, analysisCfg)
 			err = analysisCfg.Validate()
 		}
 		if err != nil {
@@ -383,9 +384,11 @@ func loadExecutionConfig(policyPath, analysisPath string, seedOverride *int64, j
 		}
 		if seedOverride != nil {
 			cfg.Seed = *seedOverride
+			cfg.Sources.Seed = config.ParameterSourceOverride
 		}
 		if journeysPath != "" {
 			cfg.Journeys = journeysPath
+			cfg.Sources.Journeys = config.ParameterSourceOverride
 		}
 		return cfg.Normalized(), nil
 	case policyPath != "":
@@ -396,9 +399,11 @@ func loadExecutionConfig(policyPath, analysisPath string, seedOverride *int64, j
 		cfg := policy.ToAnalysisConfig()
 		if seedOverride != nil {
 			cfg.Seed = *seedOverride
+			cfg.Sources.Seed = config.ParameterSourceOverride
 		}
 		if journeysPath != "" {
 			cfg.Journeys = journeysPath
+			cfg.Sources.Journeys = config.ParameterSourceOverride
 		}
 		return cfg.Normalized(), nil
 	default:

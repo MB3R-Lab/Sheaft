@@ -20,11 +20,11 @@ This file captures the repository-side audit performed on 2026-03-11: current Gi
 
 | Epic | GitHub state | Repo reality | Notes |
 | --- | --- | --- | --- |
-| R1 | open | partial | Core semantics are implemented across `internal/artifact`, `internal/analyzer`, `internal/simulation`, and `docs/methodology.md`, but the normative consumer semantics doc and resiliency pattern contract are still missing. |
+| R1 | open | partial | Core semantics are implemented across `internal/artifact`, `internal/analyzer`, `internal/simulation`, and `docs/consumer-semantics-v1.md`, but failure-mode extensions and resiliency pattern consumption are still missing. |
 | R2 | closed | done | Artifact discovery/ingestion, provenance, incomplete telemetry handling, and diff-capable artifacts are present and covered by tests. |
-| R3 | open | partial | Reproducible analysis is in place, but pluginization, explicit calibration, and scale benchmarks are still backlog items. |
+| R3 | open | partial | Reproducible analysis and explicit parameter/calibration provenance are now in place, but pluginization and scale benchmarks are still backlog items. |
 | R4 | open | partial | External benchmark contract and limitations docs exist, but the public benchmark suite and release-grade quality reports are not yet in-repo. |
-| R5 | open | partial | CI gate, service mode, and output artifacts are implemented; chaos triage and cross-CI handoff templates were still the main workflow gap before this audit. |
+| R5 | open | partial | CI gate, service mode, output artifacts, and validated cross-CI handoff smoke pipelines are implemented; chaos triage remains the main workflow gap. |
 | R6 | open | partial | Strict contract pinning, conformance checks, vendored schemas, compatibility matrix, and contract release workflow now exist; multi-version support remains open. |
 | R7 | open | gap | No open-core/export playbook material exists yet beyond issue-level planning. |
 | R8 | open | gap | Security/privacy work is not yet implemented beyond lightweight assumptions/limitations guidance. |
@@ -37,7 +37,7 @@ This file captures the repository-side audit performed on 2026-03-11: current Gi
 
 | Issue | GitHub state | Repo reality | Notes |
 | --- | --- | --- | --- |
-| R1.1 | open | partial | Contract handling, predicate/weight precedence, snapshots, and journey overrides are implemented, but there is no dedicated "Consumer Semantics v1" spec with the required examples. |
+| R1.1 | open | done locally | "Consumer Semantics v1" is now documented in-repo with version scope, precedence rules, and 15 expected behavior examples. |
 | R1.2 | open | partial | Fail-stop semantics and three sampling modes are implemented and tested; timeout/partial/gray extension contract is still missing. |
 | R1.3 | open | gap | No input contract or end-to-end handling for retry/timeout/circuit-breaker/fallback/rate-limit annotations exists yet. |
 
@@ -56,7 +56,7 @@ This file captures the repository-side audit performed on 2026-03-11: current Gi
 | --- | --- | --- | --- |
 | R3.1 | closed | done | Deterministic Monte Carlo execution and stable config normalization are implemented. |
 | R3.2 | open | gap | There is no plugin interface or example plugin; all analyses are wired directly into the core pipeline. |
-| R3.3 | open | partial | Predicate/weight provenance is reported, but parameter sourcing/calibration provenance is not explicit end-to-end. |
+| R3.3 | open | done locally | Reports now include resolved parameter values, source attribution (`default`/`policy`/`override`/`external`), and explicit fallback markers for missing calibration inputs. |
 | R3.4 | open | gap | No published large-snapshot workload profile, SLA, or benchmark harness exists. |
 
 ### R4. Empirical validation and reproducibility
@@ -75,7 +75,7 @@ This file captures the repository-side audit performed on 2026-03-11: current Gi
 | R5.2 | closed | done | `serve`/`watch`, status endpoints, history, and metrics cover the observability workflow. |
 | R5.3 | open | gap | No chaos experiment suggestion engine or triage output exists yet. |
 | R5.4 | closed | done | `model.json`, `report.json`, and `summary.md` outputs are generated consistently. |
-| R5.5 | open | partial | Cross-CI handoff templates and conventions are now in-repo, but they are still sample templates rather than validated example repos. |
+| R5.5 | open | done locally | Example templates are now backed by a template convention checker, a native/docker smoke script, and a GitHub Actions smoke workflow. |
 | R5.6 | open | done locally | GitLab and Jenkins templates plus documented handoff/exit behavior now exist in-repo; GitHub issue can be closed after sync. |
 
 ### R6. Standardization and interoperability
@@ -121,15 +121,17 @@ This file captures the repository-side audit performed on 2026-03-11: current Gi
 
 ## Prioritized Backlog After Audit
 
-1. R1.1: publish the missing normative consumer semantics document while the implementation surface is still compact.
-2. R3.3: add explicit parameter sourcing/calibration provenance to reports and summaries.
-3. R5.5: validate the CI/CD handoff templates in example repos or smoke pipelines.
-4. R6.6: add multi-version schema contracts with project-level pinning.
-5. R4.3: expand applicability boundaries into concrete do-not-trust signals and detector heuristics.
+1. R6.6: add multi-version schema contracts with project-level pinning.
+2. R4.3: expand applicability boundaries into concrete do-not-trust signals and detector heuristics.
+3. R1.2: document and test the extension contract for timeout/partial/gray failure modes.
+4. R9.1: add a why mode for gate decisions on top of current report/diff output.
+5. R5.3: add chaos experiment suggestion and triage output on top of current gate/report flow.
 
 ## Current Execution Note
 
-- `R5.5` is in progress locally with cross-CI handoff templates now committed in-repo.
+- `R5.5` is now implemented locally via template convention checks plus native/docker smoke validation.
 - `R6.5` is now implemented locally via the compatibility matrix plus CI guard.
 - `R6.4` is now implemented locally via the contract release workflow doc and Bering release metadata check.
-- The next highest-priority repo task is **R1.1: Consumer semantics profile for supported artifact contracts (v1)**.
+- `R1.1` is now implemented locally via the Consumer Semantics v1 document.
+- `R3.3` is now implemented locally via report parameter provenance and calibration fallback markers.
+- The next highest-priority repo task is **R6.6: add multi-version schema contracts with project-level pinning**.

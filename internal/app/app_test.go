@@ -7,6 +7,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/MB3R-Lab/Sheaft/internal/config"
 	"github.com/MB3R-Lab/Sheaft/internal/model"
 	"github.com/MB3R-Lab/Sheaft/internal/modelcontract"
 )
@@ -35,6 +36,12 @@ gate:
 	if cfg.Seed != 12345 {
 		t.Fatalf("expected analysis seed to be preserved, got %d", cfg.Seed)
 	}
+	if cfg.Sources.ConfigSource != config.ParameterSourceOverride {
+		t.Fatalf("expected analysis config source override, got %s", cfg.Sources.ConfigSource)
+	}
+	if cfg.Sources.Seed != config.ParameterSourceOverride {
+		t.Fatalf("expected analysis seed source override, got %s", cfg.Sources.Seed)
+	}
 
 	override := int64(42)
 	cfg, err = loadExecutionConfig("", analysisPath, &override, "")
@@ -43,6 +50,36 @@ gate:
 	}
 	if cfg.Seed != 42 {
 		t.Fatalf("expected seed override 42, got %d", cfg.Seed)
+	}
+	if cfg.Sources.Seed != config.ParameterSourceOverride {
+		t.Fatalf("expected override seed source, got %s", cfg.Sources.Seed)
+	}
+}
+
+func TestLoadExecutionConfig_PolicySources(t *testing.T) {
+	t.Parallel()
+
+	policyPath := filepath.Join(t.TempDir(), "policy.yaml")
+	writeFile(t, policyPath, `
+mode: warn
+default_action: warn
+global_threshold: 0.99
+failure_probability: 0.1
+trials: 120
+`)
+
+	cfg, err := loadExecutionConfig(policyPath, "", nil, "")
+	if err != nil {
+		t.Fatalf("loadExecutionConfig from policy failed: %v", err)
+	}
+	if cfg.Sources.ConfigSource != config.ParameterSourcePolicy {
+		t.Fatalf("expected policy config source, got %s", cfg.Sources.ConfigSource)
+	}
+	if cfg.Sources.Trials != config.ParameterSourcePolicy {
+		t.Fatalf("expected policy trials source, got %s", cfg.Sources.Trials)
+	}
+	if cfg.Sources.Profiles["default"].FailureProbability != config.ParameterSourcePolicy {
+		t.Fatalf("expected policy profile source, got %+v", cfg.Sources.Profiles["default"])
 	}
 }
 

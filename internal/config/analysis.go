@@ -40,6 +40,7 @@ type AnalysisConfig struct {
 	Profiles           []Profile          `json:"profiles,omitempty" yaml:"profiles,omitempty"`
 	Baselines          []BaselineRef      `json:"baselines,omitempty" yaml:"baselines,omitempty"`
 	Gate               GateConfig         `json:"gate" yaml:"gate"`
+	Sources            ParameterSources   `json:"-" yaml:"-"`
 }
 
 type Profile struct {
@@ -106,7 +107,7 @@ type HistoryConfig struct {
 }
 
 func (p Policy) ToAnalysisConfig() AnalysisConfig {
-	return AnalysisConfig{
+	cfg := AnalysisConfig{
 		SchemaVersion:      AnalysisSchemaVersion,
 		Seed:               42,
 		Trials:             p.Trials,
@@ -128,6 +129,8 @@ func (p Policy) ToAnalysisConfig() AnalysisConfig {
 			EndpointThresholds: cloneFloatMap(p.EndpointThresholds),
 		},
 	}
+	cfg.Sources = BuildPolicyParameterSources(cfg)
+	return cfg
 }
 
 func (c AnalysisConfig) Normalized() AnalysisConfig {
@@ -322,7 +325,9 @@ func LoadAnalysis(path string) (AnalysisConfig, error) {
 		}
 		return policy.ToAnalysisConfig().Normalized(), nil
 	}
+	raw := cfg
 	cfg = cfg.Normalized()
+	cfg.Sources = BuildAnalysisParameterSources(raw, cfg)
 	if err := cfg.Validate(); err != nil {
 		return AnalysisConfig{}, fmt.Errorf("validate analysis config: %w", err)
 	}
@@ -396,6 +401,7 @@ func (c ServeConfig) Validate() error {
 	}
 	if strings.TrimSpace(c.AnalysisFile) == "" {
 		analysis := c.Analysis.Normalized()
+		analysis.Sources = BuildAnalysisParameterSources(c.Analysis, analysis)
 		if err := analysis.Validate(); err != nil {
 			return fmt.Errorf("inline analysis: %w", err)
 		}
