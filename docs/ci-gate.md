@@ -82,7 +82,7 @@ This repository validates the CI handoff contract in three layers:
 
 - `sh scripts/ci/check-ci-handoff-templates.sh` verifies that the example templates and docs keep the agreed handoff paths, retention windows, artifact publishing steps, and smoke workflow references.
 - `sh scripts/ci/smoke-ci-handoff.sh native` runs the same handoff layout locally via `go run ./cmd/sheaft`.
-- `sh scripts/ci/smoke-ci-handoff.sh docker` exercises the Docker execution path used by the example templates.
+- `sh scripts/ci/smoke-ci-handoff.sh docker` exercises the Docker execution path used by the example templates, including local runs from Windows Git Bash.
 
 The GitHub Actions workflow at `.github/workflows/ci-template-smoke.yml` runs both smoke modes on every pull request and on pushes to `main`.
 

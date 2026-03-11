@@ -57,6 +57,12 @@ type Provenance struct {
 	WeightsSource   string `json:"weights_source"`
 }
 
+type ContractPolicy struct {
+	Status  string `json:"status"`
+	Action  string `json:"action"`
+	Message string `json:"message,omitempty"`
+}
+
 type IntParameter struct {
 	Value  int64  `json:"value"`
 	Source string `json:"source"`
@@ -162,6 +168,7 @@ type Report struct {
 	Summary             Summary               `json:"summary"`
 	PolicyEvaluation    PolicyEvaluation      `json:"policy_evaluation"`
 	InputArtifact       *InputArtifact        `json:"input_artifact,omitempty"`
+	ContractPolicy      *ContractPolicy       `json:"contract_policy,omitempty"`
 	Provenance          *Provenance           `json:"provenance,omitempty"`
 	Parameters          *Parameters           `json:"parameters,omitempty"`
 	Profiles            []ProfileSummary      `json:"profiles,omitempty"`
@@ -192,7 +199,7 @@ func Compose(simOut simulation.Output, eval gate.Evaluation, params simulation.P
 	}
 }
 
-func ComposeAnalysis(meta artifact.Loaded, simOut simulation.AnalysisOutput, eval gate.Evaluation, cfg config.AnalysisConfig, confidence float64, generatedAt time.Time, duration time.Duration) Report {
+func ComposeAnalysis(meta artifact.Loaded, simOut simulation.AnalysisOutput, eval gate.Evaluation, cfg config.AnalysisConfig, contractDecision config.ContractPolicyDecision, confidence float64, generatedAt time.Time, duration time.Duration) Report {
 	report := Report{
 		Simulation: SimulationInfo{},
 		Summary: Summary{
@@ -221,6 +228,11 @@ func ComposeAnalysis(meta artifact.Loaded, simOut simulation.AnalysisOutput, eva
 			SourceRef:       meta.Metadata.SourceRef,
 			ProducedAt:      meta.Metadata.ProducedAt,
 			TopologyVersion: meta.Metadata.TopologyVersion,
+		},
+		ContractPolicy: &ContractPolicy{
+			Status:  contractDecision.Status,
+			Action:  contractDecision.Action,
+			Message: contractDecision.Message,
 		},
 		Provenance: &Provenance{
 			PredicateSource: meta.PredicateSource,

@@ -1,0 +1,21 @@
+allowed_kinds:
+  - model
+  - snapshot
+
+allowed_contracts:
+  - kind: model
+    name: io.mb3r.bering.model
+    versions:
+      - "1.0.0"
+  - kind: snapshot
+    name: io.mb3r.bering.snapshot
+    versions:
+      - "1.0.0"
+
+deprecated_action: warn
+deprecated_contracts:
+  - kind: snapshot
+    name: io.mb3r.bering.snapshot
+    versions:
+      - "1.0.0"
+    message: snapshot 1.0.0 remains supported, but this example project policy warns until the next approved release line is adopted

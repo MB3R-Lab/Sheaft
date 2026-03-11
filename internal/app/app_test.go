@@ -29,7 +29,7 @@ gate:
   default_action: warn
 `)
 
-	cfg, err := loadExecutionConfig("", analysisPath, nil, "")
+	cfg, err := loadExecutionConfig("", analysisPath, "", nil, "")
 	if err != nil {
 		t.Fatalf("loadExecutionConfig without override failed: %v", err)
 	}
@@ -44,7 +44,7 @@ gate:
 	}
 
 	override := int64(42)
-	cfg, err = loadExecutionConfig("", analysisPath, &override, "")
+	cfg, err = loadExecutionConfig("", analysisPath, "", &override, "")
 	if err != nil {
 		t.Fatalf("loadExecutionConfig with override failed: %v", err)
 	}
@@ -68,7 +68,7 @@ failure_probability: 0.1
 trials: 120
 `)
 
-	cfg, err := loadExecutionConfig(policyPath, "", nil, "")
+	cfg, err := loadExecutionConfig(policyPath, "", "", nil, "")
 	if err != nil {
 		t.Fatalf("loadExecutionConfig from policy failed: %v", err)
 	}
@@ -80,6 +80,115 @@ trials: 120
 	}
 	if cfg.Sources.Profiles["default"].FailureProbability != config.ParameterSourcePolicy {
 		t.Fatalf("expected policy profile source, got %+v", cfg.Sources.Profiles["default"])
+	}
+}
+
+func TestLoadExecutionConfig_ContractPolicyOverride(t *testing.T) {
+	t.Parallel()
+
+	analysisPath := filepath.Join(t.TempDir(), "analysis.yaml")
+	writeFile(t, analysisPath, `
+schema_version: "1.0"
+profiles:
+  - name: default
+    trials: 100
+    sampling_mode: independent_replica
+    failure_probability: 0.1
+gate:
+  mode: warn
+  default_action: warn
+`)
+	contractPolicyPath := filepath.Join(filepath.Dir(analysisPath), "contract-policy.yaml")
+	writeFile(t, contractPolicyPath, `
+allowed_kinds:
+  - snapshot
+deprecated_action: warn
+deprecated_contracts:
+  - kind: snapshot
+    name: io.mb3r.bering.snapshot
+    versions: ["1.0.0"]
+`)
+
+	cfg, err := loadExecutionConfig("", analysisPath, contractPolicyPath, nil, "")
+	if err != nil {
+		t.Fatalf("loadExecutionConfig with contract policy failed: %v", err)
+	}
+	if len(cfg.ContractPolicy.AllowedKinds) != 1 || cfg.ContractPolicy.AllowedKinds[0] != "snapshot" {
+		t.Fatalf("expected contract policy to be loaded, got %+v", cfg.ContractPolicy)
+	}
+}
+
+func TestRun_DeprecatedContractPolicyFailReturnsExitError(t *testing.T) {
+	t.Parallel()
+
+	root := t.TempDir()
+	artifactPath := filepath.Join(root, "snapshot.json")
+	writeFile(t, artifactPath, `
+{
+  "schema": {
+    "name": "io.mb3r.bering.snapshot",
+    "version": "1.0.0",
+    "uri": "https://mb3r-lab.github.io/Bering/schema/snapshot/v1.0.0/snapshot.schema.json",
+    "digest": "sha256:0b1ff66a64419d5f2e838663451a739fe34b3871bc1ccb9102ebec0fb8ec0b83"
+  },
+  "artifact_id": "snapshot-1",
+  "produced_at": "2026-03-11T08:00:00Z",
+  "source_type": "bering",
+  "source_ref": "bering://snapshot/1",
+  "model": {
+    "services": [{ "id": "frontend", "name": "frontend", "replicas": 1 }],
+    "endpoints": [{ "id": "frontend:GET /health", "entry_service": "frontend", "success_predicate_ref": "frontend:GET /health" }],
+    "metadata": {
+      "source_type": "bering",
+      "source_ref": "bering://snapshot/1",
+      "discovered_at": "2026-03-11T08:00:00Z",
+      "confidence": 0.8,
+      "schema": {
+        "name": "io.mb3r.bering.model",
+        "version": "1.0.0",
+        "uri": "https://mb3r-lab.github.io/Bering/schema/model/v1.0.0/model.schema.json",
+        "digest": "sha256:272277c093f37580adcd2dded225bd37c86539d642d7910baad7e4228227d1a7"
+      }
+    }
+  }
+}
+`)
+	analysisPath := filepath.Join(root, "analysis.yaml")
+	writeFile(t, analysisPath, `
+schema_version: "1.0"
+profiles:
+  - name: default
+    trials: 100
+    sampling_mode: independent_replica
+    failure_probability: 0.1
+gate:
+  mode: warn
+  default_action: warn
+`)
+	contractPolicyPath := filepath.Join(root, "contract-policy.yaml")
+	writeFile(t, contractPolicyPath, `
+deprecated_action: fail
+deprecated_contracts:
+  - kind: snapshot
+    name: io.mb3r.bering.snapshot
+    versions: ["1.0.0"]
+`)
+
+	var stdout bytes.Buffer
+	var stderr bytes.Buffer
+	runner := NewRunner(&stdout, &stderr)
+	code := runner.Run([]string{
+		"run",
+		"--model", artifactPath,
+		"--analysis", analysisPath,
+		"--contract-policy", contractPolicyPath,
+		"--out-dir", filepath.Join(root, "out"),
+	})
+	if code != ExitError {
+		t.Fatalf("expected run to fail on deprecated contract policy, got code=%d stdout=%s stderr=%s", code, stdout.String(), stderr.String())
+	}
+	if !strings.Contains(stderr.String(), "contract policy") {
+		t.Fatalf("expected contract policy error, got %s", stderr.String())
 	}
 }
 

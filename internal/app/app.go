@@ -109,6 +109,7 @@ func (r Runner) runSimulate(args []string) int {
 	modelPath := fs.String("model", "", "Path to model or snapshot JSON")
 	policyPath := fs.String("policy", "", "Path to policy YAML/JSON")
 	analysisPath := fs.String("analysis", "", "Path to advanced analysis YAML/JSON")
+	contractPolicyPath := fs.String("contract-policy", "", "Path to contract policy YAML/JSON")
 	out := fs.String("out", "", "Path to output report JSON")
 	journeysPath := fs.String("journeys", "", "Path to journey override JSON")
 	seed := fs.Int64("seed", 42, "Random seed for deterministic simulation")
@@ -121,7 +122,7 @@ func (r Runner) runSimulate(args []string) int {
 		return ExitError
 	}
 
-	result, err := executeAnalysis(*modelPath, *policyPath, *analysisPath, optionalInt64(*seed, isFlagSet(fs, "seed")), *journeysPath, nil)
+	result, err := executeAnalysis(*modelPath, *policyPath, *analysisPath, *contractPolicyPath, optionalInt64(*seed, isFlagSet(fs, "seed")), *journeysPath, nil)
 	if err != nil {
 		r.printfErr("simulate error: %v\n", err)
 		return ExitError
@@ -137,6 +138,9 @@ func (r Runner) runSimulate(args []string) int {
 
 	r.printf("report written: %s\n", *out)
 	r.printf("decision: %s\n", result.GateEval.Decision)
+	if result.Report.ContractPolicy != nil && result.Report.ContractPolicy.Status != config.ContractPolicyStatusCurrent {
+		r.printf("contract policy: %s (%s)\n", result.Report.ContractPolicy.Status, result.Report.ContractPolicy.Action)
+	}
 	return decisionExitCode(result.GateEval.Decision)
 }
 
@@ -221,6 +225,7 @@ func (r Runner) runPipeline(args []string) int {
 	modelPath := fs.String("model", "", "Path to model or snapshot JSON")
 	policyPath := fs.String("policy", "", "Path to policy YAML/JSON")
 	analysisPath := fs.String("analysis", "", "Path to advanced analysis YAML/JSON")
+	contractPolicyPath := fs.String("contract-policy", "", "Path to contract policy YAML/JSON")
 	journeysPath := fs.String("journeys", "", "Path to journey override JSON")
 	outDir := fs.String("out-dir", "", "Output directory")
 	seed := fs.Int64("seed", 42, "Random seed for deterministic simulation")
@@ -242,7 +247,7 @@ func (r Runner) runPipeline(args []string) int {
 		return ExitError
 	}
 
-	result, err := executeAnalysis(*modelPath, *policyPath, *analysisPath, optionalInt64(*seed, isFlagSet(fs, "seed")), *journeysPath, nil)
+	result, err := executeAnalysis(*modelPath, *policyPath, *analysisPath, *contractPolicyPath, optionalInt64(*seed, isFlagSet(fs, "seed")), *journeysPath, nil)
 	if err != nil {
 		r.printfErr("run error: %v\n", err)
 		return ExitError
@@ -267,6 +272,9 @@ func (r Runner) runPipeline(args []string) int {
 	if result.Report.InputArtifact != nil {
 		r.printf("contract: %s@%s\n", result.Report.InputArtifact.ContractName, result.Report.InputArtifact.ContractVersion)
 	}
+	if result.Report.ContractPolicy != nil && result.Report.ContractPolicy.Status != config.ContractPolicyStatusCurrent {
+		r.printf("contract policy: %s (%s)\n", result.Report.ContractPolicy.Status, result.Report.ContractPolicy.Action)
+	}
 	r.printf("policy mode: %s\n", result.Config.Gate.Mode)
 	if strings.TrimSpace(result.Config.Journeys) != "" {
 		r.printf("journeys override: %s\n", result.Config.Journeys)
@@ -282,6 +290,7 @@ func (r Runner) runServe(args []string) int {
 	artifactMode := fs.String("artifact-mode", "auto", "Artifact mode: auto|file|directory")
 	policyPath := fs.String("policy", "", "Path to policy YAML/JSON")
 	analysisPath := fs.String("analysis", "", "Path to advanced analysis YAML/JSON")
+	contractPolicyPath := fs.String("contract-policy", "", "Path to contract policy YAML/JSON")
 	listen := fs.String("listen", ":8080", "HTTP listen address")
 	pollInterval := fs.String("poll-interval", "30s", "Polling interval")
 	historyDir := fs.String("history-dir", "", "Optional on-disk history directory")
@@ -311,12 +320,19 @@ func (r Runner) runServe(args []string) int {
 			r.printfErr("load analysis config: %v\n", err)
 			return ExitError
 		}
+		if *contractPolicyPath != "" {
+			analysisCfg.ContractPolicy, err = config.LoadContractPolicy(*contractPolicyPath)
+			if err != nil {
+				r.printfErr("load contract policy: %v\n", err)
+				return ExitError
+			}
+		}
 	default:
 		if *artifactPath == "" || (*policyPath == "" && *analysisPath == "") {
 			r.printfErr("serve requires --config or --artifact with one of --policy or --analysis\n")
 			return ExitError
 		}
-		analysisCfg, err = loadExecutionConfig(*policyPath, *analysisPath, nil, "")
+		analysisCfg, err = loadExecutionConfig(*policyPath, *analysisPath, *contractPolicyPath, nil, "")
 		if err != nil {
 			r.printfErr("load analysis config: %v\n", err)
 			return ExitError
@@ -356,8 +372,8 @@ func (r Runner) runServe(args []string) int {
 	return ExitOK
 }
 
-func executeAnalysis(modelPath, policyPath, analysisPath string, seedOverride *int64, journeysPath string, previous *report.Report) (executionResult, error) {
-	analysisCfg, err := loadExecutionConfig(policyPath, analysisPath, seedOverride, journeysPath)
+func executeAnalysis(modelPath, policyPath, analysisPath, contractPolicyPath string, seedOverride *int64, journeysPath string, previous *report.Report) (executionResult, error) {
+	analysisCfg, err := loadExecutionConfig(policyPath, analysisPath, contractPolicyPath, seedOverride, journeysPath)
 	if err != nil {
 		return executionResult{}, err
 	}
@@ -373,7 +389,7 @@ func executeAnalysis(modelPath, policyPath, analysisPath string, seedOverride *i
 	}, nil
 }
 
-func loadExecutionConfig(policyPath, analysisPath string, seedOverride *int64, journeysPath string) (config.AnalysisConfig, error) {
+func loadExecutionConfig(policyPath, analysisPath, contractPolicyPath string, seedOverride *int64, journeysPath string) (config.AnalysisConfig, error) {
 	switch {
 	case policyPath != "" && analysisPath != "":
 		return config.AnalysisConfig{}, errors.New("use either --policy or --analysis, not both")
@@ -381,6 +397,12 @@ func loadExecutionConfig(policyPath, analysisPath string, seedOverride *int64, j
 		cfg, err := config.LoadAnalysis(analysisPath)
 		if err != nil {
 			return config.AnalysisConfig{}, err
+		}
+		if contractPolicyPath != "" {
+			cfg.ContractPolicy, err = config.LoadContractPolicy(contractPolicyPath)
+			if err != nil {
+				return config.AnalysisConfig{}, err
+			}
 		}
 		if seedOverride != nil {
 			cfg.Seed = *seedOverride
@@ -397,6 +419,12 @@ func loadExecutionConfig(policyPath, analysisPath string, seedOverride *int64, j
 			return config.AnalysisConfig{}, err
 		}
 		cfg := policy.ToAnalysisConfig()
+		if contractPolicyPath != "" {
+			cfg.ContractPolicy, err = config.LoadContractPolicy(contractPolicyPath)
+			if err != nil {
+				return config.AnalysisConfig{}, err
+			}
+		}
 		if seedOverride != nil {
 			cfg.Seed = *seedOverride
 			cfg.Sources.Seed = config.ParameterSourceOverride
@@ -427,14 +455,14 @@ func (r Runner) printUsage() {
 	fmt.Fprintln(r.stdout, "")
 	fmt.Fprintln(r.stdout, "Usage:")
 	fmt.Fprintln(r.stdout, "  sheaft discover --input <trace-file|dir> --out <model.json>    # experimental local discovery")
-	fmt.Fprintln(r.stdout, "  sheaft simulate --model <artifact.json> --policy <policy.yaml> --out <report.json> [--journeys <journeys.json>] --seed <int>")
-	fmt.Fprintln(r.stdout, "  sheaft simulate --model <artifact.json> --analysis <analysis.yaml> --out <report.json>")
+	fmt.Fprintln(r.stdout, "  sheaft simulate --model <artifact.json> --policy <policy.yaml> [--contract-policy <contract-policy.yaml>] --out <report.json> [--journeys <journeys.json>] --seed <int>")
+	fmt.Fprintln(r.stdout, "  sheaft simulate --model <artifact.json> --analysis <analysis.yaml> [--contract-policy <contract-policy.yaml>] --out <report.json>")
 	fmt.Fprintln(r.stdout, "  sheaft gate --report <report.json> --policy <policy.yaml> --mode warn|fail|report")
 	fmt.Fprintln(r.stdout, "  sheaft gate --report <report.json> --analysis <analysis.yaml>")
-	fmt.Fprintln(r.stdout, "  sheaft run --model <artifact.json> --policy <policy.yaml> --out-dir <dir> [--journeys <journeys.json>] --seed <int>")
-	fmt.Fprintln(r.stdout, "  sheaft run --model <artifact.json> --analysis <analysis.yaml> --out-dir <dir>")
-	fmt.Fprintln(r.stdout, "  sheaft serve --config <serve.yaml>")
-	fmt.Fprintln(r.stdout, "  sheaft serve --artifact <artifact.json|dir> --policy <policy.yaml> [--listen :8080]")
+	fmt.Fprintln(r.stdout, "  sheaft run --model <artifact.json> --policy <policy.yaml> [--contract-policy <contract-policy.yaml>] --out-dir <dir> [--journeys <journeys.json>] --seed <int>")
+	fmt.Fprintln(r.stdout, "  sheaft run --model <artifact.json> --analysis <analysis.yaml> [--contract-policy <contract-policy.yaml>] --out-dir <dir>")
+	fmt.Fprintln(r.stdout, "  sheaft serve --config <serve.yaml> [--contract-policy <contract-policy.yaml>]")
+	fmt.Fprintln(r.stdout, "  sheaft serve --artifact <artifact.json|dir> --policy <policy.yaml> [--contract-policy <contract-policy.yaml>] [--listen :8080]")
 }
 
 func (r Runner) printf(format string, args ...any) {

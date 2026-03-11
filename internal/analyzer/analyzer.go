@@ -14,10 +14,11 @@ import (
 )
 
 type Result struct {
-	Artifact   artifact.Loaded
-	Simulation simulation.AnalysisOutput
-	Evaluation gate.Evaluation
-	Report     report.Report
+	Artifact        artifact.Loaded
+	ContractPolicy  config.ContractPolicyDecision
+	Simulation      simulation.AnalysisOutput
+	Evaluation      gate.Evaluation
+	Report          report.Report
 }
 
 func AnalyzeFile(path string, cfg config.AnalysisConfig, previous *report.Report) (Result, error) {
@@ -32,6 +33,10 @@ func AnalyzeLoaded(loaded artifact.Loaded, cfg config.AnalysisConfig, previous *
 	cfg = cfg.Normalized()
 	if err := cfg.Validate(); err != nil {
 		return Result{}, err
+	}
+	contractDecision, err := cfg.ContractPolicy.Evaluate(loaded.Metadata.Contract)
+	if err != nil {
+		return Result{}, fmt.Errorf("contract policy: %w", err)
 	}
 
 	started := time.Now()
@@ -93,7 +98,7 @@ func AnalyzeLoaded(loaded artifact.Loaded, cfg config.AnalysisConfig, previous *
 		return Result{}, err
 	}
 
-	rep := report.ComposeAnalysis(loaded, simOut, eval, cfg, loaded.Model.Metadata.Confidence, time.Now(), time.Since(started))
+	rep := report.ComposeAnalysis(loaded, simOut, eval, cfg, contractDecision, loaded.Model.Metadata.Confidence, time.Now(), time.Since(started))
 	rep.SetPreviousDiff(previous)
 
 	baselines, err := loadBaselines(cfg.Baselines)
@@ -103,10 +108,11 @@ func AnalyzeLoaded(loaded artifact.Loaded, cfg config.AnalysisConfig, previous *
 	rep.SetBaselineDiffs(baselines)
 
 	return Result{
-		Artifact:   loaded,
-		Simulation: simOut,
-		Evaluation: eval,
-		Report:     rep,
+		Artifact:       loaded,
+		ContractPolicy: contractDecision,
+		Simulation:     simOut,
+		Evaluation:     eval,
+		Report:         rep,
 	}, nil
 }
 

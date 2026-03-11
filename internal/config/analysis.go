@@ -39,6 +39,7 @@ type AnalysisConfig struct {
 	EndpointWeights    map[string]float64 `json:"endpoint_weights,omitempty" yaml:"endpoint_weights,omitempty"`
 	Profiles           []Profile          `json:"profiles,omitempty" yaml:"profiles,omitempty"`
 	Baselines          []BaselineRef      `json:"baselines,omitempty" yaml:"baselines,omitempty"`
+	ContractPolicy     ContractPolicy     `json:"contract_policy,omitempty" yaml:"contract_policy,omitempty"`
 	Gate               GateConfig         `json:"gate" yaml:"gate"`
 	Sources            ParameterSources   `json:"-" yaml:"-"`
 }
@@ -153,6 +154,7 @@ func (c AnalysisConfig) Normalized() AnalysisConfig {
 	if out.EndpointWeights == nil {
 		out.EndpointWeights = map[string]float64{}
 	}
+	out.ContractPolicy = out.ContractPolicy.Normalized()
 	if out.Gate.Mode == "" {
 		out.Gate.Mode = ModeWarn
 	}
@@ -229,6 +231,9 @@ func (c AnalysisConfig) Validate() error {
 		if weight < 0 {
 			return fmt.Errorf("endpoint_weights[%s] must be >= 0", name)
 		}
+	}
+	if err := c.ContractPolicy.Validate(); err != nil {
+		return err
 	}
 	for _, profile := range c.Profiles {
 		if strings.TrimSpace(profile.Name) == "" {

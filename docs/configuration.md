@@ -22,6 +22,7 @@ Key sections:
 - `endpoint_weights`
 - `baselines`
 - `predicate_contract`
+- `contract_policy`
 - `gate`
 
 ## Serve Config
@@ -40,6 +41,16 @@ For legacy models that only expose `success_predicate_ref`, supply:
 
 The overlay can also carry endpoint weights.
 
+## Contract Policy
+
+Use project-level contract pinning and deprecation controls when a deployment wants to accept only a subset of the globally supported Bering contracts:
+
+- [configs/contract-policy.example.yaml](../configs/contract-policy.example.yaml)
+- [configs/contract-policy.deprecated.example.yaml](../configs/contract-policy.deprecated.example.yaml)
+- [api/schema/contract-policy.schema.json](../api/schema/contract-policy.schema.json)
+
+The same structure can be embedded inline under `analysis.contract_policy`, or passed separately at runtime with `--contract-policy`.
+
 ## Artifact Schemas
 
 - Plain model schema: [api/schema/model.schema.json](../api/schema/model.schema.json)
@@ -50,9 +61,10 @@ Report output now carries both:
 
 - `provenance`: artifact/overlay origin for predicates and weights
 - `parameters`: resolved simulation inputs plus source attribution (`default`, `policy`, `override`, `external`) and calibration fallback markers
+- `contract_policy`: whether the accepted contract is current or deprecated for this project, plus the effective action (`allow`, `warn`, `fail`)
 
 ## Migration Rule of Thumb
 
 - keep `--policy` when one profile and simple thresholds are enough
-- move to `--analysis` when you need profiles, weights, baselines, or overlays
+- move to `--analysis` when you need profiles, weights, baselines, overlays, or contract pinning
 - use `serve` when posture must stay current as new artifacts arrive

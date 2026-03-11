@@ -1,0 +1,83 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/MB3R-Lab/Sheaft/api/schema/contract-policy.schema.json",
+  "title": "SheaftContractPolicy",
+  "type": "object",
+  "properties": {
+    "allowed_kinds": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "uniqueItems": true
+    },
+    "allowed_contracts": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/selector"
+      }
+    },
+    "deprecated_action": {
+      "type": "string",
+      "enum": ["warn", "fail"]
+    },
+    "deprecated_contracts": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/deprecatedSelector"
+      }
+    }
+  },
+  "$defs": {
+    "selector": {
+      "type": "object",
+      "required": ["name"],
+      "properties": {
+        "kind": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "versions": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        }
+      },
+      "additionalProperties": false
+    },
+    "deprecatedSelector": {
+      "type": "object",
+      "required": ["name"],
+      "properties": {
+        "kind": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "versions": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "action": {
+          "type": "string",
+          "enum": ["warn", "fail"]
+        },
+        "message": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

@@ -36,3 +36,6 @@ jobs:
 
       - name: Verify compatibility manifest
         run: sh scripts/ci/check-compatibility-manifest.sh
+
+      - name: Verify contract policy fixtures
+        run: sh scripts/ci/check-contract-policy-example.sh

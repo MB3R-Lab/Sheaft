@@ -37,6 +37,17 @@ require_file() {
   fi
 }
 
+docker_host_mount_path() {
+  path="$1"
+
+  if command -v cygpath >/dev/null 2>&1; then
+    cygpath -w "${path}"
+    return 0
+  fi
+
+  printf '%s\n' "${path}"
+}
+
 cd "${REPO_ROOT}"
 
 rm -rf "${SMOKE_ROOT_REL}"
@@ -51,8 +62,9 @@ case "${MODE}" in
       --out-dir "${OUT_REL}"
     ;;
   docker)
+    DOCKER_MOUNT_PATH="$(docker_host_mount_path "${REPO_ROOT}")"
     docker build -f build/Dockerfile -t sheaft:ci-smoke .
-    docker run --rm -v "${REPO_ROOT}:/workspace" -w /workspace sheaft:ci-smoke run \
+    MSYS_NO_PATHCONV=1 docker run --rm -v "${DOCKER_MOUNT_PATH}:/workspace" -w /workspace sheaft:ci-smoke run \
       --model "${ARTIFACT_REL}" \
       --analysis configs/analysis.example.yaml \
       --out-dir "${OUT_REL}"

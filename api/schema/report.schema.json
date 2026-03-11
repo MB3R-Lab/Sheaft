@@ -150,6 +150,33 @@
     "input_artifact": {
       "type": "object"
     },
+    "contract_policy": {
+      "type": "object",
+      "required": [
+        "status",
+        "action"
+      ],
+      "properties": {
+        "status": {
+          "type": "string",
+          "enum": [
+            "current",
+            "deprecated"
+          ]
+        },
+        "action": {
+          "type": "string",
+          "enum": [
+            "allow",
+            "warn",
+            "fail"
+          ]
+        },
+        "message": {
+          "type": "string"
+        }
+      }
+    },
     "provenance": {
       "type": "object"
     },

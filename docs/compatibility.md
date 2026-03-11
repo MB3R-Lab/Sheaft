@@ -38,6 +38,44 @@ Recommended checks:
 3. reject mismatches before promotion, or let Sheaft reject them at execution time;
 4. treat the manifest as compatibility data, not as schema ownership.
 
+## Project-Level Contract Policy
+
+Global runtime support and project-level acceptance are separate.
+
+- Global support is the explicit registry in `internal/modelcontract/contract.go`.
+- Project-level acceptance is narrower and can be configured with `contract_policy`.
+
+The project policy supports:
+
+- `allowed_kinds`
+- `allowed_contracts`
+- `deprecated_action`
+- `deprecated_contracts`
+
+Usage examples:
+
+```bash
+sheaft run \
+  --model examples/outputs/snapshot.sample.json \
+  --analysis configs/analysis.example.yaml \
+  --contract-policy configs/contract-policy.example.yaml \
+  --out-dir out
+```
+
+```yaml
+contract_policy:
+  allowed_kinds: [model, snapshot]
+  allowed_contracts:
+    - kind: snapshot
+      name: io.mb3r.bering.snapshot
+      versions: ["1.0.0"]
+```
+
+When a contract is still supported globally but deprecated for a given project, Sheaft can either:
+
+- continue and mark the report with `contract_policy.status=deprecated` plus `action=warn`
+- fail before simulation with a contract policy error when `deprecated_action=fail`
+
 ## Current Scope
 
 - Bering owns upstream schema publication and evolution.

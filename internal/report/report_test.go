@@ -173,6 +173,10 @@ func TestComposeAnalysis_IncludesParameterSources(t *testing.T) {
 			},
 		},
 		cfg,
+		config.ContractPolicyDecision{
+			Status: config.ContractPolicyStatusDeprecated,
+			Action: string(config.ContractPolicyActionWarn),
+		},
 		0.8,
 		time.Unix(0, 0).UTC(),
 		0,
@@ -195,5 +199,8 @@ func TestComposeAnalysis_IncludesParameterSources(t *testing.T) {
 	}
 	if rep.Parameters.Calibration.HistoricalSignals.Fallback == "" {
 		t.Fatalf("expected historical signal fallback marker, got %+v", rep.Parameters.Calibration.HistoricalSignals)
+	}
+	if rep.ContractPolicy == nil || rep.ContractPolicy.Status != config.ContractPolicyStatusDeprecated || rep.ContractPolicy.Action != string(config.ContractPolicyActionWarn) {
+		t.Fatalf("expected contract policy status in report, got %+v", rep.ContractPolicy)
 	}
 }

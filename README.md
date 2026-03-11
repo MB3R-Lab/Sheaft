@@ -32,6 +32,12 @@ sheaft run --model <artifact.json> --analysis configs/analysis.example.yaml --ou
 sheaft serve --config configs/sheaft.example.yaml
 ```
 
+Project-level contract pinning can be added on top:
+
+```bash
+sheaft run --model <artifact.json> --analysis configs/analysis.example.yaml --contract-policy configs/contract-policy.example.yaml --out-dir out
+```
+
 ## Supported Upstream Contracts
 
 Sheaft validates artifacts against an explicit whitelist.
@@ -43,6 +49,7 @@ Pinned URIs, digests, and release-line support are tracked in [docs/compatibilit
 The machine-readable compatibility contract is [compatibility-manifest.json](compatibility-manifest.json).
 
 Unknown contracts are rejected with an error that lists the supported contracts. There is no silent fallback for unsupported upstream schemas.
+Project-level narrowing and deprecation behavior can be layered on top with `--contract-policy` or inline `contract_policy` config.
 
 ## Quickstart
 
@@ -150,6 +157,7 @@ docs                       architecture, methodology, migration, and config docs
 - [Architecture](docs/architecture.md)
 - [Methodology](docs/methodology.md)
 - [Configuration and Schemas](docs/configuration.md)
+- [Contract Policy Schema](api/schema/contract-policy.schema.json)
 - [Consumer Semantics v1](docs/consumer-semantics-v1.md)
 - [CI Gate](docs/ci-gate.md)
 - [Compatibility Matrix](docs/compatibility-matrix.md)
@@ -169,6 +177,8 @@ docs                       architecture, methodology, migration, and config docs
 - Rich report sample: [examples/outputs/posture-generated/report.json](examples/outputs/posture-generated/report.json)
 - Rich summary sample: [examples/outputs/posture-generated/summary.md](examples/outputs/posture-generated/summary.md)
 - Predicate overlay: [configs/predicate-contract.example.yaml](configs/predicate-contract.example.yaml)
+- Contract policy: [configs/contract-policy.example.yaml](configs/contract-policy.example.yaml)
+- Deprecated contract policy example: [configs/contract-policy.deprecated.example.yaml](configs/contract-policy.deprecated.example.yaml)
 - GitHub Actions CI template: [examples/ci/github-actions.sheaft.yml](examples/ci/github-actions.sheaft.yml)
 - GitLab CI template: [examples/ci/gitlab-ci.sheaft.yml](examples/ci/gitlab-ci.sheaft.yml)
 - Jenkins CI template: [examples/ci/Jenkinsfile](examples/ci/Jenkinsfile)

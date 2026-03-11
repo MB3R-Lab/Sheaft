@@ -61,6 +61,9 @@
         }
       }
     },
+    "contract_policy": {
+      "$ref": "contract-policy.schema.json"
+    },
     "profiles": {
       "type": "array",
       "minItems": 1,
