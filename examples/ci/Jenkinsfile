@@ -1,0 +1,48 @@
+pipeline {
+  agent any
+
+  environment {
+    BERING_ARTIFACT_SOURCE = 'examples/outputs/snapshot.sample.json'
+  }
+
+  options {
+    timestamps()
+  }
+
+  stages {
+    stage('Checkout') {
+      steps {
+        checkout scm
+      }
+    }
+
+    stage('Bering Artifact') {
+      steps {
+        sh '''
+          mkdir -p artifacts
+          cp "$BERING_ARTIFACT_SOURCE" artifacts/input.json
+        '''
+        stash name: 'bering-artifact', includes: 'artifacts/input.json'
+      }
+    }
+
+    stage('Sheaft Gate') {
+      steps {
+        unstash 'bering-artifact'
+        sh '''
+          docker build -f build/Dockerfile -t sheaft:ci .
+          docker run --rm -v "$WORKSPACE:/workspace" -w /workspace sheaft:ci run \
+            --model artifacts/input.json \
+            --analysis configs/analysis.example.yaml \
+            --out-dir out
+        '''
+      }
+    }
+  }
+
+  post {
+    always {
+      archiveArtifacts artifacts: 'artifacts/input.json,out/**', fingerprint: true
+    }
+  }
+}

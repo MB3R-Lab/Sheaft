@@ -145,6 +145,7 @@ docs                       architecture, methodology, migration, and config docs
 - [Methodology](docs/methodology.md)
 - [Configuration and Schemas](docs/configuration.md)
 - [CI Gate](docs/ci-gate.md)
+- [Roadmap Audit](docs/roadmap.md)
 - [Service Mode](docs/observability-mode.md)
 - [Migration Notes](docs/migration.md)
 - [Assumptions and Limitations](docs/assumptions-and-limitations.md)
@@ -157,6 +158,9 @@ docs                       architecture, methodology, migration, and config docs
 - Rich report sample: [examples/outputs/posture-generated/report.json](examples/outputs/posture-generated/report.json)
 - Rich summary sample: [examples/outputs/posture-generated/summary.md](examples/outputs/posture-generated/summary.md)
 - Predicate overlay: [configs/predicate-contract.example.yaml](configs/predicate-contract.example.yaml)
+- GitHub Actions CI template: [examples/ci/github-actions.sheaft.yml](examples/ci/github-actions.sheaft.yml)
+- GitLab CI template: [examples/ci/gitlab-ci.sheaft.yml](examples/ci/gitlab-ci.sheaft.yml)
+- Jenkins CI template: [examples/ci/Jenkinsfile](examples/ci/Jenkinsfile)
 
 ## Exit Codes
 

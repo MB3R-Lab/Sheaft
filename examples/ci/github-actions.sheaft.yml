@@ -1,0 +1,53 @@
+name: sheaft-gate
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+env:
+  BERING_ARTIFACT_SOURCE: examples/outputs/snapshot.sample.json
+
+jobs:
+  bering-artifact:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Produce or fetch Bering artifact
+        run: |
+          mkdir -p artifacts
+          cp "$BERING_ARTIFACT_SOURCE" artifacts/input.json
+      - name: Upload Bering artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: bering-model
+          path: artifacts/input.json
+          if-no-files-found: error
+          retention-days: 7
+
+  sheaft-gate:
+    needs: bering-artifact
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download Bering artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: bering-model
+          path: artifacts
+      - name: Build Sheaft image
+        run: docker build -f build/Dockerfile -t sheaft:ci .
+      - name: Run Sheaft
+        run: |
+          docker run --rm -v "$PWD:/workspace" -w /workspace sheaft:ci run \
+            --model artifacts/input.json \
+            --analysis configs/analysis.example.yaml \
+            --out-dir out
+      - name: Upload Sheaft outputs
+        uses: actions/upload-artifact@v4
+        with:
+          name: sheaft-report
+          path: |
+            artifacts/input.json
+            out/
+          if-no-files-found: error
+          retention-days: 14

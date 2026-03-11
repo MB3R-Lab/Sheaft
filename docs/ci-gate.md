@@ -33,37 +33,189 @@ Use the richer config when CI needs:
 - external predicate overlays
 - explicit multi-profile gate rules
 
+## Bering Artifact Handoff Contract
+
+Use the same handoff layout in every CI system:
+
+- upstream Bering job writes the selected artifact to `artifacts/input.json`
+- Sheaft reads only that file via `--model artifacts/input.json`
+- Sheaft outputs always land in `out/`
+- retain `artifacts/input.json` for short-term debugging and `out/` for downstream review
+
+Recommended retention windows:
+
+- upstream artifact: 7 days
+- Sheaft outputs: 14 days
+
+This keeps all CI templates aligned across GitHub Actions, GitLab CI, and Jenkins.
+
+In the example templates below, replace the sample `BERING_ARTIFACT_SOURCE` value with the actual fetch/copy step that hands off the Bering-produced artifact into the workspace.
+
+## Strict Schema Checks
+
+Sheaft is a strict downstream consumer. `sheaft run` and `sheaft simulate` will fail with exit code `1` when the incoming artifact declares an unsupported contract, mismatched schema URI, or mismatched digest.
+
+No extra CI flag is needed for strict checking: it is already part of artifact loading.
+
 ## Exit Codes
 
 - `0`: pass / warn / report
 - `2`: gate failure in `mode=fail`
 - `1`: input, contract, config, or runtime error
 
+## Reference Templates
+
+- GitHub Actions: [examples/ci/github-actions.sheaft.yml](../examples/ci/github-actions.sheaft.yml)
+- GitLab CI: [examples/ci/gitlab-ci.sheaft.yml](../examples/ci/gitlab-ci.sheaft.yml)
+- Jenkins: [examples/ci/Jenkinsfile](../examples/ci/Jenkinsfile)
+
+All three templates cover:
+
+- Bering artifact handoff into `artifacts/input.json`
+- `sheaft run` execution with the richer analysis config
+- artifact publishing for both the original input and Sheaft outputs
+- native CI failure propagation from Sheaft exit codes
+
 ## GitHub Actions Example
 
 ```yaml
 name: sheaft-gate
 on: [pull_request]
+env:
+  BERING_ARTIFACT_SOURCE: examples/outputs/snapshot.sample.json
 jobs:
-  resilience:
+  bering-artifact:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Build image
-        run: docker build -f build/Dockerfile -t sheaft:ci .
-      - name: Fetch upstream artifact
+      - name: Produce or fetch Bering artifact
         run: |
           mkdir -p artifacts
-          cp path/from/previous-step/model-or-snapshot.json artifacts/input.json
+          cp "$BERING_ARTIFACT_SOURCE" artifacts/input.json
+      - name: Upload Bering artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: bering-model
+          path: artifacts/input.json
+          if-no-files-found: error
+          retention-days: 7
+  sheaft-gate:
+    needs: bering-artifact
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download Bering artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: bering-model
+          path: artifacts
+      - name: Build image
+        run: docker build -f build/Dockerfile -t sheaft:ci .
       - name: Run Sheaft
         run: |
           docker run --rm -v "$PWD:/workspace" -w /workspace sheaft:ci run \
             --model artifacts/input.json \
             --analysis configs/analysis.example.yaml \
             --out-dir out
-      - name: Upload artifacts
+      - name: Upload Sheaft outputs
         uses: actions/upload-artifact@v4
         with:
           name: sheaft-report
-          path: out/
+          path: |
+            artifacts/input.json
+            out/
+          if-no-files-found: error
+          retention-days: 14
+```
+
+## GitLab CI Example
+
+```yaml
+stages:
+  - bering
+  - posture
+
+variables:
+  BERING_ARTIFACT_SOURCE: examples/outputs/snapshot.sample.json
+  SHEAFT_IMAGE: "$CI_REGISTRY_IMAGE/sheaft-ci:$CI_COMMIT_SHA"
+
+bering_artifact:
+  stage: bering
+  image: alpine:3.20
+  script:
+    - mkdir -p artifacts
+    - cp "$BERING_ARTIFACT_SOURCE" artifacts/input.json
+  artifacts:
+    when: always
+    expire_in: 7 days
+    paths:
+      - artifacts/input.json
+
+sheaft_gate:
+  stage: posture
+  image: docker:27-cli
+  services:
+    - docker:27-dind
+  variables:
+    DOCKER_HOST: tcp://docker:2375
+    DOCKER_TLS_CERTDIR: ""
+  needs:
+    - job: bering_artifact
+      artifacts: true
+  script:
+    - docker build -f build/Dockerfile -t "$SHEAFT_IMAGE" .
+    - docker run --rm -v "$CI_PROJECT_DIR:/workspace" -w /workspace "$SHEAFT_IMAGE" run --model artifacts/input.json --analysis configs/analysis.example.yaml --out-dir out
+  artifacts:
+    when: always
+    expire_in: 14 days
+    paths:
+      - artifacts/input.json
+      - out/
+```
+
+## Jenkins Example
+
+```groovy
+pipeline {
+  agent any
+  environment {
+    BERING_ARTIFACT_SOURCE = 'examples/outputs/snapshot.sample.json'
+  }
+  options {
+    timestamps()
+  }
+  stages {
+    stage('Checkout') {
+      steps {
+        checkout scm
+      }
+    }
+    stage('Bering Artifact') {
+      steps {
+        sh '''
+          mkdir -p artifacts
+          cp "$BERING_ARTIFACT_SOURCE" artifacts/input.json
+        '''
+        stash name: 'bering-artifact', includes: 'artifacts/input.json'
+      }
+    }
+    stage('Sheaft Gate') {
+      steps {
+        unstash 'bering-artifact'
+        sh '''
+          docker build -f build/Dockerfile -t sheaft:ci .
+          docker run --rm -v "$WORKSPACE:/workspace" -w /workspace sheaft:ci run \
+            --model artifacts/input.json \
+            --analysis configs/analysis.example.yaml \
+            --out-dir out
+        '''
+      }
+    }
+  }
+  post {
+    always {
+      archiveArtifacts artifacts: 'artifacts/input.json,out/**', fingerprint: true
+    }
+  }
+}
 ```
