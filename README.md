@@ -170,6 +170,17 @@ docs                       architecture, methodology, migration, and config docs
 - Production topology discovery remains upstream.
 - `discover` is retained as an experimental local helper only.
 
+## Research background
+
+Sheaft is grounded in the same resilience-modeling and simulation work described in the following publications:
+
+1. [**Model Discovery and Graph Simulation: A Lightweight Gateway to Chaos Engineering**](https://www.alphaxiv.org/abs/2506.11176)  
+   The 48th IEEE/ACM International Conference on Software Engineering - New Ideas and Emerging Results (ICSE-NIER 2026)
+2. [**Evaluating Asynchronous Semantics in Trace-Discovered Resilience Models: A Case Study on the OpenTelemetry Demo**](https://www.alphaxiv.org/abs/2512.12314)  
+   The 40th International Conference on Advanced Information Networking and Applications (AINA-2026)
+
+The public CLI, schemas, and service mode are kept generic for broad OSS use, but the methodology and design choices are informed by that research lineage. See [docs/methodology.md](docs/methodology.md) for the operational model used in this repository.
+
 ## License
 
 MIT, see [LICENSE](LICENSE).
