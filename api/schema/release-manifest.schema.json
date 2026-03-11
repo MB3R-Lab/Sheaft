@@ -1,0 +1,268 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/MB3R-Lab/Sheaft/api/schema/release-manifest.schema.json",
+  "title": "SheaftReleaseManifest",
+  "type": "object",
+  "required": [
+    "$schema",
+    "schema_version",
+    "product_name",
+    "app_version",
+    "git_commit",
+    "build_date",
+    "binaries",
+    "checksums_file",
+    "oci_images",
+    "chart",
+    "compatibility_manifest",
+    "default_config_packs"
+  ],
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "schema_version": {
+      "const": "1.0.0"
+    },
+    "product_name": {
+      "const": "Sheaft"
+    },
+    "app_version": {
+      "type": "string",
+      "minLength": 1
+    },
+    "git_commit": {
+      "type": "string",
+      "minLength": 1
+    },
+    "build_date": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "binaries": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "os",
+          "arch",
+          "archive"
+        ],
+        "properties": {
+          "os": {
+            "type": "string"
+          },
+          "arch": {
+            "type": "string"
+          },
+          "archive": {
+            "$ref": "#/$defs/assetReference"
+          },
+          "sbom": {
+            "$ref": "#/$defs/assetReference"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "checksums_file": {
+      "$ref": "#/$defs/assetReference"
+    },
+    "oci_images": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/ociImage"
+      }
+    },
+    "chart": {
+      "$ref": "#/$defs/chart"
+    },
+    "compatibility_manifest": {
+      "$ref": "#/$defs/assetReference"
+    },
+    "default_config_packs": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/defaultConfigPack"
+      }
+    }
+  },
+  "$defs": {
+    "assetReference": {
+      "type": "object",
+      "required": [
+        "path",
+        "sha256"
+      ],
+      "properties": {
+        "path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      },
+      "additionalProperties": false
+    },
+    "ociImage": {
+      "type": "object",
+      "required": [
+        "schema_version",
+        "repository",
+        "tags",
+        "platforms",
+        "published",
+        "references"
+      ],
+      "properties": {
+        "schema_version": {
+          "type": "string"
+        },
+        "repository": {
+          "type": "string",
+          "minLength": 1
+        },
+        "tags": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string"
+          }
+        },
+        "platforms": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string"
+          }
+        },
+        "published": {
+          "type": "boolean"
+        },
+        "digest": {
+          "type": "string",
+          "pattern": "^sha256:[a-f0-9]{64}$"
+        },
+        "references": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "required": [
+              "reference"
+            ],
+            "properties": {
+              "reference": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "additionalProperties": false
+          }
+        }
+      },
+      "if": {
+        "properties": {
+          "published": {
+            "const": true
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "digest"
+        ]
+      },
+      "additionalProperties": false
+    },
+    "chart": {
+      "type": "object",
+      "required": [
+        "schema_version",
+        "name",
+        "version",
+        "published",
+        "archive"
+      ],
+      "properties": {
+        "schema_version": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "version": {
+          "type": "string",
+          "minLength": 1
+        },
+        "published": {
+          "type": "boolean"
+        },
+        "archive": {
+          "$ref": "#/$defs/assetReference"
+        },
+        "oci_reference": {
+          "type": "string"
+        },
+        "digest": {
+          "type": "string",
+          "pattern": "^sha256:[a-f0-9]{64}$"
+        }
+      },
+      "if": {
+        "properties": {
+          "published": {
+            "const": true
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "oci_reference",
+          "digest"
+        ]
+      },
+      "additionalProperties": false
+    },
+    "defaultConfigPack": {
+      "type": "object",
+      "required": [
+        "schema_version",
+        "name",
+        "version",
+        "archive",
+        "files"
+      ],
+      "properties": {
+        "schema_version": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "version": {
+          "type": "string",
+          "minLength": 1
+        },
+        "archive": {
+          "$ref": "#/$defs/assetReference"
+        },
+        "files": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

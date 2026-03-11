@@ -33,3 +33,6 @@ jobs:
           else
             sh scripts/ci/check-compatibility-matrix.sh
           fi
+
+      - name: Verify compatibility manifest
+        run: sh scripts/ci/check-compatibility-manifest.sh

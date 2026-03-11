@@ -40,6 +40,7 @@ Sheaft validates artifacts against an explicit whitelist.
 - `io.mb3r.bering.snapshot@1.0.0`
 
 Pinned URIs, digests, and release-line support are tracked in [docs/compatibility-matrix.md](docs/compatibility-matrix.md).
+The machine-readable compatibility contract is [compatibility-manifest.json](compatibility-manifest.json).
 
 Unknown contracts are rejected with an error that lists the supported contracts. There is no silent fallback for unsupported upstream schemas.
 
@@ -143,6 +144,9 @@ docs                       architecture, methodology, migration, and config docs
 
 ## Docs
 
+- [Install](docs/install.md)
+- [Compatibility](docs/compatibility.md)
+- [Release Assets](docs/release-assets.md)
 - [Architecture](docs/architecture.md)
 - [Methodology](docs/methodology.md)
 - [Configuration and Schemas](docs/configuration.md)
@@ -150,6 +154,8 @@ docs                       architecture, methodology, migration, and config docs
 - [CI Gate](docs/ci-gate.md)
 - [Compatibility Matrix](docs/compatibility-matrix.md)
 - [Contract Release Workflow](docs/contract-release-workflow.md)
+- [Versioning](VERSIONING.md)
+- [Releasing](RELEASING.md)
 - [Roadmap Audit](docs/roadmap.md)
 - [Service Mode](docs/observability-mode.md)
 - [Migration Notes](docs/migration.md)

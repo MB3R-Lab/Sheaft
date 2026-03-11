@@ -30,6 +30,7 @@ When Bering publishes a new contract line that Sheaft wants to support:
    - `internal/modelcontract/contract.go`
    - vendored schema snapshot under `internal/modelcontract/schema/`
    - mirrored public schema under `api/schema/`
+   - `compatibility-manifest.json`
    - [compatibility matrix](compatibility-matrix.md)
 4. Sheaft CI must pass:
    - remote schema sync check
@@ -51,11 +52,13 @@ If the new Bering contract is not backward compatible for Sheaft:
 - Confirm the Bering release metadata manifest is already updated upstream.
 - Update the Sheaft contract constants and supported contract list.
 - Refresh vendored and mirrored schema files.
+- Regenerate `compatibility-manifest.json`.
 - Update [compatibility matrix](compatibility-matrix.md).
 - Run:
   - `sh scripts/ci/check-bering-release-metadata.sh`
   - `sh scripts/ci/check-remote-schema-sync.sh`
   - `sh scripts/ci/check-compatibility-matrix.sh`
+  - `sh scripts/ci/check-compatibility-manifest.sh`
   - `go test ./...`
 - Mention the upstream Bering release metadata timestamp in the PR notes.
 

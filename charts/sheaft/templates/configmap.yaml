@@ -1,0 +1,25 @@
+{{- if and (not .Values.config.existingConfigMap) (include "sheaft.hasInlineConfig" .) }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "sheaft.generatedConfigMapName" . }}
+  labels:
+    {{- include "sheaft.labels" . | nindent 4 }}
+data:
+  {{- if .Values.config.analysis }}
+  analysis.yaml: |
+{{ .Values.config.analysis | indent 4 }}
+  {{- end }}
+  {{- if .Values.config.policy }}
+  policy.yaml: |
+{{ .Values.config.policy | indent 4 }}
+  {{- end }}
+  {{- if .Values.config.serve }}
+  sheaft.yaml: |
+{{ .Values.config.serve | indent 4 }}
+  {{- end }}
+  {{- if .Values.config.journeys }}
+  journeys.json: |
+{{ .Values.config.journeys | indent 4 }}
+  {{- end }}
+{{- end }}

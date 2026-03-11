@@ -1,0 +1,100 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/MB3R-Lab/Sheaft/api/schema/compatibility-manifest.schema.json",
+  "title": "SheaftCompatibilityManifest",
+  "type": "object",
+  "required": [
+    "$schema",
+    "schema_version",
+    "product_name",
+    "downstream_consumer_of",
+    "strict_contract_validation",
+    "supported_upstream_artifact_types",
+    "supported_upstream_schema_names",
+    "supported_upstream_schema_versions",
+    "supported_contracts",
+    "tested_bering_app_versions"
+  ],
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "schema_version": {
+      "const": "1.0.0"
+    },
+    "product_name": {
+      "const": "Sheaft"
+    },
+    "downstream_consumer_of": {
+      "const": "Bering"
+    },
+    "strict_contract_validation": {
+      "const": true
+    },
+    "supported_upstream_artifact_types": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "minItems": 1,
+      "uniqueItems": true
+    },
+    "supported_upstream_schema_names": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "minItems": 1,
+      "uniqueItems": true
+    },
+    "supported_upstream_schema_versions": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "minItems": 1,
+      "uniqueItems": true
+    },
+    "supported_contracts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "artifact_type",
+          "schema_name",
+          "schema_version",
+          "schema_uri",
+          "schema_digest"
+        ],
+        "properties": {
+          "artifact_type": {
+            "type": "string"
+          },
+          "schema_name": {
+            "type": "string"
+          },
+          "schema_version": {
+            "type": "string"
+          },
+          "schema_uri": {
+            "type": "string"
+          },
+          "schema_digest": {
+            "type": "string",
+            "pattern": "^sha256:[a-f0-9]{64}$"
+          }
+        },
+        "additionalProperties": false
+      },
+      "minItems": 1
+    },
+    "tested_bering_app_versions": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "uniqueItems": true
+    }
+  },
+  "additionalProperties": false
+}

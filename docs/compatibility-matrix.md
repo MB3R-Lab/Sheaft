@@ -2,6 +2,8 @@
 
 Sheaft is a strict downstream consumer of Bering-produced artifacts. It does not auto-negotiate schema versions: only the contract pins declared in `internal/modelcontract/contract.go` are accepted.
 
+The machine-readable equivalent of this page is the repo-root `compatibility-manifest.json`.
+
 ## Current Matrix
 
 | Sheaft line | Status | Bering model contract | Model URI | Model digest | Bering snapshot contract | Snapshot URI | Snapshot digest | Notes |
@@ -11,8 +13,10 @@ Sheaft is a strict downstream consumer of Bering-produced artifacts. It does not
 ## Update Rules
 
 - Update this matrix in the same PR that changes any Bering contract pin, URI, digest, or vendored schema snapshot.
+- Regenerate `compatibility-manifest.json` in the same PR so the machine-readable release contract stays aligned.
 - Keep `README.md`, `internal/modelcontract/contract.go`, and this matrix aligned.
 - CI checks fail if the current contract pins are not represented here.
+- CI also fails if `compatibility-manifest.json` drifts from the current strict contract pins.
 - CI also fails on pull requests that modify contract pin files without changing this matrix.
 
 ## Release Note

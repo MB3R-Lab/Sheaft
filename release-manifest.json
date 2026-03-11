@@ -1,0 +1,138 @@
+{
+  "$schema": "api/schema/release-manifest.schema.json",
+  "schema_version": "1.0.0",
+  "product_name": "Sheaft",
+  "app_version": "0.0.0-dev",
+  "git_commit": "82e0cd03adc2fba1d7ad4d9a97a1bac6d074c6c9",
+  "build_date": "2026-03-11T14:56:28Z",
+  "binaries": [
+    {
+      "os": "darwin",
+      "arch": "amd64",
+      "archive": {
+        "path": "dist/sheaft_0.0.0-dev_darwin_amd64.tar.gz",
+        "sha256": "9f3e97fd3b8fb14221293416d39b7f83cbadf4ea92463fc341acb794d2bb7c21"
+      },
+      "sbom": {
+        "path": "dist/sheaft_0.0.0-dev_darwin_amd64.tar.gz.sbom.json",
+        "sha256": "83af32e0695022176409f8217c4b2d110d539d90464033e43c8170bc0099fd79"
+      }
+    },
+    {
+      "os": "darwin",
+      "arch": "arm64",
+      "archive": {
+        "path": "dist/sheaft_0.0.0-dev_darwin_arm64.tar.gz",
+        "sha256": "f4de8b5a14eb6f0a612e68abfc5fb9c98e548584d6adb3fd6bf1d0f240c0639c"
+      },
+      "sbom": {
+        "path": "dist/sheaft_0.0.0-dev_darwin_arm64.tar.gz.sbom.json",
+        "sha256": "050256f7138fb116bd57194ab82c1e14f7fc733bf4c66435b932cb0fc751cb70"
+      }
+    },
+    {
+      "os": "linux",
+      "arch": "amd64",
+      "archive": {
+        "path": "dist/sheaft_0.0.0-dev_linux_amd64.tar.gz",
+        "sha256": "2d4c50e36e480a73f1eb5a39f8d67ee3f459b8693524c92ee475700711bcb50f"
+      },
+      "sbom": {
+        "path": "dist/sheaft_0.0.0-dev_linux_amd64.tar.gz.sbom.json",
+        "sha256": "04e2d3a37c98af21df35b90b68378c75a01fd978fe44915c42231d69d0251309"
+      }
+    },
+    {
+      "os": "linux",
+      "arch": "arm64",
+      "archive": {
+        "path": "dist/sheaft_0.0.0-dev_linux_arm64.tar.gz",
+        "sha256": "73e2811d0e2302ee8e82a35472d4cb1bad80cef144a05a5b17b2dda9bfb26565"
+      },
+      "sbom": {
+        "path": "dist/sheaft_0.0.0-dev_linux_arm64.tar.gz.sbom.json",
+        "sha256": "c63e1db4a0a9c50dbaf6996ac8403308202449d225bb708f3062ac59b6d71104"
+      }
+    },
+    {
+      "os": "windows",
+      "arch": "amd64",
+      "archive": {
+        "path": "dist/sheaft_0.0.0-dev_windows_amd64.zip",
+        "sha256": "c0ce2063f691c2c7a5ac0b0e7cdbb262978b4232d80412fa9726bd76524f29e9"
+      },
+      "sbom": {
+        "path": "dist/sheaft_0.0.0-dev_windows_amd64.zip.sbom.json",
+        "sha256": "40776a65f58a33fbea0f041e8017bbca2154e71d6d3353ff395cbd394ee02c5b"
+      }
+    }
+  ],
+  "checksums_file": {
+    "path": "dist/sheaft_0.0.0-dev_checksums.txt",
+    "sha256": "38c6313387bd3f07cabcb3ca2a5f64431be74caa8c6b2d1a2dfbc32b458d437e"
+  },
+  "oci_images": [
+    {
+      "schema_version": "1.0.0",
+      "repository": "ghcr.io/mb3r-lab/sheaft",
+      "tags": [
+        "v0.0.0-dev",
+        "v0.0",
+        "sha-82e0cd03adc2fba1d7ad4d9a97a1bac6d074c6c9"
+      ],
+      "platforms": [
+        "linux/amd64",
+        "linux/arm64"
+      ],
+      "published": false,
+      "references": [
+        {
+          "reference": "ghcr.io/mb3r-lab/sheaft:v0.0.0-dev"
+        },
+        {
+          "reference": "ghcr.io/mb3r-lab/sheaft:v0.0"
+        },
+        {
+          "reference": "ghcr.io/mb3r-lab/sheaft:sha-82e0cd03adc2fba1d7ad4d9a97a1bac6d074c6c9"
+        }
+      ]
+    }
+  ],
+  "chart": {
+    "schema_version": "1.0.0",
+    "name": "sheaft",
+    "version": "0.0.0-dev",
+    "published": false,
+    "archive": {
+      "path": "dist/charts/sheaft-0.0.0-dev.tgz",
+      "sha256": "1f9edae21c5dc7ca7879271ccbdc3114c5a84446ed0631ebc4f9b17c7c5eba61"
+    }
+  },
+  "compatibility_manifest": {
+    "path": "compatibility-manifest.json",
+    "sha256": "6da50638633eb1ca557ccab3cf255b60528cf1ecb7f2daf8d37707057ab95548"
+  },
+  "default_config_packs": [
+    {
+      "schema_version": "1.0.0",
+      "name": "default-config-pack",
+      "version": "0.0.0-dev",
+      "archive": {
+        "path": "dist/sheaft-default-config-pack_0.0.0-dev.tar.gz",
+        "sha256": "48f19d3cd13fe3e726e36b70d0f9f867f3071890b8862be166f2cdbdd10f5652"
+      },
+      "files": [
+        "configs/analysis.example.yaml",
+        "configs/gate.policy.example.yaml",
+        "configs/predicate-contract.example.yaml",
+        "configs/sheaft.example.yaml",
+        "examples/otel/journeys.sample.json",
+        "examples/outputs/model.sample.json",
+        "examples/outputs/snapshot.sample.json",
+        "examples/outputs/report.sample.json",
+        "examples/outputs/posture-generated/report.json",
+        "examples/outputs/posture-generated/summary.md"
+      ]
+    }
+  ]
+}

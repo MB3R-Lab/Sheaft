@@ -1,0 +1,85 @@
+name: release
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+jobs:
+  publish-release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      packages: write
+    env:
+      APP_VERSION: ${{ github.ref_name }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Setup Go
+        uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
+
+      - name: Setup QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Setup Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Setup Helm
+        uses: azure/setup-helm@v4
+
+      - name: Log in to GHCR
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
+
+      - name: Run tests
+        run: make test
+
+      - name: Generate compatibility manifest
+        run: make compatibility-manifest
+
+      - name: Build release archives
+        run: make release-build APP_VERSION=${APP_VERSION#v}
+
+      - name: Package default config pack
+        run: make default-config-pack APP_VERSION=${APP_VERSION#v}
+
+      - name: Publish OCI image
+        run: |
+          OWNER_LC="$(printf '%s' "${GITHUB_REPOSITORY_OWNER}" | tr '[:upper:]' '[:lower:]')"
+          IMAGE_REPOSITORY="ghcr.io/${OWNER_LC}/sheaft" \
+          APP_VERSION="${APP_VERSION#v}" \
+          PUBLISH=true \
+          sh scripts/release/build-image.sh
+
+      - name: Publish OCI chart
+        run: |
+          OWNER_LC="$(printf '%s' "${GITHUB_REPOSITORY_OWNER}" | tr '[:upper:]' '[:lower:]')"
+          CHART_OCI_REPOSITORY="oci://ghcr.io/${OWNER_LC}/charts" \
+          APP_VERSION="${APP_VERSION#v}" \
+          CHART_VERSION="${APP_VERSION#v}" \
+          PUBLISH=true \
+          sh scripts/release/package-chart.sh
+
+      - name: Generate release manifest
+        run: make release-manifest APP_VERSION=${APP_VERSION#v}
+
+      - name: Validate release assets
+        run: make validate-release-assets
+
+      - name: Create or update GitHub release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TAG="${GITHUB_REF_NAME}"
+          if ! gh release view "${TAG}" >/dev/null 2>&1; then
+            gh release create "${TAG}" --verify-tag --title "${TAG}" --notes "Canonical release metadata lives in dist/ and release-manifest.json."
+          fi
+          mapfile -t files < <(find dist -type f | sort)
+          files+=("compatibility-manifest.json")
+          files+=("release-manifest.json")
+          gh release upload "${TAG}" "${files[@]}" --clobber

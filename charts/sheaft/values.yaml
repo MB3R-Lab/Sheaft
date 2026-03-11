@@ -1,0 +1,75 @@
+# Supported values:
+# - mode=batch renders a Job that runs `sheaft run`
+# - mode=serve renders a Deployment and optional Service for `sheaft serve`
+mode: batch
+
+image:
+  repository: ghcr.io/mb3r-lab/sheaft
+  tag: v0.0.0-dev
+  digest: ""
+  pullPolicy: IfNotPresent
+
+paths:
+  configDir: /etc/sheaft
+  model: /var/lib/sheaft/input/model.json
+  artifact: /var/lib/sheaft/input
+  policy: /etc/sheaft/policy.yaml
+  analysis: /etc/sheaft/analysis.yaml
+  journeys: /etc/sheaft/journeys.json
+  serveConfig: /etc/sheaft/sheaft.yaml
+  outputDir: /var/lib/sheaft/output
+  historyDir: /var/lib/sheaft/history
+
+config:
+  existingConfigMap: ""
+  analysis: ""
+  policy: ""
+  serve: ""
+  journeys: ""
+
+batch:
+  useAnalysis: true
+  seed: 42
+  extraArgs: []
+  backoffLimit: 0
+  ttlSecondsAfterFinished: 3600
+
+serve:
+  useConfigFile: true
+  useAnalysis: true
+  artifactMode: auto
+  listen: :8080
+  pollInterval: 30s
+  extraArgs: []
+
+storage:
+  artifact:
+    type: emptyDir
+    existingClaim: ""
+    hostPath: ""
+  output:
+    type: emptyDir
+    existingClaim: ""
+    hostPath: ""
+  history:
+    type: emptyDir
+    existingClaim: ""
+    hostPath: ""
+
+service:
+  enabled: true
+  type: ClusterIP
+  port: 8080
+
+metrics:
+  enabled: true
+
+env: []
+envFrom: []
+resources: {}
+podSecurityContext: {}
+securityContext: {}
+podAnnotations: {}
+imagePullSecrets: []
+extraVolumes: []
+extraVolumeMounts: []
