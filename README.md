@@ -148,6 +148,7 @@ docs                       architecture, methodology, migration, and config docs
 - [Configuration and Schemas](docs/configuration.md)
 - [CI Gate](docs/ci-gate.md)
 - [Compatibility Matrix](docs/compatibility-matrix.md)
+- [Contract Release Workflow](docs/contract-release-workflow.md)
 - [Roadmap Audit](docs/roadmap.md)
 - [Service Mode](docs/observability-mode.md)
 - [Migration Notes](docs/migration.md)

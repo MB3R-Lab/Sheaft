@@ -25,7 +25,7 @@ This file captures the repository-side audit performed on 2026-03-11: current Gi
 | R3 | open | partial | Reproducible analysis is in place, but pluginization, explicit calibration, and scale benchmarks are still backlog items. |
 | R4 | open | partial | External benchmark contract and limitations docs exist, but the public benchmark suite and release-grade quality reports are not yet in-repo. |
 | R5 | open | partial | CI gate, service mode, and output artifacts are implemented; chaos triage and cross-CI handoff templates were still the main workflow gap before this audit. |
-| R6 | open | partial | Strict contract pinning, conformance checks, vendored schemas, and a repository compatibility matrix now exist; release workflow and multi-version support remain open. |
+| R6 | open | partial | Strict contract pinning, conformance checks, vendored schemas, compatibility matrix, and contract release workflow now exist; multi-version support remains open. |
 | R7 | open | gap | No open-core/export playbook material exists yet beyond issue-level planning. |
 | R8 | open | gap | Security/privacy work is not yet implemented beyond lightweight assumptions/limitations guidance. |
 | R9 | open | partial | Diff endpoints exist, but there is no why/debug UX or dependency-level explanation layer yet. |
@@ -85,7 +85,7 @@ This file captures the repository-side audit performed on 2026-03-11: current Gi
 | R6.1 | closed | done | Open schemas live under `api/schema` and are validated via tests. |
 | R6.2 | closed | done | Contract and integration tests cover model/snapshot consumption and output shape. |
 | R6.3 | closed | done | The repository already functions as the open reference consumer implementation. |
-| R6.4 | open | partial | Remote schema sync checks and compatibility-matrix CI guard now exist, but there is still no documented cross-repo release policy or release checklist. |
+| R6.4 | open | done locally | Contract release workflow, release checklist, and CI verification against published Bering release metadata are now in-repo. |
 | R6.5 | open | done locally | Compatibility matrix is now published in-repo, linked from `README.md`, and guarded in CI when contract pin files change. |
 | R6.6 | open | gap | Only a single supported schema version is pinned today; project-level multi-version pinning is absent. |
 
@@ -121,14 +121,15 @@ This file captures the repository-side audit performed on 2026-03-11: current Gi
 
 ## Prioritized Backlog After Audit
 
-1. R6.4: document the contract release policy so schema pin bumps have a defined workflow.
-2. R1.1: publish the missing normative consumer semantics document while the implementation surface is still compact.
-3. R3.3: add explicit parameter sourcing/calibration provenance to reports and summaries.
-4. R5.5: validate the CI/CD handoff templates in example repos or smoke pipelines.
-5. R6.6: add multi-version schema contracts with project-level pinning.
+1. R1.1: publish the missing normative consumer semantics document while the implementation surface is still compact.
+2. R3.3: add explicit parameter sourcing/calibration provenance to reports and summaries.
+3. R5.5: validate the CI/CD handoff templates in example repos or smoke pipelines.
+4. R6.6: add multi-version schema contracts with project-level pinning.
+5. R4.3: expand applicability boundaries into concrete do-not-trust signals and detector heuristics.
 
 ## Current Execution Note
 
 - `R5.5` is in progress locally with cross-CI handoff templates now committed in-repo.
 - `R6.5` is now implemented locally via the compatibility matrix plus CI guard.
-- The next highest-priority repo task is **R6.4: Bering-Sheaft contract release workflow**.
+- `R6.4` is now implemented locally via the contract release workflow doc and Bering release metadata check.
+- The next highest-priority repo task is **R1.1: Consumer semantics profile for supported artifact contracts (v1)**.

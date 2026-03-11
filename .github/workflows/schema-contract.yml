@@ -23,6 +23,9 @@ jobs:
       - name: Verify remote schema sync
         run: sh scripts/ci/check-remote-schema-sync.sh
 
+      - name: Verify Bering release metadata
+        run: sh scripts/ci/check-bering-release-metadata.sh
+
       - name: Verify compatibility matrix
         run: |
           if [ "${{ github.event_name }}" = "pull_request" ]; then
