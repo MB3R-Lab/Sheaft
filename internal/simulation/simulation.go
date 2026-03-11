@@ -3,11 +3,14 @@ package simulation
 import (
 	"errors"
 	"fmt"
+	"hash/fnv"
 	"math/rand"
 	"slices"
 	"strings"
 
+	"github.com/MB3R-Lab/Sheaft/internal/config"
 	"github.com/MB3R-Lab/Sheaft/internal/model"
+	"github.com/MB3R-Lab/Sheaft/internal/predicates"
 )
 
 type Params struct {
@@ -17,22 +20,83 @@ type Params struct {
 	JourneyOverrides   map[string][][]string
 }
 
+type ProfileParams struct {
+	Name               string
+	Trials             int
+	Seed               int64
+	SamplingMode       string
+	FailureProbability float64
+	FixedKFailures     int
+	EndpointWeights    map[string]float64
+}
+
+type AnalysisParams struct {
+	Seed             int64
+	JourneyOverrides map[string][][]string
+	PredicateSet     map[string]predicates.Definition
+	DefaultWeights   map[string]float64
+	Profiles         []ProfileParams
+}
+
 type Output struct {
 	EndpointAvailability map[string]float64
 	OverallAvailability  float64
 }
 
-func Run(mdl model.ResilienceModel, params Params) (Output, error) {
-	if err := mdl.Validate(); err != nil {
-		return Output{}, fmt.Errorf("invalid model: %w", err)
-	}
-	if params.Trials <= 0 {
-		return Output{}, errors.New("trials must be > 0")
-	}
-	if params.FailureProbability < 0 || params.FailureProbability > 1 {
-		return Output{}, errors.New("failure_probability must be in range [0,1]")
-	}
+type ProfileOutput struct {
+	Name                 string             `json:"name"`
+	Trials               int                `json:"trials"`
+	Seed                 int64              `json:"seed"`
+	SamplingMode         string             `json:"sampling_mode"`
+	FailureProbability   float64            `json:"failure_probability,omitempty"`
+	FixedKFailures       int                `json:"fixed_k_failures,omitempty"`
+	EndpointAvailability map[string]float64 `json:"endpoint_availability"`
+	EndpointWeights      map[string]float64 `json:"endpoint_weights,omitempty"`
+	WeightedAggregate    float64            `json:"weighted_aggregate"`
+	UnweightedAggregate  float64            `json:"unweighted_aggregate"`
+}
 
+type AnalysisOutput struct {
+	Profiles               []ProfileOutput `json:"profiles"`
+	CrossProfileWeighted   float64         `json:"cross_profile_weighted_aggregate"`
+	CrossProfileUnweighted float64         `json:"cross_profile_unweighted_aggregate"`
+}
+
+func Run(mdl model.ResilienceModel, params Params) (Output, error) {
+	analysisOut, err := RunProfiles(mdl, AnalysisParams{
+		Seed:             params.Seed,
+		JourneyOverrides: params.JourneyOverrides,
+		Profiles: []ProfileParams{
+			{
+				Name:               "default",
+				Trials:             params.Trials,
+				Seed:               params.Seed,
+				SamplingMode:       config.SamplingModeIndependentReplica,
+				FailureProbability: params.FailureProbability,
+			},
+		},
+	})
+	if err != nil {
+		return Output{}, err
+	}
+	profile := analysisOut.Profiles[0]
+	return Output{
+		EndpointAvailability: profile.EndpointAvailability,
+		OverallAvailability:  profile.UnweightedAggregate,
+	}, nil
+}
+
+func RunProfiles(mdl model.ResilienceModel, params AnalysisParams) (AnalysisOutput, error) {
+	if err := mdl.Validate(); err != nil {
+		return AnalysisOutput{}, fmt.Errorf("invalid model: %w", err)
+	}
+	if len(params.Profiles) == 0 {
+		return AnalysisOutput{}, errors.New("at least one profile is required")
+	}
+	resolved, endpointIDs, serviceIDs, err := resolveEndpointPredicates(mdl, params.PredicateSet, params.JourneyOverrides)
+	if err != nil {
+		return AnalysisOutput{}, err
+	}
 	serviceReplicas := make(map[string]int, len(mdl.Services))
 	for _, svc := range mdl.Services {
 		replicas := svc.Replicas
@@ -42,99 +106,174 @@ func Run(mdl model.ResilienceModel, params Params) (Output, error) {
 		serviceReplicas[svc.ID] = replicas
 	}
 
-	adj := make(map[string][]string)
-	for _, edge := range mdl.Edges {
-		// Non-blocking or async edges are intentionally not part of immediate HTTP success path.
-		if !edge.Blocking || edge.Kind == model.EdgeKindAsync {
-			continue
-		}
-		adj[edge.From] = append(adj[edge.From], edge.To)
+	out := AnalysisOutput{
+		Profiles: make([]ProfileOutput, 0, len(params.Profiles)),
 	}
+	for idx, profile := range params.Profiles {
+		normalized, err := normalizeProfile(profile, params.Seed, idx)
+		if err != nil {
+			return AnalysisOutput{}, err
+		}
+		profileOutput, err := runProfile(normalized, endpointIDs, serviceIDs, serviceReplicas, resolved, params.DefaultWeights)
+		if err != nil {
+			return AnalysisOutput{}, fmt.Errorf("profile %q: %w", normalized.Name, err)
+		}
+		out.Profiles = append(out.Profiles, profileOutput)
+		out.CrossProfileWeighted += profileOutput.WeightedAggregate
+		out.CrossProfileUnweighted += profileOutput.UnweightedAggregate
+	}
+	if len(out.Profiles) > 0 {
+		out.CrossProfileWeighted /= float64(len(out.Profiles))
+		out.CrossProfileUnweighted /= float64(len(out.Profiles))
+	}
+	return out, nil
+}
 
-	for serviceID := range serviceReplicas {
-		if _, ok := adj[serviceID]; !ok {
-			adj[serviceID] = []string{}
-		}
-		slices.Sort(adj[serviceID])
-	}
-
-	journeysByEndpoint := make(map[string][][]string, len(mdl.Endpoints))
-	endpointIDs := make([]string, 0, len(mdl.Endpoints))
-	endpointSet := make(map[string]struct{}, len(mdl.Endpoints))
-	for _, ep := range mdl.Endpoints {
-		endpointSet[ep.ID] = struct{}{}
-	}
-	for endpointID := range params.JourneyOverrides {
-		if _, ok := endpointSet[endpointID]; !ok {
-			return Output{}, fmt.Errorf("journey override endpoint not found in model: %s", endpointID)
-		}
-	}
-	for _, ep := range mdl.Endpoints {
-		if override, ok := params.JourneyOverrides[ep.ID]; ok {
-			if err := validateJourneyPaths(override); err != nil {
-				return Output{}, fmt.Errorf("invalid journey override for endpoint %s: %w", ep.ID, err)
-			}
-			journeysByEndpoint[ep.ID] = cloneAndNormalizeJourneys(override)
-		} else {
-			journeysByEndpoint[ep.ID] = discoverJourneys(ep.EntryService, adj)
-		}
-		endpointIDs = append(endpointIDs, ep.ID)
-	}
-	slices.Sort(endpointIDs)
-
-	rng := rand.New(rand.NewSource(params.Seed))
+func runProfile(profile ProfileParams, endpointIDs []string, serviceIDs []string, serviceReplicas map[string]int, resolved map[string]predicates.Definition, defaultWeights map[string]float64) (ProfileOutput, error) {
+	rng := rand.New(rand.NewSource(profile.Seed))
 	successCount := make(map[string]int, len(endpointIDs))
-
-	for trial := 0; trial < params.Trials; trial++ {
-		alive := make(map[string]bool, len(serviceReplicas))
-		for serviceID, replicas := range serviceReplicas {
-			live := false
-			for i := 0; i < replicas; i++ {
-				if rng.Float64() > params.FailureProbability {
-					live = true
-					break
-				}
-			}
-			alive[serviceID] = live
+	for trial := 0; trial < profile.Trials; trial++ {
+		alive, err := sampleAlive(profile, rng, serviceIDs, serviceReplicas)
+		if err != nil {
+			return ProfileOutput{}, err
 		}
-
 		for _, endpointID := range endpointIDs {
-			journeys := journeysByEndpoint[endpointID]
-			endpointOK := false
-			for _, journey := range journeys {
-				journeyOK := true
-				for _, serviceID := range journey {
-					if !alive[serviceID] {
-						journeyOK = false
-						break
-					}
-				}
-				if journeyOK {
-					endpointOK = true
-					break
-				}
-			}
-			if endpointOK {
+			if predicates.Evaluate(resolved[endpointID], func(serviceID string) bool { return alive[serviceID] }) {
 				successCount[endpointID]++
 			}
 		}
 	}
 
 	availability := make(map[string]float64, len(endpointIDs))
-	overall := 0.0
+	unweighted := 0.0
 	for _, endpointID := range endpointIDs {
-		avail := float64(successCount[endpointID]) / float64(params.Trials)
+		avail := float64(successCount[endpointID]) / float64(profile.Trials)
 		availability[endpointID] = avail
-		overall += avail
+		unweighted += avail
 	}
 	if len(endpointIDs) > 0 {
-		overall /= float64(len(endpointIDs))
+		unweighted /= float64(len(endpointIDs))
 	}
 
-	return Output{
+	weights := mergeWeights(defaultWeights, profile.EndpointWeights, endpointIDs)
+	weighted := aggregateWeightedAvailability(availability, weights, endpointIDs)
+
+	return ProfileOutput{
+		Name:                 profile.Name,
+		Trials:               profile.Trials,
+		Seed:                 profile.Seed,
+		SamplingMode:         profile.SamplingMode,
+		FailureProbability:   profile.FailureProbability,
+		FixedKFailures:       profile.FixedKFailures,
 		EndpointAvailability: availability,
-		OverallAvailability:  overall,
+		EndpointWeights:      weights,
+		WeightedAggregate:    weighted,
+		UnweightedAggregate:  unweighted,
 	}, nil
+}
+
+func sampleAlive(profile ProfileParams, rng *rand.Rand, serviceIDs []string, serviceReplicas map[string]int) (map[string]bool, error) {
+	alive := make(map[string]bool, len(serviceIDs))
+	switch profile.SamplingMode {
+	case config.SamplingModeIndependentReplica:
+		for _, serviceID := range serviceIDs {
+			live := false
+			for i := 0; i < serviceReplicas[serviceID]; i++ {
+				if rng.Float64() > profile.FailureProbability {
+					live = true
+					break
+				}
+			}
+			alive[serviceID] = live
+		}
+	case config.SamplingModeIndependentService:
+		for _, serviceID := range serviceIDs {
+			alive[serviceID] = rng.Float64() > profile.FailureProbability
+		}
+	case config.SamplingModeFixedKServiceSet:
+		if profile.FixedKFailures > len(serviceIDs) {
+			return nil, fmt.Errorf("fixed_k_failures %d exceeds service count %d", profile.FixedKFailures, len(serviceIDs))
+		}
+		for _, serviceID := range serviceIDs {
+			alive[serviceID] = true
+		}
+		if profile.FixedKFailures == 0 {
+			return alive, nil
+		}
+		indices := rng.Perm(len(serviceIDs))
+		for _, idx := range indices[:profile.FixedKFailures] {
+			alive[serviceIDs[idx]] = false
+		}
+	default:
+		return nil, fmt.Errorf("unsupported sampling mode %q", profile.SamplingMode)
+	}
+	return alive, nil
+}
+
+func resolveEndpointPredicates(mdl model.ResilienceModel, predicateSet map[string]predicates.Definition, journeyOverrides map[string][][]string) (map[string]predicates.Definition, []string, []string, error) {
+	serviceSet := make(map[string]struct{}, len(mdl.Services))
+	serviceIDs := make([]string, 0, len(mdl.Services))
+	for _, svc := range mdl.Services {
+		serviceSet[svc.ID] = struct{}{}
+		serviceIDs = append(serviceIDs, svc.ID)
+	}
+	slices.Sort(serviceIDs)
+
+	adj := make(map[string][]string)
+	for _, edge := range mdl.Edges {
+		if !edge.Blocking || edge.Kind == model.EdgeKindAsync {
+			continue
+		}
+		adj[edge.From] = append(adj[edge.From], edge.To)
+	}
+	for _, serviceID := range serviceIDs {
+		slices.Sort(adj[serviceID])
+	}
+
+	endpointIDs := make([]string, 0, len(mdl.Endpoints))
+	resolved := make(map[string]predicates.Definition, len(mdl.Endpoints))
+	endpointSet := make(map[string]struct{}, len(mdl.Endpoints))
+	for _, ep := range mdl.Endpoints {
+		endpointSet[ep.ID] = struct{}{}
+	}
+	for endpointID := range journeyOverrides {
+		if _, ok := endpointSet[endpointID]; !ok {
+			return nil, nil, nil, fmt.Errorf("journey override endpoint not found in model: %s", endpointID)
+		}
+	}
+
+	mergedPredicates := make(map[string]predicates.Definition, len(mdl.Predicates)+len(predicateSet))
+	for key, def := range mdl.Predicates {
+		mergedPredicates[key] = def
+	}
+	for key, def := range predicateSet {
+		mergedPredicates[key] = def
+	}
+
+	for _, ep := range mdl.Endpoints {
+		var def predicates.Definition
+		switch {
+		case ep.SuccessPredicate != nil:
+			def = *ep.SuccessPredicate
+		case hasPredicate(mergedPredicates, ep.SuccessPredicateRef):
+			def = mergedPredicates[ep.SuccessPredicateRef]
+		default:
+			paths := journeyOverrides[ep.ID]
+			if len(paths) == 0 {
+				paths = discoverJourneys(ep.EntryService, adj)
+			} else if err := validateJourneyPaths(paths); err != nil {
+				return nil, nil, nil, fmt.Errorf("invalid journey override for endpoint %s: %w", ep.ID, err)
+			}
+			def = journeysToPredicate(paths)
+		}
+		if err := validatePredicateServices(def, serviceSet); err != nil {
+			return nil, nil, nil, fmt.Errorf("endpoint %s: %w", ep.ID, err)
+		}
+		resolved[ep.ID] = def
+		endpointIDs = append(endpointIDs, ep.ID)
+	}
+	slices.Sort(endpointIDs)
+	return resolved, endpointIDs, serviceIDs, nil
 }
 
 func discoverJourneys(entry string, adjacency map[string][]string) [][]string {
@@ -142,7 +281,7 @@ func discoverJourneys(entry string, adjacency map[string][]string) [][]string {
 	path := make([]string, 0, 8)
 	paths := make([][]string, 0, 8)
 
-	var dfs func(current string)
+	var dfs func(string)
 	dfs = func(current string) {
 		visited[current] = true
 		path = append(path, current)
@@ -154,7 +293,6 @@ func discoverJourneys(entry string, adjacency map[string][]string) [][]string {
 			}
 		}
 		slices.Sort(nexts)
-
 		if len(nexts) == 0 {
 			paths = append(paths, slices.Clone(path))
 		} else {
@@ -168,24 +306,7 @@ func discoverJourneys(entry string, adjacency map[string][]string) [][]string {
 	}
 
 	dfs(entry)
-
-	uniq := make(map[string][]string, len(paths))
-	keys := make([]string, 0, len(paths))
-	for _, p := range paths {
-		key := strings.Join(p, "->")
-		if _, ok := uniq[key]; ok {
-			continue
-		}
-		uniq[key] = p
-		keys = append(keys, key)
-	}
-	slices.Sort(keys)
-
-	out := make([][]string, 0, len(keys))
-	for _, key := range keys {
-		out = append(out, uniq[key])
-	}
-	return out
+	return cloneAndNormalizeJourneys(paths)
 }
 
 func cloneAndNormalizeJourneys(paths [][]string) [][]string {
@@ -223,4 +344,110 @@ func validateJourneyPaths(paths [][]string) error {
 		}
 	}
 	return nil
+}
+
+func journeysToPredicate(paths [][]string) predicates.Definition {
+	children := make([]predicates.Definition, 0, len(paths))
+	for _, path := range cloneAndNormalizeJourneys(paths) {
+		children = append(children, predicates.Definition{
+			Type:     predicates.TypeAllOf,
+			Services: slices.Clone(path),
+		})
+	}
+	return predicates.Definition{
+		Type:     predicates.TypeAnyOf,
+		Children: children,
+	}
+}
+
+func normalizeProfile(profile ProfileParams, seed int64, index int) (ProfileParams, error) {
+	out := profile
+	if strings.TrimSpace(out.Name) == "" {
+		out.Name = fmt.Sprintf("profile-%d", index+1)
+	}
+	if out.Trials <= 0 {
+		return ProfileParams{}, errors.New("trials must be > 0")
+	}
+	if out.SamplingMode == "" {
+		out.SamplingMode = config.SamplingModeIndependentReplica
+	}
+	if out.Seed == 0 {
+		out.Seed = derivedSeed(seed, out.Name, index)
+	}
+	switch out.SamplingMode {
+	case config.SamplingModeIndependentReplica, config.SamplingModeIndependentService:
+		if out.FailureProbability < 0 || out.FailureProbability > 1 {
+			return ProfileParams{}, errors.New("failure_probability must be in range [0,1]")
+		}
+	case config.SamplingModeFixedKServiceSet:
+		if out.FixedKFailures < 0 {
+			return ProfileParams{}, errors.New("fixed_k_failures must be >= 0")
+		}
+	default:
+		return ProfileParams{}, fmt.Errorf("unsupported sampling mode %q", out.SamplingMode)
+	}
+	if out.EndpointWeights == nil {
+		out.EndpointWeights = map[string]float64{}
+	}
+	return out, nil
+}
+
+func validatePredicateServices(def predicates.Definition, serviceSet map[string]struct{}) error {
+	for _, service := range def.Services {
+		if _, ok := serviceSet[service]; !ok {
+			return fmt.Errorf("predicate references unknown service %q", service)
+		}
+	}
+	for idx, child := range def.Children {
+		if err := validatePredicateServices(child, serviceSet); err != nil {
+			return fmt.Errorf("child %d: %w", idx, err)
+		}
+	}
+	return nil
+}
+
+func hasPredicate(set map[string]predicates.Definition, name string) bool {
+	_, ok := set[name]
+	return ok
+}
+
+func mergeWeights(defaults map[string]float64, overrides map[string]float64, endpointIDs []string) map[string]float64 {
+	weights := make(map[string]float64, len(endpointIDs))
+	for _, endpointID := range endpointIDs {
+		if weight, ok := defaults[endpointID]; ok {
+			weights[endpointID] = weight
+		}
+		if weight, ok := overrides[endpointID]; ok {
+			weights[endpointID] = weight
+		}
+	}
+	return weights
+}
+
+func aggregateWeightedAvailability(availability map[string]float64, weights map[string]float64, endpointIDs []string) float64 {
+	totalWeight := 0.0
+	sum := 0.0
+	for _, endpointID := range endpointIDs {
+		if weight, ok := weights[endpointID]; ok && weight > 0 {
+			sum += availability[endpointID] * weight
+			totalWeight += weight
+		}
+	}
+	if totalWeight == 0 {
+		if len(endpointIDs) == 0 {
+			return 0
+		}
+		sum = 0
+		for _, endpointID := range endpointIDs {
+			sum += availability[endpointID]
+		}
+		return sum / float64(len(endpointIDs))
+	}
+	return sum / totalWeight
+}
+
+func derivedSeed(base int64, profileName string, index int) int64 {
+	h := fnv.New64a()
+	_, _ = h.Write([]byte(fmt.Sprintf("%d:%s:%d", base, profileName, index)))
+	return int64(h.Sum64())
 }

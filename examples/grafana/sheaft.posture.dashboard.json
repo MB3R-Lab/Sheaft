@@ -1,0 +1,82 @@
+{
+  "title": "Sheaft Posture Overview",
+  "schemaVersion": 39,
+  "version": 1,
+  "refresh": "30s",
+  "tags": ["sheaft", "posture", "resilience"],
+  "timezone": "browser",
+  "panels": [
+    {
+      "id": 1,
+      "type": "stat",
+      "title": "Cross-Profile Weighted Availability",
+      "gridPos": { "h": 6, "w": 6, "x": 0, "y": 0 },
+      "targets": [
+        {
+          "expr": "avg(current_profile_aggregate_availability{aggregate=\"weighted\"})",
+          "legendFormat": "weighted"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "type": "stat",
+      "title": "Endpoints Below Threshold",
+      "gridPos": { "h": 6, "w": 6, "x": 6, "y": 0 },
+      "targets": [
+        {
+          "expr": "sum(endpoints_below_threshold)",
+          "legendFormat": "endpoints"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "type": "timeseries",
+      "title": "Profile Aggregate Availability",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 6 },
+      "targets": [
+        {
+          "expr": "current_profile_aggregate_availability",
+          "legendFormat": "{{profile}} / {{aggregate}}"
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "type": "timeseries",
+      "title": "Endpoint Availability",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 6 },
+      "targets": [
+        {
+          "expr": "current_endpoint_availability",
+          "legendFormat": "{{profile}} / {{endpoint}}"
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "type": "timeseries",
+      "title": "Previous Gap",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 14 },
+      "targets": [
+        {
+          "expr": "previous_gap",
+          "legendFormat": "{{profile}} / {{endpoint}} / {{kind}}"
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "type": "timeseries",
+      "title": "Baseline Gap",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 14 },
+      "targets": [
+        {
+          "expr": "baseline_gap",
+          "legendFormat": "{{baseline}} / {{profile}} / {{endpoint}} / {{kind}}"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,171 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/MB3R-Lab/Sheaft/api/schema/analysis.schema.json",
+  "title": "SheaftAnalysisConfigV1",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "profiles",
+    "gate"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "const": "1.0"
+    },
+    "seed": {
+      "type": "integer"
+    },
+    "trials": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "sampling_mode": {
+      "type": "string",
+      "enum": [
+        "independent_replica",
+        "independent_service",
+        "fixed_k_service_set"
+      ]
+    },
+    "failure_probability": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1
+    },
+    "fixed_k_failures": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "journeys": {
+      "type": "string"
+    },
+    "predicate_contract": {
+      "type": "string"
+    },
+    "endpoint_weights": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "number",
+        "minimum": 0
+      }
+    },
+    "baselines": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name", "path"],
+        "properties": {
+          "name": { "type": "string" },
+          "path": { "type": "string" }
+        }
+      }
+    },
+    "profiles": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "name"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "trials": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "sampling_mode": {
+            "type": "string",
+            "enum": [
+              "independent_replica",
+              "independent_service",
+              "fixed_k_service_set"
+            ]
+          },
+          "failure_probability": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "fixed_k_failures": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "endpoint_weights": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "number",
+              "minimum": 0
+            }
+          }
+        }
+      }
+    },
+    "gate": {
+      "type": "object",
+      "required": [
+        "mode",
+        "default_action"
+      ],
+      "properties": {
+        "mode": {
+          "type": "string",
+          "enum": ["warn", "fail", "report"]
+        },
+        "default_action": {
+          "type": "string",
+          "enum": ["warn", "fail", "report"]
+        },
+        "evaluation_rule": {
+          "type": "string",
+          "enum": ["all_profiles", "any_profile"]
+        },
+        "global_threshold": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "aggregate_threshold": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "cross_profile_aggregate_threshold": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "endpoint_thresholds": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          }
+        },
+        "profile_aggregate_thresholds": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          }
+        },
+        "profile_endpoint_thresholds": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            }
+          }
+        }
+      }
+    }
+  }
+}

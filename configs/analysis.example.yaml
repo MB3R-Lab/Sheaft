@@ -1,0 +1,38 @@
+schema_version: "1.0"
+seed: 42
+trials: 12000
+sampling_mode: independent_replica
+failure_probability: 0.05
+
+predicate_contract: configs/predicate-contract.example.yaml
+
+endpoint_weights:
+  frontend:GET /checkout: 0.7
+  frontend:GET /health: 0.3
+
+baselines:
+  - name: last-release
+    path: examples/outputs/report.sample.json
+
+profiles:
+  - name: steady-state
+    sampling_mode: independent_replica
+    failure_probability: 0.03
+  - name: service-fault
+    sampling_mode: independent_service
+    failure_probability: 0.08
+  - name: fixed-blast-radius
+    sampling_mode: fixed_k_service_set
+    fixed_k_failures: 1
+
+gate:
+  mode: warn
+  default_action: warn
+  evaluation_rule: all_profiles
+  global_threshold: 0.985
+  aggregate_threshold: 0.97
+  cross_profile_aggregate_threshold: 0.965
+  endpoint_thresholds:
+    frontend:GET /checkout: 0.97
+  profile_aggregate_thresholds:
+    fixed-blast-radius: 0.90

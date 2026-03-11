@@ -1,0 +1,61 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/MB3R-Lab/Sheaft/api/schema/predicate-contract.schema.json",
+  "title": "SheaftPredicateContractV1",
+  "type": "object",
+  "required": [
+    "schema_version"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "const": "1.0"
+    },
+    "predicates": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/$defs/predicate"
+      }
+    },
+    "endpoint_weights": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "number",
+        "minimum": 0
+      }
+    }
+  },
+  "$defs": {
+    "predicate": {
+      "type": "object",
+      "required": [
+        "type"
+      ],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": ["all_of", "any_of", "k_of_n"]
+        },
+        "description": {
+          "type": "string"
+        },
+        "services": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "children": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/predicate"
+          }
+        },
+        "k": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    }
+  }
+}

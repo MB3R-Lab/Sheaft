@@ -1,12 +1,18 @@
-# Sheaft runtime config (MVP)
-model: examples/outputs/model.sample.json
-journeys: examples/otel/journeys.sample.json
-output_dir: out
-seed: 42
+schema_version: "1.0"
+listen: ":8080"
 
-simulation:
-  trials: 10000
-  failure_probability: 0.05
+artifact:
+  path: artifacts/bering
+  mode: directory
+  patterns:
+    - "*.json"
 
-policy:
-  file: configs/gate.policy.example.yaml
+analysis_file: configs/analysis.example.yaml
+
+poll_interval: 30s
+watch_fs: true
+watch_polling: true
+
+history:
+  max_items: 20
+  disk_dir: out/history

@@ -43,6 +43,9 @@
           "status"
         ],
         "properties": {
+          "profile": {
+            "type": "string"
+          },
           "endpoint_id": {
             "type": "string"
           },
@@ -76,6 +79,21 @@
       ],
       "properties": {
         "overall_availability": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "weighted_overall_availability": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "cross_profile_availability": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "cross_profile_weighted_availability": {
           "type": "number",
           "minimum": 0,
           "maximum": 1
@@ -117,9 +135,36 @@
           "items": {
             "type": "string"
           }
+        },
+        "failed_profiles": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "evaluation_rule": {
+          "type": "string"
         }
       }
+    },
+    "input_artifact": {
+      "type": "object"
+    },
+    "provenance": {
+      "type": "object"
+    },
+    "profiles": {
+      "type": "array"
+    },
+    "diffs": {
+      "type": "object"
+    },
+    "generated_at": {
+      "type": "string"
+    },
+    "recompute_duration_ms": {
+      "type": "integer",
+      "minimum": 0
     }
   }
 }
-

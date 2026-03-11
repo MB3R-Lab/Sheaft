@@ -1,32 +1,49 @@
-# Architecture (MVP v0)
+# Architecture
 
-Sheaft v0 is a pre-release resilience gate built around a simple, explicit pipeline:
+Sheaft is a downstream consumer of resilience model artifacts.
 
-1. **Discovery (external)**: Bering produces a typed model JSON.
-2. **Contract check**: Sheaft validates exact schema binding (`name/version/uri/digest`).
-3. **Simulation**: run Monte Carlo fail-stop availability estimation over blocking synchronous paths.
-4. **Policy gate**: compare estimated availabilities with thresholds and emit pass/warn/fail decision.
-5. **Reporting**: write machine-readable report JSON and a concise markdown summary.
+## Core Flow
 
-## Runtime Components
+1. An upstream producer writes a plain model artifact or snapshot envelope.
+2. `internal/artifact` validates the declared contract against a supported whitelist and adapts the artifact into a normalized internal model.
+3. `internal/analyzer` resolves predicates, optional overlays, journeys, baselines, and profile configuration.
+4. `internal/simulation` runs deterministic Monte Carlo analysis for one or more profiles.
+5. `internal/gate` applies explicit gate rules across endpoints, aggregates, and profiles.
+6. `internal/report` emits JSON and markdown outputs plus diffs versus previous and baseline reports.
+7. `internal/service` optionally turns the same pipeline into a long-running HTTP posture service.
 
-- `cmd/sheaft`: CLI entrypoint.
-- `internal/app`: command orchestration and exit code mapping.
-- `internal/discovery/otel`: experimental local discovery helper.
-- `internal/journeys`: external journey override contract loading/validation.
-- `internal/model`: model types, validation, and model file IO.
-- `internal/modelcontract`: strict Bering schema pinning and vendored snapshot.
-- `internal/simulation`: deterministic Monte Carlo engine (`seed` + fixed params).
-- `internal/gate`: policy evaluation (`warn` / `fail` / `report`).
-- `internal/report`: report composition + JSON/markdown output.
-- `internal/config`: policy/config loading and validation.
+## Design Principles
 
-## Data Contracts
+- Discovery ownership stays upstream.
+- Batch and service mode share the same analysis engine.
+- Contract handling is explicit and adapter-based.
+- Legacy simple policy flow remains available.
+- Richer predicate and workload data can come from the artifact, snapshot, or external overlay.
 
-- `api/schema/model.schema.json`
-- `api/schema/journeys.schema.json`
-- `api/schema/policy.schema.json`
-- `api/schema/report.schema.json`
+## Main Packages
 
-Model schema ownership is external (Bering).  
-This repository keeps a pinned snapshot for strict consumer-side validation.
+- `internal/artifact`: plain model and snapshot envelope readers, contract compatibility, provenance normalization.
+- `internal/config`: legacy policy loading plus versioned analysis and serve configs.
+- `internal/analyzer`: shared orchestration for batch and service analysis.
+- `internal/simulation`: multi-profile sampling, weighted aggregation, and legacy journey fallback.
+- `internal/gate`: profile-aware gate evaluation.
+- `internal/report`: richer posture reports, diffs, and summary rendering.
+- `internal/service`: watch loop, bounded history, HTTP endpoints, and Prometheus/OpenMetrics metrics.
+
+## Service Mode
+
+`sheaft serve` watches:
+
+- a single artifact file
+- a directory of artifacts
+- a stable path that is updated in place
+
+On each new artifact it recomputes posture, updates history, refreshes metrics, and serves:
+
+- `/healthz`
+- `/readyz`
+- `/status`
+- `/current-report`
+- `/current-diff`
+- `/history`
+- `/metrics`

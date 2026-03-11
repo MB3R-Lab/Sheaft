@@ -1,0 +1,65 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/MB3R-Lab/Sheaft/api/schema/serve.schema.json",
+  "title": "SheaftServeConfigV1",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "artifact"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "const": "1.0"
+    },
+    "listen": {
+      "type": "string"
+    },
+    "artifact": {
+      "type": "object",
+      "required": ["path"],
+      "properties": {
+        "path": {
+          "type": "string"
+        },
+        "mode": {
+          "type": "string",
+          "enum": ["auto", "file", "directory"]
+        },
+        "patterns": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "analysis_file": {
+      "type": "string"
+    },
+    "analysis": {
+      "$ref": "analysis.schema.json"
+    },
+    "poll_interval": {
+      "type": "string"
+    },
+    "watch_fs": {
+      "type": "boolean"
+    },
+    "watch_polling": {
+      "type": "boolean"
+    },
+    "history": {
+      "type": "object",
+      "properties": {
+        "max_items": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "disk_dir": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

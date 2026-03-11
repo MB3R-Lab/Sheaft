@@ -1,0 +1,53 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/MB3R-Lab/Sheaft/api/schema/snapshot.schema.json",
+  "title": "BeringSnapshotEnvelopeV1",
+  "type": "object",
+  "required": [
+    "schema",
+    "artifact_id",
+    "produced_at",
+    "model"
+  ],
+  "properties": {
+    "schema": {
+      "type": "object",
+      "required": ["name", "version", "uri", "digest"],
+      "properties": {
+        "name": { "type": "string" },
+        "version": { "type": "string" },
+        "uri": { "type": "string" },
+        "digest": { "type": "string" }
+      }
+    },
+    "artifact_id": {
+      "type": "string"
+    },
+    "produced_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "source_type": {
+      "type": "string"
+    },
+    "source_ref": {
+      "type": "string"
+    },
+    "topology_version": {
+      "type": "string"
+    },
+    "endpoint_weights": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "number",
+        "minimum": 0
+      }
+    },
+    "predicates": {
+      "$ref": "predicate-contract.schema.json#/properties/predicates"
+    },
+    "model": {
+      "$ref": "model.schema.json"
+    }
+  }
+}

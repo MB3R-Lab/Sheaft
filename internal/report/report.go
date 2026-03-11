@@ -5,8 +5,11 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
+	"time"
 
+	"github.com/MB3R-Lab/Sheaft/internal/artifact"
 	"github.com/MB3R-Lab/Sheaft/internal/gate"
 	"github.com/MB3R-Lab/Sheaft/internal/simulation"
 )
@@ -18,22 +21,104 @@ type SimulationInfo struct {
 }
 
 type Summary struct {
-	OverallAvailability float64 `json:"overall_availability"`
-	RiskScore           float64 `json:"risk_score"`
-	Confidence          float64 `json:"confidence"`
+	OverallAvailability              float64 `json:"overall_availability"`
+	WeightedOverallAvailability      float64 `json:"weighted_overall_availability,omitempty"`
+	CrossProfileAvailability         float64 `json:"cross_profile_availability,omitempty"`
+	CrossProfileWeightedAvailability float64 `json:"cross_profile_weighted_availability,omitempty"`
+	RiskScore                        float64 `json:"risk_score"`
+	Confidence                       float64 `json:"confidence"`
 }
 
 type PolicyEvaluation struct {
 	Mode            string   `json:"mode"`
 	Decision        string   `json:"decision"`
 	FailedEndpoints []string `json:"failed_endpoints"`
+	FailedProfiles  []string `json:"failed_profiles,omitempty"`
+	EvaluationRule  string   `json:"evaluation_rule,omitempty"`
+}
+
+type InputArtifact struct {
+	Path            string `json:"path"`
+	Digest          string `json:"digest"`
+	ArtifactID      string `json:"artifact_id,omitempty"`
+	Kind            string `json:"kind"`
+	ContractName    string `json:"contract_name"`
+	ContractVersion string `json:"contract_version"`
+	SourceType      string `json:"source_type"`
+	SourceRef       string `json:"source_ref"`
+	ProducedAt      string `json:"produced_at,omitempty"`
+	TopologyVersion string `json:"topology_version,omitempty"`
+}
+
+type Provenance struct {
+	PredicateSource string `json:"predicate_source"`
+	WeightsSource   string `json:"weights_source"`
+}
+
+type ProfileSummary struct {
+	Name                    string                   `json:"name"`
+	Simulation              simulation.ProfileOutput `json:"simulation"`
+	EndpointResults         []gate.EndpointResult    `json:"endpoint_results"`
+	Decision                string                   `json:"decision"`
+	EndpointsBelowThreshold int                      `json:"endpoints_below_threshold"`
+	Aggregate               *gate.AggregateResult    `json:"aggregate,omitempty"`
+}
+
+type Delta struct {
+	Current   float64 `json:"current"`
+	Reference float64 `json:"reference"`
+	Signed    float64 `json:"signed"`
+	Absolute  float64 `json:"absolute"`
+}
+
+type StatusDelta struct {
+	Current   string `json:"current"`
+	Reference string `json:"reference"`
+	Changed   bool   `json:"changed"`
+}
+
+type EndpointDiff struct {
+	Profile      string      `json:"profile"`
+	EndpointID   string      `json:"endpoint_id"`
+	Availability Delta       `json:"availability"`
+	Status       StatusDelta `json:"status"`
+}
+
+type ProfileDiff struct {
+	Profile             string         `json:"profile"`
+	WeightedAggregate   Delta          `json:"weighted_aggregate"`
+	UnweightedAggregate Delta          `json:"unweighted_aggregate"`
+	Decision            StatusDelta    `json:"decision"`
+	Endpoints           []EndpointDiff `json:"endpoints"`
+}
+
+type Diff struct {
+	Name                     string        `json:"name,omitempty"`
+	CurrentDigest            string        `json:"current_digest,omitempty"`
+	ReferenceDigest          string        `json:"reference_digest,omitempty"`
+	CurrentTopologyVersion   string        `json:"current_topology_version,omitempty"`
+	ReferenceTopologyVersion string        `json:"reference_topology_version,omitempty"`
+	CrossProfileWeighted     Delta         `json:"cross_profile_weighted"`
+	CrossProfileUnweighted   Delta         `json:"cross_profile_unweighted"`
+	Profiles                 []ProfileDiff `json:"profiles"`
+}
+
+type Diffs struct {
+	Previous  *Diff  `json:"previous,omitempty"`
+	Baselines []Diff `json:"baselines,omitempty"`
 }
 
 type Report struct {
-	Simulation       SimulationInfo        `json:"simulation"`
-	EndpointResults  []gate.EndpointResult `json:"endpoint_results"`
-	Summary          Summary               `json:"summary"`
-	PolicyEvaluation PolicyEvaluation      `json:"policy_evaluation"`
+	Simulation          SimulationInfo        `json:"simulation"`
+	EndpointResults     []gate.EndpointResult `json:"endpoint_results"`
+	Summary             Summary               `json:"summary"`
+	PolicyEvaluation    PolicyEvaluation      `json:"policy_evaluation"`
+	InputArtifact       *InputArtifact        `json:"input_artifact,omitempty"`
+	Provenance          *Provenance           `json:"provenance,omitempty"`
+	Profiles            []ProfileSummary      `json:"profiles,omitempty"`
+	Diffs               Diffs                 `json:"diffs,omitempty"`
+	GeneratedAt         string                `json:"generated_at,omitempty"`
+	RecomputeDurationMS int64                 `json:"recompute_duration_ms,omitempty"`
 }
 
 func Compose(simOut simulation.Output, eval gate.Evaluation, params simulation.Params, confidence float64) Report {
@@ -45,9 +130,10 @@ func Compose(simOut simulation.Output, eval gate.Evaluation, params simulation.P
 		},
 		EndpointResults: eval.EndpointResults,
 		Summary: Summary{
-			OverallAvailability: simOut.OverallAvailability,
-			RiskScore:           1 - simOut.OverallAvailability,
-			Confidence:          confidence,
+			OverallAvailability:         simOut.OverallAvailability,
+			WeightedOverallAvailability: simOut.OverallAvailability,
+			RiskScore:                   1 - simOut.OverallAvailability,
+			Confidence:                  confidence,
 		},
 		PolicyEvaluation: PolicyEvaluation{
 			Mode:            string(eval.Mode),
@@ -57,12 +143,191 @@ func Compose(simOut simulation.Output, eval gate.Evaluation, params simulation.P
 	}
 }
 
+func ComposeAnalysis(meta artifact.Loaded, simOut simulation.AnalysisOutput, eval gate.Evaluation, confidence float64, generatedAt time.Time, duration time.Duration) Report {
+	report := Report{
+		Simulation: SimulationInfo{},
+		Summary: Summary{
+			Confidence:                       confidence,
+			CrossProfileAvailability:         simOut.CrossProfileUnweighted,
+			CrossProfileWeightedAvailability: simOut.CrossProfileWeighted,
+			OverallAvailability:              simOut.CrossProfileUnweighted,
+			WeightedOverallAvailability:      simOut.CrossProfileWeighted,
+			RiskScore:                        1 - simOut.CrossProfileWeighted,
+		},
+		PolicyEvaluation: PolicyEvaluation{
+			Mode:            string(eval.Mode),
+			Decision:        eval.Decision,
+			FailedEndpoints: slices.Clone(eval.FailedEndpoints),
+			FailedProfiles:  slices.Clone(eval.FailedProfiles),
+			EvaluationRule:  string(eval.EvaluationRule),
+		},
+		InputArtifact: &InputArtifact{
+			Path:            meta.Metadata.Path,
+			Digest:          meta.Metadata.Digest,
+			ArtifactID:      meta.Metadata.ArtifactID,
+			Kind:            string(meta.Metadata.Kind),
+			ContractName:    meta.Metadata.Contract.Name,
+			ContractVersion: meta.Metadata.Contract.Version,
+			SourceType:      meta.Metadata.SourceType,
+			SourceRef:       meta.Metadata.SourceRef,
+			ProducedAt:      meta.Metadata.ProducedAt,
+			TopologyVersion: meta.Metadata.TopologyVersion,
+		},
+		Provenance: &Provenance{
+			PredicateSource: meta.PredicateSource,
+			WeightsSource:   meta.WeightsSource,
+		},
+		Profiles:            make([]ProfileSummary, 0, len(simOut.Profiles)),
+		GeneratedAt:         generatedAt.UTC().Format(time.RFC3339Nano),
+		RecomputeDurationMS: duration.Milliseconds(),
+	}
+
+	if len(simOut.Profiles) > 0 {
+		first := simOut.Profiles[0]
+		report.Simulation = SimulationInfo{
+			Trials:             first.Trials,
+			Seed:               first.Seed,
+			FailureProbability: first.FailureProbability,
+		}
+		report.Summary.OverallAvailability = first.UnweightedAggregate
+		report.Summary.WeightedOverallAvailability = first.WeightedAggregate
+		report.Summary.RiskScore = 1 - first.WeightedAggregate
+	}
+
+	for _, profile := range simOut.Profiles {
+		profileEval := findProfileEvaluation(eval.ProfileEvaluations, profile.Name)
+		if report.EndpointResults == nil {
+			report.EndpointResults = slices.Clone(profileEval.EndpointResults)
+		}
+		report.Profiles = append(report.Profiles, ProfileSummary{
+			Name:                    profile.Name,
+			Simulation:              profile,
+			EndpointResults:         slices.Clone(profileEval.EndpointResults),
+			Decision:                profileEval.Decision,
+			EndpointsBelowThreshold: profileEval.EndpointsBelowThreshold,
+			Aggregate:               profileEval.Aggregate,
+		})
+	}
+	return report
+}
+
 func (r Report) AvailabilityMap() map[string]float64 {
 	out := make(map[string]float64, len(r.EndpointResults))
 	for _, endpoint := range r.EndpointResults {
 		out[endpoint.EndpointID] = endpoint.Availability
 	}
 	return out
+}
+
+func (r Report) NormalizedProfiles() []ProfileSummary {
+	if len(r.Profiles) > 0 {
+		return slices.Clone(r.Profiles)
+	}
+	return []ProfileSummary{
+		{
+			Name: "default",
+			Simulation: simulation.ProfileOutput{
+				Name:                 "default",
+				Trials:               r.Simulation.Trials,
+				Seed:                 r.Simulation.Seed,
+				FailureProbability:   r.Simulation.FailureProbability,
+				SamplingMode:         "",
+				EndpointAvailability: r.AvailabilityMap(),
+				WeightedAggregate:    firstNonZero(r.Summary.WeightedOverallAvailability, r.Summary.OverallAvailability),
+				UnweightedAggregate:  r.Summary.OverallAvailability,
+			},
+			EndpointResults: slices.Clone(r.EndpointResults),
+			Decision:        r.PolicyEvaluation.Decision,
+		},
+	}
+}
+
+func Compare(current Report, reference Report, name string) Diff {
+	currentProfiles := current.NormalizedProfiles()
+	referenceProfiles := reference.NormalizedProfiles()
+	refByName := make(map[string]ProfileSummary, len(referenceProfiles))
+	for _, profile := range referenceProfiles {
+		refByName[profile.Name] = profile
+	}
+
+	diff := Diff{
+		Name:                     name,
+		CurrentDigest:            inputDigest(current.InputArtifact),
+		ReferenceDigest:          inputDigest(reference.InputArtifact),
+		CurrentTopologyVersion:   inputTopology(current.InputArtifact),
+		ReferenceTopologyVersion: inputTopology(reference.InputArtifact),
+		CrossProfileWeighted:     delta(current.Summary.CrossProfileWeightedAvailabilityOrFallback(), reference.Summary.CrossProfileWeightedAvailabilityOrFallback()),
+		CrossProfileUnweighted:   delta(current.Summary.CrossProfileAvailabilityOrFallback(), reference.Summary.CrossProfileAvailabilityOrFallback()),
+		Profiles:                 make([]ProfileDiff, 0, len(currentProfiles)),
+	}
+
+	for _, profile := range currentProfiles {
+		refProfile, ok := refByName[profile.Name]
+		if !ok {
+			if len(referenceProfiles) == 1 {
+				refProfile = referenceProfiles[0]
+			} else {
+				refProfile = ProfileSummary{Name: profile.Name}
+			}
+		}
+		currentEndpoints := endpointMap(profile.EndpointResults)
+		refEndpoints := endpointMap(refProfile.EndpointResults)
+		endpointIDs := make([]string, 0, len(currentEndpoints))
+		for endpointID := range currentEndpoints {
+			endpointIDs = append(endpointIDs, endpointID)
+		}
+		slices.Sort(endpointIDs)
+		endpoints := make([]EndpointDiff, 0, len(endpointIDs))
+		for _, endpointID := range endpointIDs {
+			currentResult := currentEndpoints[endpointID]
+			refResult := refEndpoints[endpointID]
+			endpoints = append(endpoints, EndpointDiff{
+				Profile:      profile.Name,
+				EndpointID:   endpointID,
+				Availability: delta(currentResult.Availability, refResult.Availability),
+				Status: StatusDelta{
+					Current:   currentResult.Status,
+					Reference: refResult.Status,
+					Changed:   currentResult.Status != refResult.Status,
+				},
+			})
+		}
+		diff.Profiles = append(diff.Profiles, ProfileDiff{
+			Profile:             profile.Name,
+			WeightedAggregate:   delta(profile.Simulation.WeightedAggregate, refProfile.Simulation.WeightedAggregate),
+			UnweightedAggregate: delta(profile.Simulation.UnweightedAggregate, refProfile.Simulation.UnweightedAggregate),
+			Decision: StatusDelta{
+				Current:   profile.Decision,
+				Reference: refProfile.Decision,
+				Changed:   profile.Decision != refProfile.Decision,
+			},
+			Endpoints: endpoints,
+		})
+	}
+	return diff
+}
+
+func (r *Report) SetPreviousDiff(previous *Report) {
+	if previous == nil {
+		return
+	}
+	diff := Compare(*r, *previous, "previous")
+	r.Diffs.Previous = &diff
+}
+
+func (r *Report) SetBaselineDiffs(baselines map[string]Report) {
+	if len(baselines) == 0 {
+		return
+	}
+	names := make([]string, 0, len(baselines))
+	for name := range baselines {
+		names = append(names, name)
+	}
+	slices.Sort(names)
+	r.Diffs.Baselines = make([]Diff, 0, len(names))
+	for _, name := range names {
+		r.Diffs.Baselines = append(r.Diffs.Baselines, Compare(*r, baselines[name], name))
+	}
 }
 
 func Load(path string) (Report, error) {
@@ -94,10 +359,46 @@ func WriteSummaryMarkdown(path string, rep Report) error {
 	b.WriteString(fmt.Sprintf("- Decision: **%s**\n", rep.PolicyEvaluation.Decision))
 	b.WriteString(fmt.Sprintf("- Mode: `%s`\n", rep.PolicyEvaluation.Mode))
 	b.WriteString(fmt.Sprintf("- Overall availability: `%.4f`\n", rep.Summary.OverallAvailability))
+	if rep.Summary.WeightedOverallAvailability > 0 {
+		b.WriteString(fmt.Sprintf("- Weighted overall availability: `%.4f`\n", rep.Summary.WeightedOverallAvailability))
+	}
+	if rep.Summary.CrossProfileAvailability > 0 {
+		b.WriteString(fmt.Sprintf("- Cross-profile availability: `%.4f`\n", rep.Summary.CrossProfileAvailability))
+	}
+	if rep.Summary.CrossProfileWeightedAvailability > 0 {
+		b.WriteString(fmt.Sprintf("- Cross-profile weighted availability: `%.4f`\n", rep.Summary.CrossProfileWeightedAvailability))
+	}
 	b.WriteString(fmt.Sprintf("- Risk score: `%.4f`\n", rep.Summary.RiskScore))
 	b.WriteString(fmt.Sprintf("- Confidence: `%.2f`\n\n", rep.Summary.Confidence))
+
+	if len(rep.Profiles) > 0 {
+		b.WriteString("## Profiles\n\n")
+		for _, profile := range rep.Profiles {
+			b.WriteString(fmt.Sprintf(
+				"- `%s`: decision=`%s`, weighted=`%.4f`, unweighted=`%.4f`, below-threshold=`%d`\n",
+				profile.Name,
+				profile.Decision,
+				profile.Simulation.WeightedAggregate,
+				profile.Simulation.UnweightedAggregate,
+				profile.EndpointsBelowThreshold,
+			))
+		}
+		b.WriteString("\n")
+	}
+
 	b.WriteString("## Endpoint results\n\n")
 	for _, endpoint := range rep.EndpointResults {
+		if endpoint.Profile != "" {
+			b.WriteString(fmt.Sprintf(
+				"- `%s` / `%s`: availability=`%.4f`, threshold=`%.4f`, status=`%s`\n",
+				endpoint.Profile,
+				endpoint.EndpointID,
+				endpoint.Availability,
+				endpoint.Threshold,
+				endpoint.Status,
+			))
+			continue
+		}
 		b.WriteString(fmt.Sprintf(
 			"- `%s`: availability=`%.4f`, threshold=`%.4f`, status=`%s`\n",
 			endpoint.EndpointID,
@@ -107,6 +408,25 @@ func WriteSummaryMarkdown(path string, rep Report) error {
 		))
 	}
 
+	if rep.Diffs.Previous != nil || len(rep.Diffs.Baselines) > 0 {
+		b.WriteString("\n## Diffs\n\n")
+		if rep.Diffs.Previous != nil {
+			b.WriteString(fmt.Sprintf(
+				"- Previous: weighted delta=`%.4f`, unweighted delta=`%.4f`\n",
+				rep.Diffs.Previous.CrossProfileWeighted.Signed,
+				rep.Diffs.Previous.CrossProfileUnweighted.Signed,
+			))
+		}
+		for _, baseline := range rep.Diffs.Baselines {
+			b.WriteString(fmt.Sprintf(
+				"- Baseline `%s`: weighted delta=`%.4f`, unweighted delta=`%.4f`\n",
+				baseline.Name,
+				baseline.CrossProfileWeighted.Signed,
+				baseline.CrossProfileUnweighted.Signed,
+			))
+		}
+	}
+
 	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
 		return fmt.Errorf("create summary dir: %w", err)
 	}
@@ -114,4 +434,66 @@ func WriteSummaryMarkdown(path string, rep Report) error {
 		return fmt.Errorf("write summary markdown: %w", err)
 	}
 	return nil
+}
+
+func (s Summary) CrossProfileWeightedAvailabilityOrFallback() float64 {
+	return firstNonZero(s.CrossProfileWeightedAvailability, s.WeightedOverallAvailability, s.OverallAvailability)
+}
+
+func (s Summary) CrossProfileAvailabilityOrFallback() float64 {
+	return firstNonZero(s.CrossProfileAvailability, s.OverallAvailability)
+}
+
+func findProfileEvaluation(evals []gate.ProfileEvaluation, name string) gate.ProfileEvaluation {
+	for _, eval := range evals {
+		if eval.Profile == name {
+			return eval
+		}
+	}
+	return gate.ProfileEvaluation{Profile: name}
+}
+
+func endpointMap(results []gate.EndpointResult) map[string]gate.EndpointResult {
+	out := make(map[string]gate.EndpointResult, len(results))
+	for _, result := range results {
+		out[result.EndpointID] = result
+	}
+	return out
+}
+
+func delta(current, reference float64) Delta {
+	signed := current - reference
+	absolute := signed
+	if absolute < 0 {
+		absolute = -absolute
+	}
+	return Delta{
+		Current:   current,
+		Reference: reference,
+		Signed:    signed,
+		Absolute:  absolute,
+	}
+}
+
+func inputDigest(meta *InputArtifact) string {
+	if meta == nil {
+		return ""
+	}
+	return meta.Digest
+}
+
+func inputTopology(meta *InputArtifact) string {
+	if meta == nil {
+		return ""
+	}
+	return meta.TopologyVersion
+}
+
+func firstNonZero(values ...float64) float64 {
+	for _, value := range values {
+		if value != 0 {
+			return value
+		}
+	}
+	return 0
 }

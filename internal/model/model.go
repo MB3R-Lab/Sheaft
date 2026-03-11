@@ -8,7 +8,7 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/MB3R-Lab/Sheaft/internal/modelcontract"
+	"github.com/MB3R-Lab/Sheaft/internal/predicates"
 )
 
 type EdgeKind string
@@ -32,17 +32,19 @@ type Edge struct {
 }
 
 type Endpoint struct {
-	ID                  string `json:"id"`
-	EntryService        string `json:"entry_service"`
-	SuccessPredicateRef string `json:"success_predicate_ref"`
+	ID                  string                 `json:"id"`
+	EntryService        string                 `json:"entry_service"`
+	SuccessPredicateRef string                 `json:"success_predicate_ref"`
+	SuccessPredicate    *predicates.Definition `json:"success_predicate,omitempty"`
 }
 
 type Metadata struct {
-	SourceType   string  `json:"source_type"`
-	SourceRef    string  `json:"source_ref"`
-	DiscoveredAt string  `json:"discovered_at"`
-	Confidence   float64 `json:"confidence"`
-	Schema       Schema  `json:"schema"`
+	SourceType      string  `json:"source_type"`
+	SourceRef       string  `json:"source_ref"`
+	DiscoveredAt    string  `json:"discovered_at"`
+	Confidence      float64 `json:"confidence"`
+	TopologyVersion string  `json:"topology_version,omitempty"`
+	Schema          Schema  `json:"schema"`
 }
 
 type Schema struct {
@@ -53,10 +55,12 @@ type Schema struct {
 }
 
 type ResilienceModel struct {
-	Services  []Service  `json:"services"`
-	Edges     []Edge     `json:"edges"`
-	Endpoints []Endpoint `json:"endpoints"`
-	Metadata  Metadata   `json:"metadata"`
+	Services        []Service                        `json:"services"`
+	Edges           []Edge                           `json:"edges"`
+	Endpoints       []Endpoint                       `json:"endpoints"`
+	Predicates      map[string]predicates.Definition `json:"predicates,omitempty"`
+	EndpointWeights map[string]float64               `json:"endpoint_weights,omitempty"`
+	Metadata        Metadata                         `json:"metadata"`
 }
 
 func (m ResilienceModel) Validate() error {
@@ -100,6 +104,27 @@ func (m ResilienceModel) Validate() error {
 		if strings.TrimSpace(ep.SuccessPredicateRef) == "" {
 			return fmt.Errorf("endpoint %q has empty success_predicate_ref", ep.ID)
 		}
+		if ep.SuccessPredicate != nil {
+			if err := ep.SuccessPredicate.Validate(); err != nil {
+				return fmt.Errorf("endpoint %q success_predicate: %w", ep.ID, err)
+			}
+		}
+	}
+	for name, def := range m.Predicates {
+		if strings.TrimSpace(name) == "" {
+			return errors.New("predicates key cannot be empty")
+		}
+		if err := def.Validate(); err != nil {
+			return fmt.Errorf("predicate %q: %w", name, err)
+		}
+	}
+	for endpoint, weight := range m.EndpointWeights {
+		if strings.TrimSpace(endpoint) == "" {
+			return errors.New("endpoint_weights key cannot be empty")
+		}
+		if weight < 0 {
+			return fmt.Errorf("endpoint_weights[%s] must be >= 0", endpoint)
+		}
 	}
 
 	if strings.TrimSpace(m.Metadata.SourceType) == "" {
@@ -111,13 +136,17 @@ func (m ResilienceModel) Validate() error {
 	if m.Metadata.Confidence < 0 || m.Metadata.Confidence > 1 {
 		return errors.New("metadata.confidence must be in range [0,1]")
 	}
-	if err := modelcontract.ValidateStrict(modelcontract.SchemaRef{
-		Name:    m.Metadata.Schema.Name,
-		Version: m.Metadata.Schema.Version,
-		URI:     m.Metadata.Schema.URI,
-		Digest:  m.Metadata.Schema.Digest,
-	}); err != nil {
-		return fmt.Errorf("strict bering contract validation failed: %w", err)
+	if strings.TrimSpace(m.Metadata.Schema.Name) == "" {
+		return errors.New("metadata.schema.name cannot be empty")
+	}
+	if strings.TrimSpace(m.Metadata.Schema.Version) == "" {
+		return errors.New("metadata.schema.version cannot be empty")
+	}
+	if strings.TrimSpace(m.Metadata.Schema.URI) == "" {
+		return errors.New("metadata.schema.uri cannot be empty")
+	}
+	if strings.TrimSpace(m.Metadata.Schema.Digest) == "" {
+		return errors.New("metadata.schema.digest cannot be empty")
 	}
 
 	return nil

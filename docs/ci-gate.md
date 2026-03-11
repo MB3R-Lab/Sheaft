@@ -1,21 +1,13 @@
-# CI Gate Integration
+# CI Gate
 
-## Command Pattern
-
-Use `sheaft run` in CI:
+## Legacy Policy Flow
 
 ```bash
 sheaft run \
-  --model path/to/bering-model.json \
+  --model path/to/model.json \
   --policy configs/gate.policy.example.yaml \
   --out-dir out \
   --seed 42
-```
-
-Optional:
-
-```bash
---journeys path/to/journeys.json
 ```
 
 Generated artifacts:
@@ -24,13 +16,28 @@ Generated artifacts:
 - `out/report.json`
 - `out/summary.md`
 
-`out/model.json` is a validated copy of the input Bering model.
+## Rich Analysis Flow
+
+```bash
+sheaft run \
+  --model path/to/artifact.json \
+  --analysis configs/analysis.example.yaml \
+  --out-dir out
+```
+
+Use the richer config when CI needs:
+
+- multiple scenario profiles
+- weighted aggregates
+- baseline comparisons
+- external predicate overlays
+- explicit multi-profile gate rules
 
 ## Exit Codes
 
 - `0`: pass / warn / report
-- `2`: policy fail in `mode=fail`
-- `1`: input/config/runtime error
+- `2`: gate failure in `mode=fail`
+- `1`: input, contract, config, or runtime error
 
 ## GitHub Actions Example
 
@@ -44,17 +51,16 @@ jobs:
       - uses: actions/checkout@v4
       - name: Build image
         run: docker build -f build/Dockerfile -t sheaft:ci .
-      - name: Fetch model artifact from Bering step
+      - name: Fetch upstream artifact
         run: |
           mkdir -p artifacts
-          cp path/from/previous-step/bering-model.json artifacts/bering-model.json
-      - name: Run Sheaft gate
+          cp path/from/previous-step/model-or-snapshot.json artifacts/input.json
+      - name: Run Sheaft
         run: |
           docker run --rm -v "$PWD:/workspace" -w /workspace sheaft:ci run \
-            --model artifacts/bering-model.json \
-            --policy configs/gate.policy.example.yaml \
-            --out-dir out \
-            --seed 42
+            --model artifacts/input.json \
+            --analysis configs/analysis.example.yaml \
+            --out-dir out
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:

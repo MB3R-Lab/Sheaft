@@ -1,8 +1,12 @@
 package model
 
-import "testing"
+import (
+	"testing"
 
-func TestValidate_StrictSchemaBinding(t *testing.T) {
+	"github.com/MB3R-Lab/Sheaft/internal/modelcontract"
+)
+
+func TestValidate_StructuralAndContractValidation(t *testing.T) {
 	t.Parallel()
 
 	mdl := ResilienceModel{
@@ -30,9 +34,25 @@ func TestValidate_StrictSchemaBinding(t *testing.T) {
 	if err := mdl.Validate(); err != nil {
 		t.Fatalf("expected valid model, got error: %v", err)
 	}
+	if err := modelcontract.ValidateStrict(modelcontract.SchemaRef{
+		Name:    mdl.Metadata.Schema.Name,
+		Version: mdl.Metadata.Schema.Version,
+		URI:     mdl.Metadata.Schema.URI,
+		Digest:  mdl.Metadata.Schema.Digest,
+	}); err != nil {
+		t.Fatalf("expected supported contract, got error: %v", err)
+	}
 
 	mdl.Metadata.Schema.Version = "1.0.1"
-	if err := mdl.Validate(); err == nil {
-		t.Fatal("expected strict schema version mismatch error, got nil")
+	if err := mdl.Validate(); err != nil {
+		t.Fatalf("expected structural validation to ignore supported-contract resolution, got error: %v", err)
+	}
+	if err := modelcontract.ValidateStrict(modelcontract.SchemaRef{
+		Name:    mdl.Metadata.Schema.Name,
+		Version: mdl.Metadata.Schema.Version,
+		URI:     mdl.Metadata.Schema.URI,
+		Digest:  mdl.Metadata.Schema.Digest,
+	}); err == nil {
+		t.Fatal("expected contract validation to reject unsupported version, got nil")
 	}
 }

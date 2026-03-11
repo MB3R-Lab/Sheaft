@@ -1,22 +1,21 @@
 # Assumptions and Limitations
 
-## Core Assumptions (v0)
+## Assumptions
 
-- Failures are modeled as independent fail-stop crashes.
-- Availability impact is approximated using connectivity + replica counts.
-- Input model is produced upstream by Bering.
-- Input model matches pinned contract metadata exactly.
-- Policy thresholds represent accepted release risk for a given environment.
+- Input topology and endpoint metadata are produced upstream.
+- Supported contracts are explicitly versioned and whitelisted.
+- Failure modeling is fail-stop and profile-driven.
+- Weighted aggregates reflect configured workload mix, not observed runtime traffic by default.
 
-## Known Limitations
+## Current Limitations
 
-- No correlated shocks, gray failures, or latency-tail modeling in v0.
-- Discovery quality is inherited from upstream Bering model quality.
-- Endpoint predicates are minimal and focused on immediate HTTP success.
-- Async/event edges are currently treated as low-impact for immediate HTTP SLO estimation.
+- No correlated shock or latency distribution modeling.
+- No automatic discovery ownership in production flow.
+- Baseline comparison currently expects report artifacts as the baseline data source.
+- Directory watch mode selects the newest matching file; it does not merge multiple artifacts.
 
-## Operational Guidance
+## Guidance
 
-- Use Sheaft as a broad, cheap filter before expensive live chaos campaigns.
-- Treat low-confidence outputs as escalation candidates, not final proof.
-- Keep policy thresholds explicit and environment-specific.
+- Use Sheaft as a cheap, repeatable consumer-side posture check.
+- Treat low-confidence or degraded posture results as escalation inputs, not proof of runtime safety.
+- Keep thresholds and profile definitions environment-specific and explicit.
