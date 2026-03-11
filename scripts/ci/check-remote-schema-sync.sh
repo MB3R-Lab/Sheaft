@@ -5,58 +5,15 @@ REPO_ROOT="${1:-.}"
 CONTRACT_FILE="${REPO_ROOT}/internal/modelcontract/contract.go"
 VENDORED_SCHEMA="${REPO_ROOT}/internal/modelcontract/schema/model.schema.json"
 API_SCHEMA="${REPO_ROOT}/api/schema/model.schema.json"
+HELPER_FILE="${REPO_ROOT}/scripts/ci/contract-constants.sh"
 
-extract_const() {
-  name="$1"
-  resolve_const "$name" ""
-}
+if [ ! -f "${HELPER_FILE}" ]; then
+  echo "Helper file is missing: ${HELPER_FILE}" >&2
+  exit 1
+fi
 
-extract_const_raw() {
-  name="$1"
-  awk -v name="${name}" '
-    $0 ~ "^[[:space:]]*" name "[[:space:]]*=" {
-      line = $0
-      sub(/^[[:space:]]*[A-Za-z0-9_]+[[:space:]]*=[[:space:]]*/, "", line)
-      gsub(/^[[:space:]]+|[[:space:]]+$/, "", line)
-      print line
-      exit
-    }
-  ' "${CONTRACT_FILE}"
-}
-
-resolve_const() {
-  name="$1"
-  seen="$2"
-
-  case "${seen}" in
-    *"
-${name}
-"*)
-      echo "Cyclic constant reference while resolving ${name}" >&2
-      exit 1
-      ;;
-  esac
-
-  raw="$(extract_const_raw "${name}")"
-  if [ -z "${raw}" ]; then
-    echo ""
-    return 0
-  fi
-
-  case "${raw}" in
-    \"*\")
-      printf '%s\n' "${raw}" | sed 's/^"//; s/"$//'
-      ;;
-    [A-Za-z_][A-Za-z0-9_]*)
-      resolve_const "${raw}" "${seen}
-${name}
-"
-      ;;
-    *)
-      echo ""
-      ;;
-  esac
-}
+# shellcheck source=scripts/ci/contract-constants.sh
+. "${HELPER_FILE}"
 
 EXPECTED_URI="$(extract_const ExpectedSchemaURI)"
 EXPECTED_DIGEST="$(extract_const ExpectedSchemaDigest)"

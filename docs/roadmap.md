@@ -25,7 +25,7 @@ This file captures the repository-side audit performed on 2026-03-11: current Gi
 | R3 | open | partial | Reproducible analysis is in place, but pluginization, explicit calibration, and scale benchmarks are still backlog items. |
 | R4 | open | partial | External benchmark contract and limitations docs exist, but the public benchmark suite and release-grade quality reports are not yet in-repo. |
 | R5 | open | partial | CI gate, service mode, and output artifacts are implemented; chaos triage and cross-CI handoff templates were still the main workflow gap before this audit. |
-| R6 | open | partial | Strict contract pinning, conformance checks, and vendored schemas exist; release workflow, compatibility matrix, and multi-version support remain open. |
+| R6 | open | partial | Strict contract pinning, conformance checks, vendored schemas, and a repository compatibility matrix now exist; release workflow and multi-version support remain open. |
 | R7 | open | gap | No open-core/export playbook material exists yet beyond issue-level planning. |
 | R8 | open | gap | Security/privacy work is not yet implemented beyond lightweight assumptions/limitations guidance. |
 | R9 | open | partial | Diff endpoints exist, but there is no why/debug UX or dependency-level explanation layer yet. |
@@ -85,8 +85,8 @@ This file captures the repository-side audit performed on 2026-03-11: current Gi
 | R6.1 | closed | done | Open schemas live under `api/schema` and are validated via tests. |
 | R6.2 | closed | done | Contract and integration tests cover model/snapshot consumption and output shape. |
 | R6.3 | closed | done | The repository already functions as the open reference consumer implementation. |
-| R6.4 | open | partial | Remote schema sync checks exist in `.github/workflows/schema-contract.yml` and `scripts/ci/check-remote-schema-sync.sh`, but there is no documented cross-repo release policy or matrix tie-in yet. |
-| R6.5 | open | gap | No compatibility matrix is published or linked from `README.md` yet. |
+| R6.4 | open | partial | Remote schema sync checks and compatibility-matrix CI guard now exist, but there is still no documented cross-repo release policy or release checklist. |
+| R6.5 | open | done locally | Compatibility matrix is now published in-repo, linked from `README.md`, and guarded in CI when contract pin files change. |
 | R6.6 | open | gap | Only a single supported schema version is pinned today; project-level multi-version pinning is absent. |
 
 ### R7. Commercialization without lock-in
@@ -121,18 +121,14 @@ This file captures the repository-side audit performed on 2026-03-11: current Gi
 
 ## Prioritized Backlog After Audit
 
-1. R5.5: finish the CI/CD handoff path end-to-end by keeping templates current and validating them in example repos or smoke pipelines.
-2. R6.5: publish a Bering-Sheaft compatibility matrix and wire it into release/update checks.
-3. R6.4: document the contract release policy so schema pin bumps have a defined workflow.
-4. R1.1: publish the missing normative consumer semantics document while the implementation surface is still compact.
-5. R3.3: add explicit parameter sourcing/calibration provenance to reports and summaries.
+1. R6.4: document the contract release policy so schema pin bumps have a defined workflow.
+2. R1.1: publish the missing normative consumer semantics document while the implementation surface is still compact.
+3. R3.3: add explicit parameter sourcing/calibration provenance to reports and summaries.
+4. R5.5: validate the CI/CD handoff templates in example repos or smoke pipelines.
+5. R6.6: add multi-version schema contracts with project-level pinning.
 
-## Selected Task
+## Current Execution Note
 
-The next task taken into active work from this audit is **R5.5: Bering artifact handoff templates for CI/CD**.
-
-Why this is first:
-
-- it is `priority: p0` and directly blocks production workflow adoption;
-- the repo already has the runtime primitives (`run`, strict contract validation, output artifacts, exit codes);
-- it also closes the narrower `R5.6` gap as part of the same documentation/templates pass.
+- `R5.5` is in progress locally with cross-CI handoff templates now committed in-repo.
+- `R6.5` is now implemented locally via the compatibility matrix plus CI guard.
+- The next highest-priority repo task is **R6.4: Bering-Sheaft contract release workflow**.

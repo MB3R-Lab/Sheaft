@@ -13,6 +13,20 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Fetch base ref
+        if: github.event_name == 'pull_request'
+        run: git fetch --no-tags --depth=1 origin "${{ github.base_ref }}"
 
       - name: Verify remote schema sync
         run: sh scripts/ci/check-remote-schema-sync.sh
+
+      - name: Verify compatibility matrix
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            sh scripts/ci/check-compatibility-matrix.sh . "origin/${{ github.base_ref }}"
+          else
+            sh scripts/ci/check-compatibility-matrix.sh
+          fi
