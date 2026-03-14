@@ -14,7 +14,15 @@ GitHub issues remain the source of truth for roadmap tracking:
 - R9: https://github.com/MB3R-Lab/Sheaft/issues/39
 - R10: https://github.com/MB3R-Lab/Sheaft/issues/40
 
-This file captures the repository-side audit performed on 2026-03-11 and synced with GitHub issue state on 2026-03-11: current GitHub issue state versus what is actually implemented in this repository.
+This file captures the repository-side audit performed on 2026-03-11 and synced with GitHub issue state on 2026-03-14: current GitHub issue state versus what is actually implemented in this repository.
+
+## Release Tracking State
+
+- Public release shipped: [Sheaft v0.1.0 technical preview](https://github.com/MB3R-Lab/Sheaft/releases/tag/v0.1.0)
+- Historical shipped milestone: `v0.1.0 technical preview`
+- Active backlog milestone: `Post-v0.1.0 technical preview`
+- Dedicated release-tracking issue: [#78](https://github.com/MB3R-Lab/Sheaft/issues/78)
+- The `v0.1.0` release shipped on top of already-closed foundation work; broader post-preview roadmap issues remain open intentionally.
 
 ## Audit Summary
 
@@ -121,14 +129,15 @@ This file captures the repository-side audit performed on 2026-03-11 and synced 
 
 ## Prioritized Backlog After Audit
 
-1. R6.6: add a real non-latest supported Bering contract line and close the remaining end-to-end gap.
-2. R4.3: expand applicability boundaries into concrete do-not-trust signals and detector heuristics.
+1. R4.3: expand applicability boundaries into concrete do-not-trust signals and detector heuristics.
+2. R6.6: add a real non-latest supported Bering contract line and close the remaining end-to-end gap.
 3. R1.2: document and test the extension contract for timeout/partial/gray failure modes.
 4. R9.1: add a why mode for gate decisions on top of current report/diff output.
-5. R5.3: add chaos experiment suggestion and triage output on top of current gate/report flow.
+5. R4.2: publish release-grade quality metrics for Sheaft-on-Bering.
 
 ## Current Execution Note
 
 - Synced GitHub closures on 2026-03-11: `R1.1`, `R3.3`, `R5.5`, `R5.6`, `R6.4`, `R6.5`.
+- Added explicit release-tracking traceability on 2026-03-14 via [#78](https://github.com/MB3R-Lab/Sheaft/issues/78), which is closed because the public `v0.1.0` technical preview shipped.
 - `R6.6` is now partially implemented locally via contract policy config, runtime enforcement, report metadata, and CI fixtures.
-- The next highest-priority repo task is **R6.6: add a real non-latest supported Bering contract line and close the remaining end-to-end gap**.
+- The next highest-priority repo task is **R4.3: expand applicability boundaries into concrete do-not-trust signals and detector heuristics**.
