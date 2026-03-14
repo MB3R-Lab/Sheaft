@@ -102,7 +102,7 @@ jobs:
               gh release create "${TAG}" --verify-tag --title "${TITLE}" --notes "Technical preview release. Canonical release metadata lives in dist/ and release-manifest.json."
             fi
           fi
-          mapfile -t files < <(find dist -type f | sort)
+          mapfile -t files < <(find dist -type f ! -path 'dist/sheaft_*_v*/*' | sort)
           files+=("compatibility-manifest.json")
           files+=("release-manifest.json")
           gh release upload "${TAG}" "${files[@]}" --clobber
