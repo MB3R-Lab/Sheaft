@@ -1,105 +1,394 @@
 {
-  "schema": {
-    "name": "io.mb3r.bering.snapshot",
-    "version": "1.0.0",
-    "uri": "https://mb3r-lab.github.io/Bering/schema/snapshot/v1.0.0/snapshot.schema.json",
-    "digest": "sha256:0b1ff66a64419d5f2e838663451a739fe34b3871bc1ccb9102ebec0fb8ec0b83"
+  "counts": {
+    "edges": 3,
+    "endpoints": 3,
+    "services": 4
   },
-  "artifact_id": "sample-snapshot-20260311T080000Z",
-  "produced_at": "2026-03-11T08:00:00Z",
-  "source_type": "bering",
-  "source_ref": "bering://examples/snapshot.sample",
-  "topology_version": "sample-topology-v2",
-  "endpoint_weights": {
-    "frontend:GET /checkout": 0.7,
-    "frontend:GET /health": 0.3
+  "coverage": {
+    "confidence": 0.94,
+    "edge_support_min": 1,
+    "endpoint_support_min": 1,
+    "service_support_min": 1
   },
-  "predicates": {
-    "frontend:GET /checkout": {
-      "type": "any_of",
-      "children": [
-        {
-          "type": "all_of",
-          "services": ["frontend", "checkout", "payment"]
+  "diff": {
+    "added_edges": 3,
+    "added_endpoints": 3,
+    "added_services": 4,
+    "changed_edges": 0,
+    "changed_endpoints": 0,
+    "changed_services": 0,
+    "removed_edges": 0,
+    "removed_endpoints": 0,
+    "removed_services": 0
+  },
+  "discovery": {
+    "edges": [
+      {
+        "blocking": true,
+        "from": "checkout",
+        "id": "checkout|inventory|sync|true",
+        "kind": "sync",
+        "metadata": {},
+        "provenance": [
+          {
+            "connector": "trace_file",
+            "ref": "bering://discover?input=examples%2Ftraces%2Fnormalized.sample.json",
+            "type": "traces"
+          }
+        ],
+        "support": {
+          "evidence": [
+            "default_sync"
+          ],
+          "observations": 1,
+          "trace_count": 1
         },
-        {
-          "type": "all_of",
-          "services": ["frontend", "checkout", "inventory"]
+        "to": "inventory"
+      },
+      {
+        "blocking": false,
+        "from": "checkout",
+        "id": "checkout|payment|async|false",
+        "kind": "async",
+        "metadata": {},
+        "provenance": [
+          {
+            "connector": "trace_file",
+            "ref": "bering://discover?input=examples%2Ftraces%2Fnormalized.sample.json",
+            "type": "traces"
+          }
+        ],
+        "support": {
+          "evidence": [
+            "child_async_signal",
+            "messaging.destination",
+            "messaging.system",
+            "span.kind=consumer"
+          ],
+          "observations": 1,
+          "trace_count": 1
+        },
+        "to": "payment"
+      },
+      {
+        "blocking": true,
+        "from": "frontend",
+        "id": "frontend|checkout|sync|true",
+        "kind": "sync",
+        "metadata": {
+          "labels": {
+            "flow": "checkout"
+          },
+          "weight": 0.8
+        },
+        "provenance": [
+          {
+            "connector": "trace_file",
+            "ref": "bering://discover?input=examples%2Ftraces%2Fnormalized.sample.json",
+            "type": "traces"
+          },
+          {
+            "name": "sample-discovery-overlay",
+            "precedence": 1,
+            "ref": "configs\\discovery.overlay.sample.yaml",
+            "type": "overlay"
+          }
+        ],
+        "support": {
+          "evidence": [
+            "default_sync"
+          ],
+          "observations": 1,
+          "trace_count": 1
+        },
+        "to": "checkout"
+      }
+    ],
+    "endpoints": [
+      {
+        "entry_service": "checkout",
+        "id": "checkout:POST /process",
+        "metadata": {
+          "labels": {
+            "workflow": "purchase"
+          },
+          "predicate_ref": "catalog.checkout.success",
+          "weight": 0.6
+        },
+        "method": "POST",
+        "path": "/process",
+        "provenance": [
+          {
+            "connector": "trace_file",
+            "ref": "bering://discover?input=examples%2Ftraces%2Fnormalized.sample.json",
+            "type": "traces"
+          },
+          {
+            "name": "sample-discovery-overlay",
+            "precedence": 1,
+            "ref": "configs\\discovery.overlay.sample.yaml",
+            "type": "overlay"
+          }
+        ],
+        "support": {
+          "observations": 1,
+          "trace_count": 1
         }
-      ]
+      },
+      {
+        "entry_service": "frontend",
+        "id": "frontend:GET /checkout",
+        "metadata": {
+          "labels": {
+            "workflow": "browse"
+          },
+          "weight": 0.4
+        },
+        "method": "GET",
+        "path": "/checkout",
+        "provenance": [
+          {
+            "connector": "trace_file",
+            "ref": "bering://discover?input=examples%2Ftraces%2Fnormalized.sample.json",
+            "type": "traces"
+          },
+          {
+            "name": "sample-discovery-overlay",
+            "precedence": 1,
+            "ref": "configs\\discovery.overlay.sample.yaml",
+            "type": "overlay"
+          }
+        ],
+        "support": {
+          "observations": 1,
+          "trace_count": 1
+        }
+      },
+      {
+        "entry_service": "frontend",
+        "id": "frontend:GET /health",
+        "metadata": {},
+        "method": "GET",
+        "path": "/health",
+        "provenance": [
+          {
+            "connector": "trace_file",
+            "ref": "bering://discover?input=examples%2Ftraces%2Fnormalized.sample.json",
+            "type": "traces"
+          }
+        ],
+        "support": {
+          "observations": 1,
+          "trace_count": 1
+        }
+      }
+    ],
+    "overlays": [
+      {
+        "name": "sample-discovery-overlay",
+        "precedence": 1,
+        "ref": "configs\\discovery.overlay.sample.yaml"
+      }
+    ],
+    "services": [
+      {
+        "id": "checkout",
+        "metadata": {
+          "failure_eligible": true,
+          "labels": {
+            "team": "commerce",
+            "tier": "backend"
+          },
+          "replicas_override": 3,
+          "slo_refs": [
+            "slo:checkout-latency"
+          ]
+        },
+        "name": "checkout",
+        "provenance": [
+          {
+            "connector": "trace_file",
+            "ref": "bering://discover?input=examples%2Ftraces%2Fnormalized.sample.json",
+            "type": "traces"
+          },
+          {
+            "name": "sample-discovery-overlay",
+            "precedence": 1,
+            "ref": "configs\\discovery.overlay.sample.yaml",
+            "type": "overlay"
+          }
+        ],
+        "replicas": 3,
+        "support": {
+          "observations": 1,
+          "trace_count": 1
+        }
+      },
+      {
+        "id": "frontend",
+        "metadata": {},
+        "name": "frontend",
+        "provenance": [
+          {
+            "connector": "trace_file",
+            "ref": "bering://discover?input=examples%2Ftraces%2Fnormalized.sample.json",
+            "type": "traces"
+          }
+        ],
+        "replicas": 1,
+        "support": {
+          "observations": 2,
+          "trace_count": 2
+        }
+      },
+      {
+        "id": "inventory",
+        "metadata": {},
+        "name": "inventory",
+        "provenance": [
+          {
+            "connector": "trace_file",
+            "ref": "bering://discover?input=examples%2Ftraces%2Fnormalized.sample.json",
+            "type": "traces"
+          }
+        ],
+        "replicas": 1,
+        "support": {
+          "observations": 1,
+          "trace_count": 1
+        }
+      },
+      {
+        "id": "payment",
+        "metadata": {
+          "labels": {
+            "team": "payments",
+            "tier": "backend"
+          }
+        },
+        "name": "payment",
+        "provenance": [
+          {
+            "connector": "trace_file",
+            "ref": "bering://discover?input=examples%2Ftraces%2Fnormalized.sample.json",
+            "type": "traces"
+          },
+          {
+            "name": "sample-discovery-overlay",
+            "precedence": 1,
+            "ref": "configs\\discovery.overlay.sample.yaml",
+            "type": "overlay"
+          }
+        ],
+        "replicas": 1,
+        "support": {
+          "observations": 1,
+          "trace_count": 1
+        }
+      }
+    ]
+  },
+  "ingest": {
+    "dropped_spans": 0,
+    "late_spans": 0,
+    "spans": 5,
+    "traces": 2
+  },
+  "metadata": {
+    "confidence": 0.94,
+    "emitted_at": "2026-03-03T00:00:00Z",
+    "schema": {
+      "digest": "sha256:87e4e887ed4a37b72f6136e268b73552eccb92941c4de2c6f3a514dd066ea972",
+      "name": "io.mb3r.bering.snapshot",
+      "uri": "https://mb3r-lab.github.io/Bering/schema/snapshot/v1.0.0/snapshot.schema.json",
+      "version": "1.0.0"
     },
-    "frontend:GET /health": {
-      "type": "all_of",
-      "services": ["frontend"]
-    }
+    "source_ref": "bering://discover?input=examples%2Ftraces%2Fnormalized.sample.json",
+    "source_type": "bering"
   },
   "model": {
+    "edges": [
+      {
+        "blocking": true,
+        "from": "checkout",
+        "kind": "sync",
+        "to": "inventory"
+      },
+      {
+        "blocking": false,
+        "from": "checkout",
+        "kind": "async",
+        "to": "payment"
+      },
+      {
+        "blocking": true,
+        "from": "frontend",
+        "kind": "sync",
+        "to": "checkout"
+      }
+    ],
+    "endpoints": [
+      {
+        "entry_service": "checkout",
+        "id": "checkout:POST /process",
+        "success_predicate_ref": "catalog.checkout.success"
+      },
+      {
+        "entry_service": "frontend",
+        "id": "frontend:GET /checkout",
+        "success_predicate_ref": "frontend:GET /checkout"
+      },
+      {
+        "entry_service": "frontend",
+        "id": "frontend:GET /health",
+        "success_predicate_ref": "frontend:GET /health"
+      }
+    ],
+    "metadata": {
+      "confidence": 0.94,
+      "discovered_at": "2026-03-03T00:00:00Z",
+      "schema": {
+        "digest": "sha256:272277c093f37580adcd2dded225bd37c86539d642d7910baad7e4228227d1a7",
+        "name": "io.mb3r.bering.model",
+        "uri": "https://mb3r-lab.github.io/Bering/schema/model/v1.0.0/model.schema.json",
+        "version": "1.0.0"
+      },
+      "source_ref": "bering://discover?input=examples%2Ftraces%2Fnormalized.sample.json",
+      "source_type": "bering"
+    },
     "services": [
+      {
+        "id": "checkout",
+        "name": "checkout",
+        "replicas": 3
+      },
       {
         "id": "frontend",
         "name": "frontend",
         "replicas": 1
       },
       {
-        "id": "checkout",
-        "name": "checkout",
+        "id": "inventory",
+        "name": "inventory",
         "replicas": 1
       },
       {
         "id": "payment",
         "name": "payment",
         "replicas": 1
-      },
-      {
-        "id": "inventory",
-        "name": "inventory",
-        "replicas": 1
       }
-    ],
-    "edges": [
-      {
-        "from": "frontend",
-        "to": "checkout",
-        "kind": "sync",
-        "blocking": true
-      },
-      {
-        "from": "checkout",
-        "to": "payment",
-        "kind": "sync",
-        "blocking": true
-      },
-      {
-        "from": "checkout",
-        "to": "inventory",
-        "kind": "sync",
-        "blocking": true
-      }
-    ],
-    "endpoints": [
-      {
-        "id": "frontend:GET /checkout",
-        "entry_service": "frontend",
-        "success_predicate_ref": "frontend:GET /checkout"
-      },
-      {
-        "id": "frontend:GET /health",
-        "entry_service": "frontend",
-        "success_predicate_ref": "frontend:GET /health"
-      }
-    ],
-    "metadata": {
-      "source_type": "bering",
-      "source_ref": "bering://snapshot/examples/model.sample",
-      "discovered_at": "2026-03-03T00:00:00Z",
-      "confidence": 0.72,
-      "topology_version": "sample-topology-v2",
-      "schema": {
-        "name": "io.mb3r.bering.model",
-        "version": "1.0.0",
-        "uri": "https://mb3r-lab.github.io/Bering/schema/model/v1.0.0/model.schema.json",
-        "digest": "sha256:272277c093f37580adcd2dded225bd37c86539d642d7910baad7e4228227d1a7"
-      }
+    ]
+  },
+  "snapshot_id": "snap-87b9684332d99fa3564dea4f",
+  "sources": [
+    {
+      "connector": "trace_file",
+      "observations": 5,
+      "ref": "bering://discover?input=examples%2Ftraces%2Fnormalized.sample.json",
+      "type": "traces"
     }
-  }
+  ],
+  "topology_version": "sha256:b20ebd677050d035b78b26a7d915a5d459a187dc7e2f3288d9e4ec32e24ae610",
+  "window_end": "2026-03-03T00:00:00Z",
+  "window_start": "2026-03-03T00:00:00Z"
 }

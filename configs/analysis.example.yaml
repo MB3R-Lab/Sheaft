@@ -7,8 +7,8 @@ failure_probability: 0.05
 predicate_contract: configs/predicate-contract.example.yaml
 
 endpoint_weights:
-  frontend:GET /checkout: 0.7
-  frontend:GET /health: 0.3
+  checkout:POST /process: 0.6
+  frontend:GET /checkout: 0.4
 
 baselines:
   - name: last-release
@@ -33,6 +33,6 @@ gate:
   aggregate_threshold: 0.97
   cross_profile_aggregate_threshold: 0.965
   endpoint_thresholds:
-    frontend:GET /checkout: 0.97
+    checkout:POST /process: 0.97
   profile_aggregate_thresholds:
     fixed-blast-radius: 0.90

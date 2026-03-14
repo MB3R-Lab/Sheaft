@@ -1,47 +1,52 @@
 {
   "services": [
     {
-      "id": "frontend",
-      "name": "frontend",
-      "replicas": 1
-    },
-    {
       "id": "checkout",
       "name": "checkout",
-      "replicas": 1
+      "replicas": 3
     },
     {
-      "id": "payment",
-      "name": "payment",
+      "id": "frontend",
+      "name": "frontend",
       "replicas": 1
     },
     {
       "id": "inventory",
       "name": "inventory",
       "replicas": 1
+    },
+    {
+      "id": "payment",
+      "name": "payment",
+      "replicas": 1
     }
   ],
   "edges": [
     {
-      "from": "frontend",
-      "to": "checkout",
+      "from": "checkout",
+      "to": "inventory",
       "kind": "sync",
       "blocking": true
     },
     {
       "from": "checkout",
       "to": "payment",
-      "kind": "sync",
-      "blocking": true
+      "kind": "async",
+      "blocking": false
     },
     {
-      "from": "checkout",
-      "to": "inventory",
+      "from": "frontend",
+      "to": "checkout",
       "kind": "sync",
       "blocking": true
     }
   ],
   "endpoints": [
+    {
+      "id": "checkout:POST /process",
+      "entry_service": "checkout",
+      "success_predicate_ref": "catalog.checkout.success"
+    },
     {
       "id": "frontend:GET /checkout",
       "entry_service": "frontend",
@@ -55,10 +60,10 @@
   ],
   "metadata": {
     "source_type": "bering",
-    "source_ref": "bering://snapshot/examples/model.sample",
+    "source_ref": "bering://discover?input=examples%2Ftraces%2Fnormalized.sample.json",
     "discovered_at": "2026-03-03T00:00:00Z",
-    "confidence": 0.72,
-    "topology_version": "sample-topology-v2",
+    "confidence": 0.94,
+    "topology_version": "sha256:b20ebd677050d035b78b26a7d915a5d459a187dc7e2f3288d9e4ec32e24ae610",
     "schema": {
       "name": "io.mb3r.bering.model",
       "version": "1.0.0",

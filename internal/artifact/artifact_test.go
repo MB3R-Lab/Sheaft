@@ -4,12 +4,12 @@ import (
 	"encoding/json"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
 
 	"github.com/MB3R-Lab/Sheaft/internal/model"
 	"github.com/MB3R-Lab/Sheaft/internal/modelcontract"
-	"github.com/MB3R-Lab/Sheaft/internal/predicates"
 )
 
 func TestLoad_PlainModelContract(t *testing.T) {
@@ -38,26 +38,56 @@ func TestLoad_SnapshotContract(t *testing.T) {
 
 	path := filepath.Join(t.TempDir(), "snapshot.json")
 	snapshot := SnapshotEnvelope{
-		Schema: modelcontract.SchemaRef{
-			Name:    modelcontract.BeringSnapshotV100Name,
-			Version: modelcontract.BeringSnapshotV100Version,
-			URI:     modelcontract.BeringSnapshotV100URI,
-			Digest:  modelcontract.BeringSnapshotV100Digest,
-		},
-		ArtifactID:      "snapshot-1",
-		ProducedAt:      "2026-03-11T08:00:00Z",
-		SourceType:      "bering",
-		SourceRef:       "bering://snapshot/1",
+		SnapshotID:      "snapshot-1",
 		TopologyVersion: "topology-1",
-		Model:           testModel(),
-		Predicates: map[string]predicates.Definition{
-			"frontend:GET /health": {
-				Type:     predicates.TypeAllOf,
-				Services: []string{"frontend"},
+		WindowStart:     "2026-03-11T08:00:00Z",
+		WindowEnd:       "2026-03-11T08:05:00Z",
+		Ingest: SnapshotIngest{
+			Spans:  10,
+			Traces: 2,
+		},
+		Counts: SnapshotCounts{
+			Services:  1,
+			Edges:     0,
+			Endpoints: 1,
+		},
+		Coverage: SnapshotCoverage{
+			Confidence:         0.8,
+			ServiceSupportMin:  1,
+			EdgeSupportMin:     0,
+			EndpointSupportMin: 1,
+		},
+		Sources: []SnapshotSource{
+			{
+				Type:         "traces",
+				Connector:    "trace_file",
+				Ref:          "bering://snapshot/1",
+				Observations: 10,
 			},
 		},
-		EndpointWeights: map[string]float64{
-			"frontend:GET /health": 2,
+		Diff: SnapshotDiff{},
+		Discovery: SnapshotDiscovery{
+			Endpoints: []SnapshotDiscoveryEndpoint{
+				{
+					ID: "frontend:GET /health",
+					Metadata: SnapshotEndpointMetadata{
+						Weight: floatPtr(2),
+					},
+				},
+			},
+		},
+		Model: testModel(),
+		Metadata: SnapshotMetadata{
+			SourceType: "bering",
+			SourceRef:  "bering://snapshot/1",
+			EmittedAt:  "2026-03-11T08:00:00Z",
+			Confidence: 0.8,
+			Schema: modelcontract.SchemaRef{
+				Name:    modelcontract.BeringSnapshotV100Name,
+				Version: modelcontract.BeringSnapshotV100Version,
+				URI:     modelcontract.BeringSnapshotV100URI,
+				Digest:  modelcontract.BeringSnapshotV100Digest,
+			},
 		},
 	}
 	raw, err := json.MarshalIndent(snapshot, "", "  ")
@@ -75,8 +105,8 @@ func TestLoad_SnapshotContract(t *testing.T) {
 	if loaded.Metadata.Kind != modelcontract.KindSnapshot {
 		t.Fatalf("expected snapshot kind, got %s", loaded.Metadata.Kind)
 	}
-	if loaded.PredicateSource != ProvenanceSnapshot {
-		t.Fatalf("expected snapshot predicate provenance, got %s", loaded.PredicateSource)
+	if loaded.PredicateSource != ProvenanceDefault {
+		t.Fatalf("expected default predicate provenance, got %s", loaded.PredicateSource)
 	}
 	if loaded.WeightsSource != ProvenanceSnapshot {
 		t.Fatalf("expected snapshot weight provenance, got %s", loaded.WeightsSource)
@@ -104,6 +134,33 @@ func TestLoad_UnsupportedContract(t *testing.T) {
 	}
 }
 
+func TestLoad_CheckedInSnapshotSample(t *testing.T) {
+	t.Parallel()
+
+	_, thisFile, _, ok := runtime.Caller(0)
+	if !ok {
+		t.Fatal("runtime.Caller failed")
+	}
+	path := filepath.Join(filepath.Dir(thisFile), "..", "..", "examples", "outputs", "snapshot.sample.json")
+
+	loaded, err := Load(path)
+	if err != nil {
+		t.Fatalf("Load checked-in snapshot sample failed: %v", err)
+	}
+	if loaded.Metadata.Kind != modelcontract.KindSnapshot {
+		t.Fatalf("expected snapshot kind, got %s", loaded.Metadata.Kind)
+	}
+	if loaded.Metadata.Contract.Digest != modelcontract.BeringSnapshotV100Digest {
+		t.Fatalf("unexpected snapshot digest: got %s want %s", loaded.Metadata.Contract.Digest, modelcontract.BeringSnapshotV100Digest)
+	}
+	if loaded.Metadata.TopologyVersion == "" {
+		t.Fatal("expected topology version from snapshot sample")
+	}
+	if len(loaded.EndpointWeights) == 0 {
+		t.Fatal("expected endpoint weights extracted from snapshot discovery metadata")
+	}
+}
+
 func testModel() model.ResilienceModel {
 	return model.ResilienceModel{
 		Services: []model.Service{
@@ -125,4 +182,8 @@ func testModel() model.ResilienceModel {
 			},
 		},
 	}
+}
+
+func floatPtr(value float64) *float64 {
+	return &value
 }

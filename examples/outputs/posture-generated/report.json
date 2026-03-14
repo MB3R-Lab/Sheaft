@@ -7,31 +7,39 @@
   "endpoint_results": [
     {
       "profile": "steady-state",
-      "endpoint_id": "frontend:GET /checkout",
-      "availability": 0.94125,
+      "endpoint_id": "checkout:POST /process",
+      "availability": 0.9715833333333334,
       "threshold": 0.97,
+      "status": "pass"
+    },
+    {
+      "profile": "steady-state",
+      "endpoint_id": "frontend:GET /checkout",
+      "availability": 0.9416666666666667,
+      "threshold": 0.985,
       "status": "warn"
     },
     {
       "profile": "steady-state",
       "endpoint_id": "frontend:GET /health",
-      "availability": 0.9705,
+      "availability": 0.9695,
       "threshold": 0.985,
       "status": "warn"
     }
   ],
   "summary": {
-    "overall_availability": 0.955875,
-    "weighted_overall_availability": 0.950025,
-    "cross_profile_availability": 0.8184027777777777,
-    "cross_profile_weighted_availability": 0.7944305555555555,
-    "risk_score": 0.04997499999999999,
-    "confidence": 0.72
+    "overall_availability": 0.9609166666666668,
+    "weighted_overall_availability": 0.9596166666666667,
+    "cross_profile_availability": 0.768074074074074,
+    "cross_profile_weighted_availability": 0.7248888888888888,
+    "risk_score": 0.04038333333333333,
+    "confidence": 0.94
   },
   "policy_evaluation": {
     "mode": "warn",
     "decision": "warn",
     "failed_endpoints": [
+      "checkout:POST /process",
       "frontend:GET /checkout",
       "frontend:GET /health"
     ],
@@ -44,15 +52,19 @@
   },
   "input_artifact": {
     "path": "examples/outputs/snapshot.sample.json",
-    "digest": "sha256:41b0adf7699fad837221e97a924ad2c00105f4556fe8bef76625e1661ea73d78",
-    "artifact_id": "sample-snapshot-20260311T080000Z",
+    "digest": "sha256:3656573fdccc2deb9142ab830fed64aed44584d2cf82416d937dc7733dd2d6d6",
+    "artifact_id": "snap-87b9684332d99fa3564dea4f",
     "kind": "snapshot",
     "contract_name": "io.mb3r.bering.snapshot",
     "contract_version": "1.0.0",
     "source_type": "bering",
-    "source_ref": "bering://examples/snapshot.sample",
-    "produced_at": "2026-03-11T08:00:00Z",
-    "topology_version": "sample-topology-v2"
+    "source_ref": "bering://discover?input=examples%2Ftraces%2Fnormalized.sample.json",
+    "produced_at": "2026-03-03T00:00:00Z",
+    "topology_version": "sha256:b20ebd677050d035b78b26a7d915a5d459a187dc7e2f3288d9e4ec32e24ae610"
+  },
+  "contract_policy": {
+    "status": "current",
+    "action": "allow"
   },
   "provenance": {
     "predicate_source": "external_overlay",
@@ -178,28 +190,36 @@
         "sampling_mode": "independent_replica",
         "failure_probability": 0.03,
         "endpoint_availability": {
-          "frontend:GET /checkout": 0.94125,
-          "frontend:GET /health": 0.9705
+          "checkout:POST /process": 0.9715833333333334,
+          "frontend:GET /checkout": 0.9416666666666667,
+          "frontend:GET /health": 0.9695
         },
         "endpoint_weights": {
-          "frontend:GET /checkout": 0.7,
-          "frontend:GET /health": 0.3
+          "checkout:POST /process": 0.6,
+          "frontend:GET /checkout": 0.4
         },
-        "weighted_aggregate": 0.950025,
-        "unweighted_aggregate": 0.955875
+        "weighted_aggregate": 0.9596166666666667,
+        "unweighted_aggregate": 0.9609166666666668
       },
       "endpoint_results": [
         {
           "profile": "steady-state",
-          "endpoint_id": "frontend:GET /checkout",
-          "availability": 0.94125,
+          "endpoint_id": "checkout:POST /process",
+          "availability": 0.9715833333333334,
           "threshold": 0.97,
+          "status": "pass"
+        },
+        {
+          "profile": "steady-state",
+          "endpoint_id": "frontend:GET /checkout",
+          "availability": 0.9416666666666667,
+          "threshold": 0.985,
           "status": "warn"
         },
         {
           "profile": "steady-state",
           "endpoint_id": "frontend:GET /health",
-          "availability": 0.9705,
+          "availability": 0.9695,
           "threshold": 0.985,
           "status": "warn"
         }
@@ -207,7 +227,7 @@
       "decision": "warn",
       "endpoints_below_threshold": 2,
       "aggregate": {
-        "availability": 0.950025,
+        "availability": 0.9596166666666667,
         "threshold": 0.97,
         "status": "warn"
       }
@@ -221,22 +241,30 @@
         "sampling_mode": "independent_service",
         "failure_probability": 0.08,
         "endpoint_availability": {
-          "frontend:GET /checkout": 0.83575,
+          "checkout:POST /process": 0.8446666666666667,
+          "frontend:GET /checkout": 0.7731666666666667,
           "frontend:GET /health": 0.9164166666666667
         },
         "endpoint_weights": {
-          "frontend:GET /checkout": 0.7,
-          "frontend:GET /health": 0.3
+          "checkout:POST /process": 0.6,
+          "frontend:GET /checkout": 0.4
         },
-        "weighted_aggregate": 0.8599499999999999,
-        "unweighted_aggregate": 0.8760833333333333
+        "weighted_aggregate": 0.8160666666666667,
+        "unweighted_aggregate": 0.84475
       },
       "endpoint_results": [
         {
           "profile": "service-fault",
-          "endpoint_id": "frontend:GET /checkout",
-          "availability": 0.83575,
+          "endpoint_id": "checkout:POST /process",
+          "availability": 0.8446666666666667,
           "threshold": 0.97,
+          "status": "warn"
+        },
+        {
+          "profile": "service-fault",
+          "endpoint_id": "frontend:GET /checkout",
+          "availability": 0.7731666666666667,
+          "threshold": 0.985,
           "status": "warn"
         },
         {
@@ -248,9 +276,9 @@
         }
       ],
       "decision": "warn",
-      "endpoints_below_threshold": 2,
+      "endpoints_below_threshold": 3,
       "aggregate": {
-        "availability": 0.8599499999999999,
+        "availability": 0.8160666666666667,
         "threshold": 0.97,
         "status": "warn"
       }
@@ -265,22 +293,30 @@
         "failure_probability": 0.05,
         "fixed_k_failures": 1,
         "endpoint_availability": {
-          "frontend:GET /checkout": 0.4984166666666667,
+          "checkout:POST /process": 0.49975,
+          "frontend:GET /checkout": 0.24783333333333332,
           "frontend:GET /health": 0.7480833333333333
         },
         "endpoint_weights": {
-          "frontend:GET /checkout": 0.7,
-          "frontend:GET /health": 0.3
+          "checkout:POST /process": 0.6,
+          "frontend:GET /checkout": 0.4
         },
-        "weighted_aggregate": 0.5733166666666667,
-        "unweighted_aggregate": 0.62325
+        "weighted_aggregate": 0.39898333333333336,
+        "unweighted_aggregate": 0.4985555555555556
       },
       "endpoint_results": [
         {
           "profile": "fixed-blast-radius",
-          "endpoint_id": "frontend:GET /checkout",
-          "availability": 0.4984166666666667,
+          "endpoint_id": "checkout:POST /process",
+          "availability": 0.49975,
           "threshold": 0.97,
+          "status": "warn"
+        },
+        {
+          "profile": "fixed-blast-radius",
+          "endpoint_id": "frontend:GET /checkout",
+          "availability": 0.24783333333333332,
+          "threshold": 0.985,
           "status": "warn"
         },
         {
@@ -292,9 +328,9 @@
         }
       ],
       "decision": "warn",
-      "endpoints_below_threshold": 2,
+      "endpoints_below_threshold": 3,
       "aggregate": {
-        "availability": 0.5733166666666667,
+        "availability": 0.39898333333333336,
         "threshold": 0.9,
         "status": "warn"
       }
@@ -304,34 +340,34 @@
     "baselines": [
       {
         "name": "last-release",
-        "current_digest": "sha256:41b0adf7699fad837221e97a924ad2c00105f4556fe8bef76625e1661ea73d78",
-        "current_topology_version": "sample-topology-v2",
+        "current_digest": "sha256:3656573fdccc2deb9142ab830fed64aed44584d2cf82416d937dc7733dd2d6d6",
+        "current_topology_version": "sha256:b20ebd677050d035b78b26a7d915a5d459a187dc7e2f3288d9e4ec32e24ae610",
         "cross_profile_weighted": {
-          "current": 0.7944305555555555,
+          "current": 0.7248888888888888,
           "reference": 0.9055,
-          "signed": -0.11106944444444444,
-          "absolute": 0.11106944444444444
+          "signed": -0.18061111111111117,
+          "absolute": 0.18061111111111117
         },
         "cross_profile_unweighted": {
-          "current": 0.8184027777777777,
+          "current": 0.768074074074074,
           "reference": 0.9055,
-          "signed": -0.08709722222222227,
-          "absolute": 0.08709722222222227
+          "signed": -0.13742592592592595,
+          "absolute": 0.13742592592592595
         },
         "profiles": [
           {
             "profile": "steady-state",
             "weighted_aggregate": {
-              "current": 0.950025,
+              "current": 0.9596166666666667,
               "reference": 0.9055,
-              "signed": 0.04452500000000004,
-              "absolute": 0.04452500000000004
+              "signed": 0.0541166666666667,
+              "absolute": 0.0541166666666667
             },
             "unweighted_aggregate": {
-              "current": 0.955875,
+              "current": 0.9609166666666668,
               "reference": 0.9055,
-              "signed": 0.05037500000000006,
-              "absolute": 0.05037500000000006
+              "signed": 0.05541666666666678,
+              "absolute": 0.05541666666666678
             },
             "decision": {
               "current": "warn",
@@ -341,12 +377,27 @@
             "endpoints": [
               {
                 "profile": "steady-state",
+                "endpoint_id": "checkout:POST /process",
+                "availability": {
+                  "current": 0.9715833333333334,
+                  "reference": 0,
+                  "signed": 0.9715833333333334,
+                  "absolute": 0.9715833333333334
+                },
+                "status": {
+                  "current": "pass",
+                  "reference": "",
+                  "changed": true
+                }
+              },
+              {
+                "profile": "steady-state",
                 "endpoint_id": "frontend:GET /checkout",
                 "availability": {
-                  "current": 0.94125,
+                  "current": 0.9416666666666667,
                   "reference": 0.8612,
-                  "signed": 0.08005000000000007,
-                  "absolute": 0.08005000000000007
+                  "signed": 0.08046666666666669,
+                  "absolute": 0.08046666666666669
                 },
                 "status": {
                   "current": "warn",
@@ -358,10 +409,10 @@
                 "profile": "steady-state",
                 "endpoint_id": "frontend:GET /health",
                 "availability": {
-                  "current": 0.9705,
+                  "current": 0.9695,
                   "reference": 0.9498,
-                  "signed": 0.02070000000000005,
-                  "absolute": 0.02070000000000005
+                  "signed": 0.01970000000000005,
+                  "absolute": 0.01970000000000005
                 },
                 "status": {
                   "current": "warn",
@@ -374,16 +425,16 @@
           {
             "profile": "service-fault",
             "weighted_aggregate": {
-              "current": 0.8599499999999999,
+              "current": 0.8160666666666667,
               "reference": 0.9055,
-              "signed": -0.04555000000000009,
-              "absolute": 0.04555000000000009
+              "signed": -0.08943333333333325,
+              "absolute": 0.08943333333333325
             },
             "unweighted_aggregate": {
-              "current": 0.8760833333333333,
+              "current": 0.84475,
               "reference": 0.9055,
-              "signed": -0.029416666666666647,
-              "absolute": 0.029416666666666647
+              "signed": -0.06074999999999997,
+              "absolute": 0.06074999999999997
             },
             "decision": {
               "current": "warn",
@@ -393,12 +444,27 @@
             "endpoints": [
               {
                 "profile": "service-fault",
+                "endpoint_id": "checkout:POST /process",
+                "availability": {
+                  "current": 0.8446666666666667,
+                  "reference": 0,
+                  "signed": 0.8446666666666667,
+                  "absolute": 0.8446666666666667
+                },
+                "status": {
+                  "current": "warn",
+                  "reference": "",
+                  "changed": true
+                }
+              },
+              {
+                "profile": "service-fault",
                 "endpoint_id": "frontend:GET /checkout",
                 "availability": {
-                  "current": 0.83575,
+                  "current": 0.7731666666666667,
                   "reference": 0.8612,
-                  "signed": -0.025449999999999973,
-                  "absolute": 0.025449999999999973
+                  "signed": -0.0880333333333333,
+                  "absolute": 0.0880333333333333
                 },
                 "status": {
                   "current": "warn",
@@ -426,16 +492,16 @@
           {
             "profile": "fixed-blast-radius",
             "weighted_aggregate": {
-              "current": 0.5733166666666667,
+              "current": 0.39898333333333336,
               "reference": 0.9055,
-              "signed": -0.3321833333333333,
-              "absolute": 0.3321833333333333
+              "signed": -0.5065166666666666,
+              "absolute": 0.5065166666666666
             },
             "unweighted_aggregate": {
-              "current": 0.62325,
+              "current": 0.4985555555555556,
               "reference": 0.9055,
-              "signed": -0.28225,
-              "absolute": 0.28225
+              "signed": -0.4069444444444444,
+              "absolute": 0.4069444444444444
             },
             "decision": {
               "current": "warn",
@@ -445,12 +511,27 @@
             "endpoints": [
               {
                 "profile": "fixed-blast-radius",
+                "endpoint_id": "checkout:POST /process",
+                "availability": {
+                  "current": 0.49975,
+                  "reference": 0,
+                  "signed": 0.49975,
+                  "absolute": 0.49975
+                },
+                "status": {
+                  "current": "warn",
+                  "reference": "",
+                  "changed": true
+                }
+              },
+              {
+                "profile": "fixed-blast-radius",
                 "endpoint_id": "frontend:GET /checkout",
                 "availability": {
-                  "current": 0.4984166666666667,
+                  "current": 0.24783333333333332,
                   "reference": 0.8612,
-                  "signed": -0.3627833333333333,
-                  "absolute": 0.3627833333333333
+                  "signed": -0.6133666666666666,
+                  "absolute": 0.6133666666666666
                 },
                 "status": {
                   "current": "warn",
@@ -479,6 +560,6 @@
       }
     ]
   },
-  "generated_at": "2026-03-11T14:27:18.5421084Z",
-  "recompute_duration_ms": 22
+  "generated_at": "2026-03-14T17:10:33.8544183Z",
+  "recompute_duration_ms": 18
 }

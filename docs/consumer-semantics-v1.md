@@ -36,8 +36,9 @@ Sheaft treats an input as a plain model artifact when:
 
 Sheaft treats an input as a snapshot envelope when:
 
-- the JSON root has `schema`;
-- that schema matches the pinned `io.mb3r.bering.snapshot@1.0.0` contract exactly.
+- the JSON root has `metadata.schema`;
+- that schema matches the pinned `io.mb3r.bering.snapshot@1.0.0` contract exactly;
+- the envelope carries snapshot fields such as `snapshot_id`, `ingest`, `coverage`, `diff`, `discovery`, and `model`.
 
 ## Strict Contract Rules
 
@@ -75,11 +76,11 @@ There is no silent fallback to "best effort" parsing for unsupported contracts.
 
 ### Metadata
 
-- `metadata.schema` on plain models and top-level `schema` on snapshots are strict contract selectors.
+- `metadata.schema` on both plain models and snapshot envelopes is the strict contract selector.
 - `metadata.confidence` is carried into the report summary as-is.
 - `metadata.source_type` and `metadata.source_ref` are carried into `report.input_artifact`.
 - `topology_version` is propagated when available.
-- for snapshots, top-level `artifact_id`, `produced_at`, `source_type`, `source_ref`, and `topology_version` take precedence over nested model metadata when present.
+- for snapshots, top-level `snapshot_id`, top-level `topology_version`, and snapshot `metadata.{emitted_at,source_type,source_ref}` take precedence over nested model metadata when present.
 
 ## Predicate Semantics
 
@@ -112,15 +113,14 @@ This means:
 Highest to lowest precedence:
 
 1. external predicate overlay from `analysis.predicate_contract`
-2. snapshot top-level `predicates`
-3. model-embedded `predicates`
-4. legacy journey override from `analysis.journeys`
-5. legacy path discovery from `entry_service` + `sync/blocking` edges
+2. model-embedded `predicates`
+3. legacy journey override from `analysis.journeys`
+4. legacy path discovery from `entry_service` + `sync/blocking` edges
 
 Notes:
 
-- snapshot predicates replace model-embedded predicates when the snapshot top-level map is non-empty;
 - external overlay merges on top of the artifact-level predicate map and wins on key collision;
+- the current upstream snapshot contract does not carry a top-level predicate map;
 - the v1 upstream JSON schema does not require embedded predicate maps, but Sheaft supports them as compatible producer/adapter behavior.
 
 ### Weight precedence
@@ -130,13 +130,13 @@ Highest to lowest precedence:
 1. per-profile `profiles[].endpoint_weights`
 2. analysis-level `endpoint_weights`
 3. external overlay `predicate_contract.endpoint_weights`
-4. snapshot top-level `endpoint_weights`
+4. snapshot `discovery.endpoints[].metadata.weight`
 5. model-embedded `endpoint_weights`
 6. equal-weight average across endpoints
 
 Notes:
 
-- snapshot weights replace model-embedded weights when the snapshot top-level map is non-empty;
+- snapshot discovery weights replace model-embedded weights when present;
 - if all resulting weights are missing or non-positive, Sheaft falls back to an unweighted arithmetic mean.
 
 ### Gate threshold precedence
@@ -172,6 +172,8 @@ Cross-profile aggregate threshold:
 - `default`
 
 `default` means no artifact-level predicate or weight data was present for that dimension.
+
+With the current `io.mb3r.bering.snapshot@1.0.0` envelope, `snapshot` provenance is expected for weights sourced from `discovery.endpoints[].metadata.weight`, not for top-level snapshot predicates.
 
 ## Examples
 
@@ -214,25 +216,13 @@ Expected outcome:
 
 Input:
 
-- snapshot with top-level `artifact_id`, `produced_at`, `source_ref`, `source_type`, and `topology_version`
+- snapshot with top-level `snapshot_id`, `topology_version`, and snapshot `metadata.{emitted_at,source_ref,source_type}`
 
 Expected outcome:
 
 - report input artifact uses those top-level snapshot fields rather than nested model metadata when both exist.
 
-### 5. Snapshot predicates override model-embedded predicates
-
-Input:
-
-- model contains predicate map `P_model`;
-- snapshot top-level contains predicate map `P_snapshot` with the same endpoint keys.
-
-Expected outcome:
-
-- Sheaft uses `P_snapshot`;
-- report predicate provenance becomes `snapshot`.
-
-### 6. External predicate overlay overrides snapshot or model predicates
+### 5. External predicate overlay overrides model predicates or legacy fallback
 
 Input:
 
@@ -243,11 +233,24 @@ Expected outcome:
 - external overlay wins on predicate key collision;
 - report predicate provenance becomes `external_overlay`.
 
-### 7. Weight precedence is profile > analysis > external overlay > snapshot > model
+### 6. Snapshot discovery weights override model-embedded weights when config does not override them
 
 Input:
 
-- snapshot sample with top-level weights;
+- snapshot sample with `discovery.endpoints[].metadata.weight`;
+- model without conflicting endpoint weights;
+- no config-level weight override.
+
+Expected outcome:
+
+- Sheaft uses the snapshot discovery weights;
+- report weight provenance becomes `snapshot`.
+
+### 7. Weight precedence is profile > analysis > external overlay > snapshot discovery > model
+
+Input:
+
+- snapshot sample with discovery endpoint weights;
 - analysis config with top-level `endpoint_weights`;
 - profile-specific `endpoint_weights` inside one profile.
 

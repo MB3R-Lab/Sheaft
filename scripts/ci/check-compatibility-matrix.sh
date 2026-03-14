@@ -69,6 +69,7 @@ if [ -n "${BASE_REF}" ]; then
   contract_changes="$(git diff --name-only "${BASE_REF}"...HEAD -- \
     internal/modelcontract/contract.go \
     internal/modelcontract/schema/model.schema.json \
+    internal/modelcontract/schema/snapshot.schema.json \
     api/schema/model.schema.json \
     api/schema/snapshot.schema.json)"
   matrix_changes="$(git diff --name-only "${BASE_REF}"...HEAD -- docs/compatibility-matrix.md)"

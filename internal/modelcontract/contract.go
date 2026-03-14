@@ -16,7 +16,7 @@ const (
 	BeringSnapshotV100Name    = "io.mb3r.bering.snapshot"
 	BeringSnapshotV100Version = "1.0.0"
 	BeringSnapshotV100URI     = "https://mb3r-lab.github.io/Bering/schema/snapshot/v1.0.0/snapshot.schema.json"
-	BeringSnapshotV100Digest  = "sha256:0b1ff66a64419d5f2e838663451a739fe34b3871bc1ccb9102ebec0fb8ec0b83"
+	BeringSnapshotV100Digest  = "sha256:87e4e887ed4a37b72f6136e268b73552eccb92941c4de2c6f3a514dd066ea972"
 
 	ExpectedSchemaName    = BeringModelV100Name
 	ExpectedSchemaVersion = BeringModelV100Version
@@ -26,6 +26,9 @@ const (
 
 //go:embed schema/model.schema.json
 var VendoredSchema string
+
+//go:embed schema/snapshot.schema.json
+var VendoredSnapshotSchema string
 
 type ArtifactKind string
 
@@ -76,6 +79,15 @@ func ExpectedRef() SchemaRef {
 		Version: BeringModelV100Version,
 		URI:     BeringModelV100URI,
 		Digest:  BeringModelV100Digest,
+	}
+}
+
+func ExpectedSnapshotRef() SchemaRef {
+	return SchemaRef{
+		Name:    BeringSnapshotV100Name,
+		Version: BeringSnapshotV100Version,
+		URI:     BeringSnapshotV100URI,
+		Digest:  BeringSnapshotV100Digest,
 	}
 }
 

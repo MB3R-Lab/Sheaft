@@ -91,6 +91,8 @@ Analysis example:
   --out-dir out/quickstart-analysis
 ```
 
+The checked-in snapshot sample mirrors the current Bering `io.mb3r.bering.snapshot@1.0.0` envelope. The accompanying analysis example layers explicit predicate and weight overrides on top of that snapshot sample.
+
 On Windows from a source checkout, the same path is:
 
 ```powershell

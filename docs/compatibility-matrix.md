@@ -8,7 +8,7 @@ The machine-readable equivalent of this page is the repo-root `compatibility-man
 
 | Sheaft line | Status | Bering model contract | Model URI | Model digest | Bering snapshot contract | Snapshot URI | Snapshot digest | Notes |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| `main` (unreleased) | active | `io.mb3r.bering.model@1.0.0` | `https://mb3r-lab.github.io/Bering/schema/model/v1.0.0/model.schema.json` | `sha256:272277c093f37580adcd2dded225bd37c86539d642d7910baad7e4228227d1a7` | `io.mb3r.bering.snapshot@1.0.0` | `https://mb3r-lab.github.io/Bering/schema/snapshot/v1.0.0/snapshot.schema.json` | `sha256:0b1ff66a64419d5f2e838663451a739fe34b3871bc1ccb9102ebec0fb8ec0b83` | Strict pin validated by `artifact.Load` and CI checks. |
+| `main` (unreleased) | active | `io.mb3r.bering.model@1.0.0` | `https://mb3r-lab.github.io/Bering/schema/model/v1.0.0/model.schema.json` | `sha256:272277c093f37580adcd2dded225bd37c86539d642d7910baad7e4228227d1a7` | `io.mb3r.bering.snapshot@1.0.0` | `https://mb3r-lab.github.io/Bering/schema/snapshot/v1.0.0/snapshot.schema.json` | `sha256:87e4e887ed4a37b72f6136e268b73552eccb92941c4de2c6f3a514dd066ea972` | Strict pin validated by `artifact.Load`, vendored schema sync tests, and CI checks. |
 
 ## Update Rules
 

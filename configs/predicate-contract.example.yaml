@@ -1,24 +1,22 @@
 schema_version: "1.0"
 
 predicates:
+  catalog.checkout.success:
+    type: all_of
+    services:
+      - checkout
+      - inventory
   frontend:GET /checkout:
-    type: any_of
-    children:
-      - type: all_of
-        services:
-          - frontend
-          - checkout
-          - payment
-      - type: all_of
-        services:
-          - frontend
-          - checkout
-          - inventory
+    type: all_of
+    services:
+      - frontend
+      - checkout
+      - inventory
   frontend:GET /health:
     type: all_of
     services:
       - frontend
 
 endpoint_weights:
-  frontend:GET /checkout: 0.7
-  frontend:GET /health: 0.3
+  checkout:POST /process: 0.6
+  frontend:GET /checkout: 0.4
