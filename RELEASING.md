@@ -69,6 +69,7 @@ make release-local APP_VERSION=0.0.0-dev LOCAL_REGISTRY=localhost:5000
 
 - Docker with `buildx`
 - Helm 3 with OCI support
+- Go 1.26+ on the release runner, because the release-tool bootstrap path installs `syft`
 - network access for Go tool bootstrap
 
 ## GitHub Publisher Flow
