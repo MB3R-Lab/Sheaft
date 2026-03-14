@@ -1,6 +1,6 @@
 # Releasing Sheaft
 
-Sheaft release automation is tag-driven and platform-neutral. `v0.1.0` is intentionally published as a technical preview, so release notes and README language should stay explicit about what is stable versus experimental.
+Sheaft release automation is tag-driven and platform-neutral. The `v0.1.x` line is intentionally published as a technical preview, so release notes and README language should stay explicit about what is stable versus experimental.
 
 The canonical release contract is the generated payload:
 

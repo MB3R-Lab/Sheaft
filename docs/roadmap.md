@@ -18,11 +18,11 @@ This file captures the repository-side audit performed on 2026-03-11 and synced 
 
 ## Release Tracking State
 
-- Public release shipped: [Sheaft v0.1.0 technical preview](https://github.com/MB3R-Lab/Sheaft/releases/tag/v0.1.0)
+- Latest public release shipped: [Sheaft v0.1.1 technical preview](https://github.com/MB3R-Lab/Sheaft/releases/tag/v0.1.1)
 - Historical shipped milestone: `v0.1.0 technical preview`
 - Active backlog milestone: `Post-v0.1.0 technical preview`
 - Dedicated release-tracking issue: [#78](https://github.com/MB3R-Lab/Sheaft/issues/78)
-- The `v0.1.0` release shipped on top of already-closed foundation work; broader post-preview roadmap issues remain open intentionally.
+- The public `v0.1.x` release line shipped on top of already-closed foundation work; broader post-preview roadmap issues remain open intentionally.
 
 ## Audit Summary
 

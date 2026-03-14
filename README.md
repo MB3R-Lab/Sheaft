@@ -13,9 +13,9 @@ It stays downstream of topology discovery. The public surface in this repository
 
 ## Stability / Release Status
 
-`v0.1.0` is an experimental public release and should be treated as a technical preview, not a stable GA release.
+The current public release is `v0.1.1`. The `v0.1.x` line is an experimental public release and should be treated as a technical preview, not a stable GA release.
 
-Stable within the `v0.1.0` technical preview:
+Stable within the `v0.1.x` technical preview:
 
 - strict acceptance of `io.mb3r.bering.model@1.0.0`
 - strict acceptance of `io.mb3r.bering.snapshot@1.0.0`
@@ -23,7 +23,7 @@ Stable within the `v0.1.0` technical preview:
 - deterministic batch execution for a fixed seed and config
 - release archives for Linux and macOS on `amd64` and `arm64`
 
-Experimental in `v0.1.0`:
+Experimental in `v0.1.x`:
 
 - long-running `serve` / `watch` posture service
 - richer analysis configuration beyond the legacy gate-policy subset
@@ -43,7 +43,7 @@ Unknown or mismatched contracts are rejected. There is no silent fallback for un
 
 ## Installation
 
-Preferred path for `v0.1.0`:
+Preferred path for the current technical preview release:
 
 1. Download the release binary archive for your platform.
 2. Download the matching `sheaft-default-config-pack_X.Y.Z.tar.gz`.
@@ -121,7 +121,7 @@ sheaft run --model <artifact.json> --analysis <analysis.yaml> --contract-policy 
 
 ## Service mode
 
-The long-running service remains experimental in `v0.1.0`, but it is included in the public technical preview.
+The long-running service remains experimental in `v0.1.x`, but it is included in the public technical preview.
 
 The checked-in example is runnable without editing paths:
 
@@ -157,7 +157,7 @@ Sheaft is intentionally downstream of Bering artifacts and schemas.
 
 ## Known limitations
 
-- `v0.1.0` supports only `io.mb3r.bering.model@1.0.0` and `io.mb3r.bering.snapshot@1.0.0`.
+- `v0.1.1` supports only `io.mb3r.bering.model@1.0.0` and `io.mb3r.bering.snapshot@1.0.0`.
 - This release does not introduce or stabilize an upstream discovery pipeline. Discovery remains upstream; the local `discover` helper is experimental only.
 - `serve` / `watch` are suitable for technical-preview evaluation, not yet for a stable long-term operational contract.
 - The richer analysis surface is available, but its configuration ergonomics and operational conventions may still change in later `0.x` releases.
