@@ -1,40 +1,62 @@
 # Install
 
-Sheaft can be consumed as a binary, OCI image, or OCI Helm chart.
+`v0.1.0` is the first public technical preview of Sheaft. Prefer release assets for evaluation and automation; use `go install` or `go build` as fallback paths.
 
-The machine-readable entrypoint for automation is `release-manifest.json`. Use that file to resolve exact archive names, checksums, image references, chart version, and the default config pack asset for a given release.
+The machine-readable entrypoint for release consumers is `release-manifest.json`. It records exact archive names, checksums, image references, chart version, and the default config pack asset for a given release.
 
-## Binary
+## Preferred: Release Binary + Default Config Pack
 
-1. Download the archive for your platform from the release payload.
-2. Verify it against the checksum listed in `release-manifest.json` or the release checksums file.
-3. Extract the `sheaft` binary and place it on `PATH`.
+1. Download the archive for your platform.
+2. Download the matching default config pack archive.
+3. Verify both against `sheaft_X.Y.Z_checksums.txt` and, if needed, `release-manifest.json`.
+4. Extract the binary and the config pack.
 
-Example:
+Example asset names:
+
+- `sheaft_X.Y.Z_linux_amd64.tar.gz`
+- `sheaft_X.Y.Z_linux_arm64.tar.gz`
+- `sheaft_X.Y.Z_darwin_amd64.tar.gz`
+- `sheaft_X.Y.Z_darwin_arm64.tar.gz`
+- `sheaft-default-config-pack_X.Y.Z.tar.gz`
+
+Minimal first run after extraction:
 
 ```bash
 tar -xzf sheaft_X.Y.Z_linux_amd64.tar.gz
-./sheaft help
+tar -xzf sheaft-default-config-pack_X.Y.Z.tar.gz
+./sheaft run --model examples/outputs/model.sample.json --policy configs/gate.policy.example.yaml --out-dir out/quickstart --seed 42
+```
+
+## Fallback: `go install`
+
+```bash
+go install github.com/MB3R-Lab/Sheaft/cmd/sheaft@vX.Y.Z
+sheaft help
+```
+
+## Fallback: `go build`
+
+From a clean checkout:
+
+```bash
+go build ./cmd/sheaft
+./sheaft run --model examples/outputs/model.sample.json --policy configs/gate.policy.example.yaml --out-dir out/quickstart --seed 42
 ```
 
 ## OCI Image
-
-Pull the tagged image:
 
 ```bash
 docker pull ghcr.io/mb3r-lab/sheaft:vX.Y.Z
 docker run --rm ghcr.io/mb3r-lab/sheaft:vX.Y.Z help
 ```
 
-The image keeps the current CLI entrypoint behavior:
+The image keeps the same CLI entrypoint behavior:
 
 ```bash
 docker run --rm ghcr.io/mb3r-lab/sheaft:vX.Y.Z run --model /data/input.json --analysis /config/analysis.yaml --out-dir /out
 ```
 
 ## OCI Helm Chart
-
-Pull or install the chart from OCI:
 
 ```bash
 helm pull oci://ghcr.io/mb3r-lab/charts/sheaft --version X.Y.Z
@@ -48,33 +70,18 @@ Chart modes:
 
 ## Default Config Pack
 
-Each release includes a versioned default config pack archive.
-
-It is intended to be automation-friendly:
+Each release includes a versioned default config pack archive with checked-in examples:
 
 - example analysis config
 - example gate policy
 - example predicate contract
 - example serve config
-- example journeys override
 - example reports and sample Bering-compatible artifacts
 
 Typical flow:
 
-1. extract the pack into your repo or CI workspace;
-2. start from the provided config files;
-3. override file contents or mount paths as needed for your environment.
-
-## Kubernetes Notes
-
-The OCI chart exposes:
-
-- image repository, tag, and digest override
-- mounted policy/model/artifact paths
-- batch and serve mode selection
-- resources
-- env and envFrom
-- service and metrics toggles
-- pod and container security context
+1. extract the pack into a repo, CI workspace, or scratch directory;
+2. run the sample batch path unchanged once;
+3. replace sample artifact and config paths with project-specific inputs.
 
 See [release-assets.md](release-assets.md) for the asset inventory and [compatibility.md](compatibility.md) for upstream contract usage.

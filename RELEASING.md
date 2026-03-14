@@ -1,6 +1,6 @@
 # Releasing Sheaft
 
-Sheaft release automation is tag-driven and platform-neutral.
+Sheaft release automation is tag-driven and platform-neutral. `v0.1.0` is intentionally published as a technical preview, so release notes and README language should stay explicit about what is stable versus experimental.
 
 The canonical release contract is the generated payload:
 
@@ -43,6 +43,7 @@ A successful tagged release publishes:
 - `compatibility-manifest.json`
 - `release-manifest.json`
 - default config pack archive
+- versioned GitHub release notes from `release/<tag>.md`, when present
 
 ## Local Validation
 
@@ -50,6 +51,12 @@ Dry-run validation:
 
 ```bash
 make release-dry-run APP_VERSION=0.0.0-dev
+```
+
+`release-dry-run` includes the checked-in example smoke path. You can still run it separately when you only want to validate the first-run surface:
+
+```bash
+make smoke-examples
 ```
 
 Local end-to-end publish to a local OCI registry:
@@ -71,11 +78,13 @@ make release-local APP_VERSION=0.0.0-dev LOCAL_REGISTRY=localhost:5000
 On tag push it:
 
 1. runs tests;
-2. builds release archives with GoReleaser;
-3. publishes the OCI image;
-4. publishes the OCI Helm chart;
-5. generates `release-manifest.json`;
-6. uploads the canonical payload to the GitHub Release.
+2. runs smoke checks against checked-in examples;
+3. builds release archives with GoReleaser;
+4. publishes the OCI image;
+5. publishes the OCI Helm chart;
+6. generates `release-manifest.json`;
+7. creates or updates the GitHub Release using `release/<tag>.md` when available;
+8. uploads the canonical payload to the GitHub Release.
 
 ## Generic CI Reuse
 

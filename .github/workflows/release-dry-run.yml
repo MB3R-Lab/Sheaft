@@ -29,6 +29,9 @@ jobs:
       - name: Setup Helm
         uses: azure/setup-helm@v4
 
+      - name: Smoke checked-in examples
+        run: make smoke-examples
+
       - name: Validate release dry-run
         run: |
           OWNER_LC="$(printf '%s' "${GITHUB_REPOSITORY_OWNER}" | tr '[:upper:]' '[:lower:]')"
@@ -46,4 +49,5 @@ jobs:
             compatibility-manifest.json
             release-manifest.json
             charts/sheaft/**
+            .tmp/smoke-examples/**
           if-no-files-found: error

@@ -1,82 +1,138 @@
 # Sheaft
 
-Sheaft is a resilience posture engine for model artifacts produced upstream by Bering or another compatible producer.
+Sheaft is a downstream resilience posture engine and CI/CD gate for model artifacts produced by Bering or another compatible upstream producer.
 
-It supports two operating modes:
+## What is Sheaft
 
-- CI/CD batch gating from externally produced artifacts.
-- Continuous posture monitoring from watched model or snapshot artifacts.
+Sheaft consumes already-produced model or snapshot artifacts, runs deterministic resilience analysis, emits posture reports, and can fail or warn a delivery pipeline based on policy.
 
-Sheaft stays downstream of topology discovery. `discover` still exists as a local helper, but it is not the production discovery path.
+It stays downstream of topology discovery. The public surface in this repository is the CLI and release assets around:
 
-## What It Does
+- batch commands: `simulate`, `gate`, `run`
+- service commands: `serve`, `watch`
 
-- `simulate`: consume a model or snapshot artifact and write a posture report.
-- `gate`: evaluate a report against the legacy policy subset or the richer analysis rules.
-- `run`: one-shot batch pipeline for CI/CD.
-- `serve` / `watch`: long-running posture service with HTTP status, diff, history, and metrics endpoints.
+## Stability / Release Status
 
-The current batch commands remain supported:
+`v0.1.0` is an experimental public release and should be treated as a technical preview, not a stable GA release.
 
-```bash
-sheaft simulate --model <artifact.json> --policy <policy.yaml> --out <report.json> --seed 42
-sheaft gate --report <report.json> --policy <policy.yaml>
-sheaft run --model <artifact.json> --policy <policy.yaml> --out-dir out --seed 42
-```
+Stable within the `v0.1.0` technical preview:
 
-The richer path is additive:
+- strict acceptance of `io.mb3r.bering.model@1.0.0`
+- strict acceptance of `io.mb3r.bering.snapshot@1.0.0`
+- batch CLI command names and core flow: `simulate`, `gate`, `run`
+- deterministic batch execution for a fixed seed and config
+- release archives for Linux and macOS on `amd64` and `arm64`
 
-```bash
-sheaft simulate --model <artifact.json> --analysis configs/analysis.example.yaml --out out/report.json
-sheaft run --model <artifact.json> --analysis configs/analysis.example.yaml --out-dir out
-sheaft serve --config configs/sheaft.example.yaml
-```
+Experimental in `v0.1.0`:
 
-Project-level contract pinning can be added on top:
+- long-running `serve` / `watch` posture service
+- richer analysis configuration beyond the legacy gate-policy subset
+- Helm chart and OCI image operational packaging
+- local `discover` helper, which is not the production discovery path
 
-```bash
-sheaft run --model <artifact.json> --analysis configs/analysis.example.yaml --contract-policy configs/contract-policy.example.yaml --out-dir out
-```
-
-## Supported Upstream Contracts
+## Supported upstream contracts
 
 Sheaft validates artifacts against an explicit whitelist.
 
 - `io.mb3r.bering.model@1.0.0`
 - `io.mb3r.bering.snapshot@1.0.0`
 
-Pinned URIs, digests, and release-line support are tracked in [docs/compatibility-matrix.md](docs/compatibility-matrix.md).
-The machine-readable compatibility contract is [compatibility-manifest.json](compatibility-manifest.json).
+Pinned URIs, digests, and release-line support are tracked in [docs/compatibility-matrix.md](docs/compatibility-matrix.md). The machine-readable compatibility contract is [compatibility-manifest.json](compatibility-manifest.json).
 
-Unknown contracts are rejected with an error that lists the supported contracts. There is no silent fallback for unsupported upstream schemas.
-Project-level narrowing and deprecation behavior can be layered on top with `--contract-policy` or inline `contract_policy` config.
+Unknown or mismatched contracts are rejected. There is no silent fallback for unsupported upstream schemas.
+
+## Installation
+
+Preferred path for `v0.1.0`:
+
+1. Download the release binary archive for your platform.
+2. Download the matching `sheaft-default-config-pack_X.Y.Z.tar.gz`.
+3. Verify against `sheaft_X.Y.Z_checksums.txt`.
+4. Extract and run the quickstart below.
+
+Minimum planned binary archives:
+
+- `sheaft_X.Y.Z_linux_amd64.tar.gz`
+- `sheaft_X.Y.Z_linux_arm64.tar.gz`
+- `sheaft_X.Y.Z_darwin_amd64.tar.gz`
+- `sheaft_X.Y.Z_darwin_arm64.tar.gz`
+
+Fallbacks:
+
+- `go install github.com/MB3R-Lab/Sheaft/cmd/sheaft@vX.Y.Z`
+- `go build ./cmd/sheaft`
+
+See [docs/install.md](docs/install.md) for the full install matrix, including OCI image and Helm chart paths.
 
 ## Quickstart
 
-### Batch Gate
+If you extracted a release binary plus the default config pack, or if you are in a cloned checkout, this first run is intentionally copy-paste friendly:
 
 ```bash
-sheaft run \
+./sheaft run \
   --model examples/outputs/model.sample.json \
   --policy configs/gate.policy.example.yaml \
-  --out-dir examples/outputs/generated \
+  --out-dir out/quickstart \
   --seed 42
 ```
 
-### Advanced Batch Analysis
+That writes:
+
+- `out/quickstart/model.json`
+- `out/quickstart/report.json`
+- `out/quickstart/summary.md`
+
+Analysis example:
 
 ```bash
-sheaft run \
+./sheaft run \
   --model examples/outputs/snapshot.sample.json \
   --analysis configs/analysis.example.yaml \
-  --out-dir examples/outputs/posture
+  --out-dir out/quickstart-analysis
 ```
 
-### Long-Running Service
+On Windows from a source checkout, the same path is:
+
+```powershell
+go build ./cmd/sheaft
+.\sheaft.exe run --model examples/outputs/model.sample.json --policy configs/gate.policy.example.yaml --out-dir out/quickstart --seed 42
+```
+
+## Batch mode
+
+Core batch commands:
 
 ```bash
-sheaft serve --config configs/sheaft.example.yaml
+sheaft simulate --model <artifact.json> --policy <policy.yaml> --out <report.json> --seed 42
+sheaft simulate --model <artifact.json> --analysis <analysis.yaml> --out <report.json>
+sheaft gate --report <report.json> --policy <policy.yaml>
+sheaft gate --report <report.json> --analysis <analysis.yaml>
+sheaft run --model <artifact.json> --policy <policy.yaml> --out-dir out --seed 42
+sheaft run --model <artifact.json> --analysis <analysis.yaml> --out-dir out
 ```
+
+Optional project-level narrowing can be layered on with:
+
+```bash
+sheaft run --model <artifact.json> --analysis <analysis.yaml> --contract-policy configs/contract-policy.example.yaml --out-dir out
+```
+
+## Service mode
+
+The long-running service remains experimental in `v0.1.0`, but it is included in the public technical preview.
+
+The checked-in example is runnable without editing paths:
+
+```bash
+./sheaft serve --config configs/sheaft.example.yaml
+```
+
+That example:
+
+- listens on `:8080`
+- watches the checked-in sample artifact at `examples/outputs/snapshot.sample.json`
+- uses `configs/analysis.example.yaml`
+- writes history under `.sheaft/history`
 
 HTTP endpoints:
 
@@ -88,124 +144,77 @@ HTTP endpoints:
 - `/history`
 - `/metrics`
 
-## Analysis Model
+## Compatibility with Bering artifacts
 
-The richer analysis config supports:
+Sheaft is intentionally downstream of Bering artifacts and schemas.
 
-- named scenario profiles
-- per-profile sampling mode and failure settings
-- weighted endpoint aggregates
-- baseline report comparison
-- external predicate and workload overlays for legacy models
-- explicit multi-profile gate evaluation rules
+- It accepts only the checked-in contract pins listed above.
+- Compatibility metadata is published in [compatibility-manifest.json](compatibility-manifest.json).
+- Schema ownership stays with Bering; Sheaft does not redefine those schema versions.
+- `--contract-policy` can narrow or deprecate accepted contracts for a specific project, but it cannot expand support beyond the built-in whitelist.
 
-Supported sampling modes:
+## Known limitations
 
-- `independent_replica`
-- `independent_service`
-- `fixed_k_service_set`
+- `v0.1.0` supports only `io.mb3r.bering.model@1.0.0` and `io.mb3r.bering.snapshot@1.0.0`.
+- This release does not introduce or stabilize an upstream discovery pipeline. Discovery remains upstream; the local `discover` helper is experimental only.
+- `serve` / `watch` are suitable for technical-preview evaluation, not yet for a stable long-term operational contract.
+- The richer analysis surface is available, but its configuration ergonomics and operational conventions may still change in later `0.x` releases.
+- Release automation is designed around GitHub Releases, release manifests, OCI image publication, and an OCI Helm chart; Windows release archives can be built, but they are not the primary tested surface in this preview.
 
-Supported predicate types:
+## Development
 
-- `all_of`
-- `any_of`
-- `k_of_n`
+If GNU Make is available:
 
-If no richer predicate definition is supplied, Sheaft falls back to legacy path-based journey evaluation.
+```bash
+make build
+make test
+make lint
+make smoke-examples
+```
 
-## Metrics
+Direct command equivalents:
 
-Prometheus/OpenMetrics output includes:
-
-- `recomputes_total`
-- `recompute_duration_seconds`
-- `current_model_age_seconds`
-- `current_profile_aggregate_availability`
-- `current_endpoint_availability`
-- `endpoints_below_threshold`
-- `active_model_info`
-- `active_topology_version`
-- `previous_gap`
-- `baseline_gap`
-
-Example scrape config: [examples/prometheus/prometheus.sheaft.yml](examples/prometheus/prometheus.sheaft.yml)  
-Example Grafana dashboard: [examples/grafana/sheaft.posture.dashboard.json](examples/grafana/sheaft.posture.dashboard.json)
-
-## Repository Layout
-
-```text
-cmd/sheaft                 CLI entrypoint
-internal/app               CLI orchestration
-internal/artifact          supported artifact adapters and contract loading
-internal/analyzer          shared batch/service analysis pipeline
-internal/simulation        deterministic multi-profile simulation engine
-internal/gate              gate evaluation
-internal/report            rich posture reports and diffs
-internal/service           watch/serve mode and metrics
-internal/config            legacy policy + richer analysis/serve config loading
-api/schema                 JSON schemas
-configs                    example configs
-examples                   sample artifacts, dashboard, and scrape config
-docs                       architecture, methodology, migration, and config docs
+```bash
+go build ./cmd/sheaft
+go test ./...
+go vet ./...
 ```
 
 ## Docs
 
 - [Install](docs/install.md)
 - [Compatibility](docs/compatibility.md)
+- [Compatibility Matrix](docs/compatibility-matrix.md)
 - [Release Assets](docs/release-assets.md)
 - [Architecture](docs/architecture.md)
 - [Methodology](docs/methodology.md)
 - [Configuration and Schemas](docs/configuration.md)
-- [Contract Policy Schema](api/schema/contract-policy.schema.json)
-- [Consumer Semantics v1](docs/consumer-semantics-v1.md)
 - [CI Gate](docs/ci-gate.md)
-- [Compatibility Matrix](docs/compatibility-matrix.md)
-- [Contract Release Workflow](docs/contract-release-workflow.md)
+- [Consumer Semantics v1](docs/consumer-semantics-v1.md)
 - [Versioning](VERSIONING.md)
 - [Releasing](RELEASING.md)
-- [Roadmap Audit](docs/roadmap.md)
+- [Changelog](CHANGELOG.md)
 - [Service Mode](docs/observability-mode.md)
-- [Migration Notes](docs/migration.md)
 - [Assumptions and Limitations](docs/assumptions-and-limitations.md)
 
-## Example Artifacts
+## Example artifacts and configs
 
-- Plain model: [examples/outputs/model.sample.json](examples/outputs/model.sample.json)
-- Snapshot envelope: [examples/outputs/snapshot.sample.json](examples/outputs/snapshot.sample.json)
-- Legacy report sample: [examples/outputs/report.sample.json](examples/outputs/report.sample.json)
-- Rich report sample: [examples/outputs/posture-generated/report.json](examples/outputs/posture-generated/report.json)
-- Rich summary sample: [examples/outputs/posture-generated/summary.md](examples/outputs/posture-generated/summary.md)
-- Predicate overlay: [configs/predicate-contract.example.yaml](configs/predicate-contract.example.yaml)
-- Contract policy: [configs/contract-policy.example.yaml](configs/contract-policy.example.yaml)
-- Deprecated contract policy example: [configs/contract-policy.deprecated.example.yaml](configs/contract-policy.deprecated.example.yaml)
-- GitHub Actions CI template: [examples/ci/github-actions.sheaft.yml](examples/ci/github-actions.sheaft.yml)
-- GitLab CI template: [examples/ci/gitlab-ci.sheaft.yml](examples/ci/gitlab-ci.sheaft.yml)
-- Jenkins CI template: [examples/ci/Jenkinsfile](examples/ci/Jenkinsfile)
-- CI template smoke scripts: [scripts/ci/check-ci-handoff-templates.sh](scripts/ci/check-ci-handoff-templates.sh) and [scripts/ci/smoke-ci-handoff.sh](scripts/ci/smoke-ci-handoff.sh)
+- [examples/outputs/model.sample.json](examples/outputs/model.sample.json)
+- [examples/outputs/snapshot.sample.json](examples/outputs/snapshot.sample.json)
+- [examples/outputs/report.sample.json](examples/outputs/report.sample.json)
+- [examples/outputs/posture-generated/report.json](examples/outputs/posture-generated/report.json)
+- [examples/outputs/posture-generated/summary.md](examples/outputs/posture-generated/summary.md)
+- [configs/gate.policy.example.yaml](configs/gate.policy.example.yaml)
+- [configs/analysis.example.yaml](configs/analysis.example.yaml)
+- [configs/predicate-contract.example.yaml](configs/predicate-contract.example.yaml)
+- [configs/contract-policy.example.yaml](configs/contract-policy.example.yaml)
+- [configs/sheaft.example.yaml](configs/sheaft.example.yaml)
 
-## Exit Codes
+## Exit codes
 
 - `0`: success / pass / warn / report
 - `2`: gate failure in `mode=fail`
 - `1`: runtime, config, or input error
-
-## Notes
-
-- Determinism is preserved for a fixed seed and config.
-- Production topology discovery remains upstream.
-- `discover` is retained as an experimental local helper only.
-
-## Research background
-
-Sheaft is grounded in the same resilience-modeling and simulation work described in the following publications:
-
-1. [**Model Discovery and Graph Simulation: A Lightweight Gateway to Chaos Engineering**](https://www.alphaxiv.org/abs/2506.11176)  
-   The 48th IEEE/ACM International Conference on Software Engineering - New Ideas and Emerging Results (ICSE-NIER 2026)
-2. [**Evaluating Asynchronous Semantics in Trace-Discovered Resilience Models: A Case Study on the OpenTelemetry Demo**](https://www.alphaxiv.org/abs/2512.12314)  
-   The 40th International Conference on Advanced Information Networking and Applications (AINA-2026)
-
-The public CLI, schemas, and service mode are kept generic for broad OSS use, but the methodology and design choices are informed by that research lineage. See [docs/methodology.md](docs/methodology.md) for the operational model used in this repository.
 
 ## License
 

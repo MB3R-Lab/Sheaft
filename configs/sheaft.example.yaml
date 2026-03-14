@@ -2,12 +2,10 @@ schema_version: "1.0"
 listen: ":8080"
 
 artifact:
-  path: artifacts/bering
-  mode: directory
-  patterns:
-    - "*.json"
+  path: ../examples/outputs/snapshot.sample.json
+  mode: file
 
-analysis_file: configs/analysis.example.yaml
+analysis_file: analysis.example.yaml
 
 poll_interval: 30s
 watch_fs: true
@@ -15,4 +13,4 @@ watch_polling: true
 
 history:
   max_items: 20
-  disk_dir: out/history
+  disk_dir: ../.sheaft/history

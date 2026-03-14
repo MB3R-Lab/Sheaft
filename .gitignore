@@ -13,6 +13,7 @@ coverage.out
 # Runtime outputs
 out/
 .sheaft/
+.tmp/
 examples/outputs/generated/
 .tools/
 
