@@ -102,7 +102,18 @@ jobs:
               gh release create "${TAG}" --verify-tag --title "${TITLE}" --notes "Technical preview release. Canonical release metadata lives in dist/ and release-manifest.json."
             fi
           fi
-          mapfile -t files < <(find dist -type f ! -path 'dist/sheaft_*_v*/*' | sort)
+          mapfile -t files < <(
+            {
+              find dist -maxdepth 1 -type f \( \
+                -name 'sheaft_*.tar.gz' -o \
+                -name 'sheaft_*.zip' -o \
+                -name 'sheaft_*.sbom.json' -o \
+                -name 'sheaft_*_checksums.txt' -o \
+                -name 'sheaft-default-config-pack_*.tar.gz' \
+              \)
+              find dist/charts -maxdepth 1 -type f -name 'sheaft-*.tgz'
+            } | sort
+          )
           files+=("compatibility-manifest.json")
           files+=("release-manifest.json")
           gh release upload "${TAG}" "${files[@]}" --clobber
