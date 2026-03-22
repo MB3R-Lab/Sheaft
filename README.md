@@ -1,9 +1,8 @@
 # Sheaft
 
 [![Release](https://img.shields.io/github/v/release/MB3R-Lab/Sheaft)](https://github.com/MB3R-Lab/Sheaft/releases)
-[![release-dry-run](https://img.shields.io/github/actions/workflow/status/MB3R-Lab/Sheaft/release-dry-run.yml?branch=main&label=release-dry-run)](https://github.com/MB3R-Lab/Sheaft/actions/workflows/release-dry-run.yml)
+[![ci-template-smoke](https://img.shields.io/github/actions/workflow/status/MB3R-Lab/Sheaft/ci-template-smoke.yml?branch=main&label=ci-template-smoke)](https://github.com/MB3R-Lab/Sheaft/actions/workflows/ci-template-smoke.yml)
 [![schema-contract](https://img.shields.io/github/actions/workflow/status/MB3R-Lab/Sheaft/schema-contract.yml?branch=main&label=schema-contract)](https://github.com/MB3R-Lab/Sheaft/actions/workflows/schema-contract.yml)
-[![License](https://img.shields.io/github/license/MB3R-Lab/Sheaft)](https://github.com/MB3R-Lab/Sheaft/blob/main/LICENSE)
 [![Go version](https://img.shields.io/github/go-mod/go-version/MB3R-Lab/Sheaft)](https://github.com/MB3R-Lab/Sheaft/blob/main/go.mod)
 [![Status](https://img.shields.io/badge/status-technical_preview-orange)](https://github.com/MB3R-Lab/Sheaft/releases/tag/v0.2.0)
 [![Bering support](https://img.shields.io/badge/Bering-1.0%20%7C%201.1-blue)](https://github.com/MB3R-Lab/Sheaft/blob/main/docs/compatibility-matrix.md)
