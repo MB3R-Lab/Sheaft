@@ -2,83 +2,83 @@
   "$schema": "api/schema/release-manifest.schema.json",
   "schema_version": "1.0.0",
   "product_name": "Sheaft",
-  "app_version": "0.2.0",
-  "git_commit": "7a37c5908a721157f9178d6173395f1cbb29d493",
-  "build_date": "2026-03-14T17:32:03Z",
+  "app_version": "0.2.1",
+  "git_commit": "cff469bbc6fda223443acd070d4783510037c114",
+  "build_date": "2026-03-22T14:39:43Z",
   "binaries": [
     {
       "os": "darwin",
       "arch": "amd64",
       "archive": {
-        "path": "dist/sheaft_0.2.0_darwin_amd64.tar.gz",
-        "sha256": "1ae95df8e7f36df9834e8271069222bcc420be5e0acca6d7ac1d6a5b9b892e5b"
+        "path": "dist/sheaft_0.2.1_darwin_amd64.tar.gz",
+        "sha256": "6d7b6dda1e63a49c2a7cbfe84fcd4b578b612229e9cd79bc0802e6bb2b0b8a3c"
       },
       "sbom": {
-        "path": "dist/sheaft_0.2.0_darwin_amd64.tar.gz.sbom.json",
-        "sha256": "3073c6520d9443238546f490c644a4cef6d24022cb17d326682a6763ea034431"
+        "path": "dist/sheaft_0.2.1_darwin_amd64.tar.gz.sbom.json",
+        "sha256": "723af9f6cdfa1b6e4d9c5cc214d5abc96ed9cc7c3c99229b28207145ba8c5f89"
       }
     },
     {
       "os": "darwin",
       "arch": "arm64",
       "archive": {
-        "path": "dist/sheaft_0.2.0_darwin_arm64.tar.gz",
-        "sha256": "d19f3b64d996586c9f66c1a8ba8e93ac624ff870646e604d2e335f74415bebf4"
+        "path": "dist/sheaft_0.2.1_darwin_arm64.tar.gz",
+        "sha256": "c4097bbf439d59436d3871246448dad59d7e7866ff3978e3602e81b5eb56d2fa"
       },
       "sbom": {
-        "path": "dist/sheaft_0.2.0_darwin_arm64.tar.gz.sbom.json",
-        "sha256": "64ff143bc241ce86b6e3716810f764525fed3b5f250a8b719a66c2c47c9aa0f6"
+        "path": "dist/sheaft_0.2.1_darwin_arm64.tar.gz.sbom.json",
+        "sha256": "10e5900c986cc69e8fe5fb2480f754e0cfef5547ef4d10ea4981cf22a2eb9f8e"
       }
     },
     {
       "os": "linux",
       "arch": "amd64",
       "archive": {
-        "path": "dist/sheaft_0.2.0_linux_amd64.tar.gz",
-        "sha256": "776ac98a2866651b450e93ba582336903be4f94e6c305124f3c34c04aa450f6e"
+        "path": "dist/sheaft_0.2.1_linux_amd64.tar.gz",
+        "sha256": "0c29493ce28a50a2906e1c00fd0c06612c9197d2d1ae8021917b276896e30432"
       },
       "sbom": {
-        "path": "dist/sheaft_0.2.0_linux_amd64.tar.gz.sbom.json",
-        "sha256": "c1d489bc23fef8b05b4e71791bebba7e72632495775386d35d4f7bc62297228c"
+        "path": "dist/sheaft_0.2.1_linux_amd64.tar.gz.sbom.json",
+        "sha256": "89333f61d687b6f1a079ec062cd2eca25e4fb1356de81165e665bbf27a2ed722"
       }
     },
     {
       "os": "linux",
       "arch": "arm64",
       "archive": {
-        "path": "dist/sheaft_0.2.0_linux_arm64.tar.gz",
-        "sha256": "567b7767367a63eaee27e043b33599fc00cfad1fb13b892745841bfe199ebbef"
+        "path": "dist/sheaft_0.2.1_linux_arm64.tar.gz",
+        "sha256": "826d6553418fc9158db0c42db3ceb1048ab2740a3ded8868ee90399d50a3f926"
       },
       "sbom": {
-        "path": "dist/sheaft_0.2.0_linux_arm64.tar.gz.sbom.json",
-        "sha256": "25b6c78b33f993995e29a50f3973a59c6ac96aaf35fab3a0933d146716a70bb5"
+        "path": "dist/sheaft_0.2.1_linux_arm64.tar.gz.sbom.json",
+        "sha256": "809bbbb5e69d6b1c4ae0fbafc0e40b6bbd93d85921829fcb94fa95ca3c181020"
       }
     },
     {
       "os": "windows",
       "arch": "amd64",
       "archive": {
-        "path": "dist/sheaft_0.2.0_windows_amd64.zip",
-        "sha256": "e585975d5d383e45e39dc2a173517a06cf1591290fd7931a9cdd73d728178359"
+        "path": "dist/sheaft_0.2.1_windows_amd64.zip",
+        "sha256": "5e409bca3378730f07216aeb619362751168a2a809f6202126d079d592e43603"
       },
       "sbom": {
-        "path": "dist/sheaft_0.2.0_windows_amd64.zip.sbom.json",
-        "sha256": "27addfd17a99e2dcc023b53e96845f6d01f2459ec6936663695b0a8fcf19a575"
+        "path": "dist/sheaft_0.2.1_windows_amd64.zip.sbom.json",
+        "sha256": "51d53584af6cb223a4476065ba6af5a03de743176d15c6ebab46f5e6cd9d9e73"
       }
     }
   ],
   "checksums_file": {
-    "path": "dist/sheaft_0.2.0_checksums.txt",
-    "sha256": "b01bf007e96c2eb3801a188af6b1b3ad977c85f1f587a1488f46d794043d2735"
+    "path": "dist/sheaft_0.2.1_checksums.txt",
+    "sha256": "845448ddface4e8dcd1defb068c2af1eceae3a0d325d6955054fa4f8b4bd7a56"
   },
   "oci_images": [
     {
       "schema_version": "1.0.0",
       "repository": "ghcr.io/mb3r-lab/sheaft",
       "tags": [
-        "v0.2.0",
+        "v0.2.1",
         "v0.2",
-        "sha-7a37c5908a721157f9178d6173395f1cbb29d493"
+        "sha-cff469bbc6fda223443acd070d4783510037c114"
       ],
       "platforms": [
         "linux/amd64"
@@ -86,13 +86,13 @@
       "published": false,
       "references": [
         {
-          "reference": "ghcr.io/mb3r-lab/sheaft:v0.2.0"
+          "reference": "ghcr.io/mb3r-lab/sheaft:v0.2.1"
         },
         {
           "reference": "ghcr.io/mb3r-lab/sheaft:v0.2"
         },
         {
-          "reference": "ghcr.io/mb3r-lab/sheaft:sha-7a37c5908a721157f9178d6173395f1cbb29d493"
+          "reference": "ghcr.io/mb3r-lab/sheaft:sha-cff469bbc6fda223443acd070d4783510037c114"
         }
       ]
     }
@@ -100,11 +100,11 @@
   "chart": {
     "schema_version": "1.0.0",
     "name": "sheaft",
-    "version": "0.2.0",
+    "version": "0.2.1",
     "published": false,
     "archive": {
-      "path": "dist/charts/sheaft-0.2.0.tgz",
-      "sha256": "d7168a83597465e9586808eaff77bd386e9f2193553abd86b49958428316733b"
+      "path": "dist/charts/sheaft-0.2.1.tgz",
+      "sha256": "d4358b0ccf31d6c83e94d999900da5595b00cf0b82f8cb642985034fde2fb676"
     }
   },
   "compatibility_manifest": {
@@ -115,10 +115,10 @@
     {
       "schema_version": "1.0.0",
       "name": "default-config-pack",
-      "version": "0.2.0",
+      "version": "0.2.1",
       "archive": {
-        "path": "dist/sheaft-default-config-pack_0.2.0.tar.gz",
-        "sha256": "07039fe4a0deecce21ad57ca42a1442cddc03a823a1287eafb22cce19857bdc9"
+        "path": "dist/sheaft-default-config-pack_0.2.1.tar.gz",
+        "sha256": "1a0ce2a7812b8ab6558ca43b5d930758d645b32a229efaaeff965dbb0be899af"
       },
       "files": [
         "configs/analysis.example.yaml",

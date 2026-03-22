@@ -5,7 +5,7 @@
 [![ci-template-smoke](https://img.shields.io/github/actions/workflow/status/MB3R-Lab/Sheaft/ci-template-smoke.yml?branch=main&label=ci-template-smoke)](https://github.com/MB3R-Lab/Sheaft/actions/workflows/ci-template-smoke.yml)
 [![schema-contract](https://img.shields.io/github/actions/workflow/status/MB3R-Lab/Sheaft/schema-contract.yml?branch=main&label=schema-contract)](https://github.com/MB3R-Lab/Sheaft/actions/workflows/schema-contract.yml)
 [![Go version](https://img.shields.io/github/go-mod/go-version/MB3R-Lab/Sheaft)](https://github.com/MB3R-Lab/Sheaft/blob/main/go.mod)
-[![Status](https://img.shields.io/badge/status-technical_preview-orange)](https://github.com/MB3R-Lab/Sheaft/releases/tag/v0.2.0)
+[![Status](https://img.shields.io/badge/status-technical_preview-orange)](https://github.com/MB3R-Lab/Sheaft/releases/tag/v0.2.1)
 [![Bering support](https://img.shields.io/badge/Bering-1.0%20%7C%201.1-blue)](https://github.com/MB3R-Lab/Sheaft/blob/main/docs/compatibility-matrix.md)
 
 Sheaft is a downstream resilience posture engine and CI/CD gate for model artifacts produced by Bering or another compatible upstream producer.
@@ -21,9 +21,9 @@ It stays downstream of topology discovery. The public surface in this repository
 
 ## Stability / Release Status
 
-The current public release is `v0.2.0`. The `v0.2.x` line is an experimental public release and should be treated as a technical preview, not a stable GA release.
+The current public release is `v0.2.1`. The `v0.2.x` line is an experimental public release and should be treated as a technical preview, not a stable GA release.
 
-Stable within the `v0.2.0` technical preview:
+Stable within the `v0.2.1` technical preview:
 
 - strict acceptance of the baseline Bering contract line: `io.mb3r.bering.model@1.0.0` and `io.mb3r.bering.snapshot@1.0.0`
 - strict acceptance of the advanced Bering contract line: `io.mb3r.bering.model@1.1.0` and `io.mb3r.bering.snapshot@1.1.0`

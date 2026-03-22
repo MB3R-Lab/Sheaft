@@ -1,5 +1,28 @@
 # Changelog
 
+## v0.2.1 - 2026-03-22
+
+Technical-preview patch release focused on post-release hardening for the `v0.2.0` line.
+
+Included in this release:
+
+- clarified README wording so dual-line support reads as accepted upstream contract lines rather than simultaneous artifact dependencies
+- added and repaired `release-dry-run` status coverage for `main`
+- fixed CI template convention checks to expect the shipped `configs/analysis.v1.1.example.yaml` handoff path
+- fixed default config pack validation for absolute temporary output paths used by CI
+
+Stable within the `v0.2.1` preview:
+
+- the same strict `1.0.0` and `1.1.0` Bering contract acceptance introduced in `v0.2.0`
+- the same deterministic baseline comparison and advanced analysis behavior shipped in `v0.2.0`
+- release validation now includes a working `release-dry-run` signal on `main`
+
+Still experimental in `v0.2.1`:
+
+- long-running `serve` / `watch` service mode
+- local `discover` helper
+- broader operator-facing packaging and operational conventions around image/chart deployment
+
 ## v0.2.0 - 2026-03-22
 
 Technical-preview feature release that turns Sheaft into a real dual-line downstream consumer for Bering `1.0.0` and `1.1.0`, while keeping `1.0.0` as the baseline semantics line.
