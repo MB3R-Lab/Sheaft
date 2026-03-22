@@ -21,7 +21,7 @@ require_common_handoff() {
 
   require_in_file "BERING_ARTIFACT_SOURCE" "${file}" "${label} artifact source variable"
   require_in_file "artifacts/input.json" "${file}" "${label} handoff path"
-  require_in_file "configs/analysis.example.yaml" "${file}" "${label} analysis config"
+  require_in_file "configs/analysis.v1.1.example.yaml" "${file}" "${label} analysis config"
   require_in_file "out" "${file}" "${label} output directory"
 }
 

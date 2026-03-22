@@ -1,6 +1,7 @@
 # Sheaft
 
 [![Release](https://img.shields.io/github/v/release/MB3R-Lab/Sheaft)](https://github.com/MB3R-Lab/Sheaft/releases)
+[![release-dry-run](https://img.shields.io/github/actions/workflow/status/MB3R-Lab/Sheaft/release-dry-run.yml?branch=main&label=release-dry-run)](https://github.com/MB3R-Lab/Sheaft/actions/workflows/release-dry-run.yml)
 [![ci-template-smoke](https://img.shields.io/github/actions/workflow/status/MB3R-Lab/Sheaft/ci-template-smoke.yml?branch=main&label=ci-template-smoke)](https://github.com/MB3R-Lab/Sheaft/actions/workflows/ci-template-smoke.yml)
 [![schema-contract](https://img.shields.io/github/actions/workflow/status/MB3R-Lab/Sheaft/schema-contract.yml?branch=main&label=schema-contract)](https://github.com/MB3R-Lab/Sheaft/actions/workflows/schema-contract.yml)
 [![Go version](https://img.shields.io/github/go-mod/go-version/MB3R-Lab/Sheaft)](https://github.com/MB3R-Lab/Sheaft/blob/main/go.mod)

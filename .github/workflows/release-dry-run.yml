@@ -1,6 +1,9 @@
 name: release-dry-run
 
 on:
+  push:
+    branches:
+      - main
   pull_request:
   workflow_dispatch:
 
