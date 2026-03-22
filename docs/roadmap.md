@@ -18,11 +18,12 @@ This file captures the repository-side audit refreshed on 2026-03-22: current Gi
 
 ## Release Tracking State
 
-- Latest public release shipped: [Sheaft v0.2.0 technical preview](https://github.com/MB3R-Lab/Sheaft/releases/tag/v0.2.0)
-- Historical shipped milestones: `v0.1.0 technical preview`, `v0.1.1 technical preview`, `v0.2.0 technical preview`
-- Active backlog milestone: `Post-v0.2.0 technical preview`
-- Previous release-tracking issue: [#78](https://github.com/MB3R-Lab/Sheaft/issues/78)
-- GitHub issue and milestone sync for `v0.2.0` should be updated after the tag is published so the tracker reflects the shipped release rather than the repository-only state.
+- Latest public release shipped: [Sheaft v0.2.1 technical preview](https://github.com/MB3R-Lab/Sheaft/releases/tag/v0.2.1)
+- Historical shipped milestones: `v0.1.0 technical preview`, `v0.1.1 technical preview`, `v0.2.0 technical preview`, `v0.2.1 technical preview`
+- Active backlog milestone: `Post-v0.2.1 technical preview`
+- Previous release-tracking issue: [#80](https://github.com/MB3R-Lab/Sheaft/issues/80)
+- Current release-tracking issue: [#81](https://github.com/MB3R-Lab/Sheaft/issues/81)
+- GitHub issue and milestone sync was refreshed after the `v0.2.1` patch release so the tracker now reflects the shipped release state.
 
 ## Audit Summary
 
