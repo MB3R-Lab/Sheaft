@@ -1,6 +1,7 @@
 package release
 
 import (
+	"os"
 	"path/filepath"
 	"testing"
 )
@@ -85,5 +86,25 @@ func TestReleaseManifestValidationRejectsMissingDigestForPublishedImage(t *testi
 
 	if err := manifest.Validate(); err == nil {
 		t.Fatal("expected validation error for published image without digest")
+	}
+}
+
+func TestPackageDefaultConfigPackSupportsAbsoluteOutputPaths(t *testing.T) {
+	t.Parallel()
+
+	repoRoot := filepath.Join("..", "..")
+	tempDir := t.TempDir()
+	archivePath := filepath.Join(tempDir, "default-pack.tar.gz")
+	metadataPath := filepath.Join(tempDir, "default-pack.json")
+
+	if err := PackageDefaultConfigPack(repoRoot, filepath.Join(repoRoot, DefaultConfigPackSourceListPath), "0.0.0-test", archivePath, metadataPath); err != nil {
+		t.Fatalf("package default config pack: %v", err)
+	}
+
+	if _, err := os.Stat(archivePath); err != nil {
+		t.Fatalf("stat archive: %v", err)
+	}
+	if _, err := os.Stat(metadataPath); err != nil {
+		t.Fatalf("stat metadata: %v", err)
 	}
 }

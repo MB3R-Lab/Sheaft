@@ -552,7 +552,18 @@ func assetReference(root, path string) (AssetReference, error) {
 	if err != nil {
 		return AssetReference{}, err
 	}
-	relative, err := filepath.Rel(root, path)
+	if root == "" {
+		root = "."
+	}
+	absRoot, err := filepath.Abs(root)
+	if err != nil {
+		return AssetReference{}, fmt.Errorf("absolute root for %s: %w", root, err)
+	}
+	absPath, err := filepath.Abs(path)
+	if err != nil {
+		return AssetReference{}, fmt.Errorf("absolute path for %s: %w", path, err)
+	}
+	relative, err := filepath.Rel(absRoot, absPath)
 	if err != nil {
 		return AssetReference{}, fmt.Errorf("relative path for %s: %w", path, err)
 	}
