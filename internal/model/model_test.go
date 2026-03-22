@@ -56,3 +56,41 @@ func TestValidate_StructuralAndContractValidation(t *testing.T) {
 		t.Fatal("expected contract validation to reject unsupported version, got nil")
 	}
 }
+
+func TestValidate_V110RequiresEdgeIDs(t *testing.T) {
+	t.Parallel()
+
+	mdl := ResilienceModel{
+		Services: []Service{
+			{ID: "gateway", Name: "gateway", Replicas: 1},
+			{ID: "checkout", Name: "checkout", Replicas: 1},
+		},
+		Edges: []Edge{
+			{From: "gateway", To: "checkout", Kind: EdgeKindSync, Blocking: true},
+		},
+		Endpoints: []Endpoint{
+			{ID: "gateway:GET /checkout", EntryService: "gateway", SuccessPredicateRef: "gateway:GET /checkout"},
+		},
+		Metadata: Metadata{
+			SourceType:   "bering",
+			SourceRef:    "artifact",
+			DiscoveredAt: "2026-03-22T00:00:00Z",
+			Confidence:   0.9,
+			Schema: Schema{
+				Name:    modelcontract.BeringModelV110Name,
+				Version: modelcontract.BeringModelV110Version,
+				URI:     modelcontract.BeringModelV110URI,
+				Digest:  modelcontract.BeringModelV110Digest,
+			},
+		},
+	}
+
+	if err := mdl.Validate(); err == nil {
+		t.Fatal("expected v1.1.0 model without edge ids to fail validation")
+	}
+
+	mdl.Edges[0].ID = "gateway|checkout|sync|true"
+	if err := mdl.Validate(); err != nil {
+		t.Fatalf("expected v1.1.0 model with edge ids to validate, got %v", err)
+	}
+}

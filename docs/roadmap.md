@@ -14,26 +14,26 @@ GitHub issues remain the source of truth for roadmap tracking:
 - R9: https://github.com/MB3R-Lab/Sheaft/issues/39
 - R10: https://github.com/MB3R-Lab/Sheaft/issues/40
 
-This file captures the repository-side audit performed on 2026-03-11 and synced with GitHub issue state on 2026-03-14: current GitHub issue state versus what is actually implemented in this repository.
+This file captures the repository-side audit refreshed on 2026-03-22: current GitHub issue state versus what is actually implemented in this repository.
 
 ## Release Tracking State
 
-- Latest public release shipped: [Sheaft v0.1.1 technical preview](https://github.com/MB3R-Lab/Sheaft/releases/tag/v0.1.1)
-- Historical shipped milestone: `v0.1.0 technical preview`
-- Active backlog milestone: `Post-v0.1.0 technical preview`
-- Dedicated release-tracking issue: [#78](https://github.com/MB3R-Lab/Sheaft/issues/78)
-- The public `v0.1.x` release line shipped on top of already-closed foundation work; broader post-preview roadmap issues remain open intentionally.
+- Latest public release shipped: [Sheaft v0.2.0 technical preview](https://github.com/MB3R-Lab/Sheaft/releases/tag/v0.2.0)
+- Historical shipped milestones: `v0.1.0 technical preview`, `v0.1.1 technical preview`, `v0.2.0 technical preview`
+- Active backlog milestone: `Post-v0.2.0 technical preview`
+- Previous release-tracking issue: [#78](https://github.com/MB3R-Lab/Sheaft/issues/78)
+- GitHub issue and milestone sync for `v0.2.0` should be updated after the tag is published so the tracker reflects the shipped release rather than the repository-only state.
 
 ## Audit Summary
 
 | Epic | GitHub state | Repo reality | Notes |
 | --- | --- | --- | --- |
-| R1 | open | partial | Core semantics are implemented across `internal/artifact`, `internal/analyzer`, `internal/simulation`, and `docs/consumer-semantics-v1.md`, but failure-mode extensions and resiliency pattern consumption are still missing. |
+| R1 | open | partial | Baseline semantics and the richer dual-line/fault-contract semantics are now implemented in-repo, but broader policy families such as rate-limit/fallback annotations are still incomplete. |
 | R2 | closed | done | Artifact discovery/ingestion, provenance, incomplete telemetry handling, and diff-capable artifacts are present and covered by tests. |
 | R3 | open | partial | Reproducible analysis and explicit parameter/calibration provenance are now in place, but pluginization and scale benchmarks are still backlog items. |
 | R4 | open | partial | External benchmark contract and limitations docs exist, but the public benchmark suite and release-grade quality reports are not yet in-repo. |
 | R5 | open | partial | CI gate, service mode, output artifacts, and validated cross-CI handoff smoke pipelines are implemented; chaos triage remains the main workflow gap. |
-| R6 | open | partial | Strict contract pinning, conformance checks, vendored schemas, compatibility matrix, contract release workflow, and project-level contract policy now exist; true multi-version support remains open. |
+| R6 | closed | done | Strict contract pinning, conformance checks, vendored schemas, compatibility matrix, contract release workflow, and real dual-line `1.0.0`/`1.1.0` support are now implemented end to end. |
 | R7 | open | gap | No open-core/export playbook material exists yet beyond issue-level planning. |
 | R8 | open | gap | Security/privacy work is not yet implemented beyond lightweight assumptions/limitations guidance. |
 | R9 | open | partial | Diff endpoints exist, but there is no why/debug UX or dependency-level explanation layer yet. |
@@ -46,8 +46,8 @@ This file captures the repository-side audit performed on 2026-03-11 and synced 
 | Issue | GitHub state | Repo reality | Notes |
 | --- | --- | --- | --- |
 | R1.1 | closed | done | "Consumer Semantics v1" is documented in-repo with version scope, precedence rules, and 15 expected behavior examples. |
-| R1.2 | open | partial | Fail-stop semantics and three sampling modes are implemented and tested; timeout/partial/gray extension contract is still missing. |
-| R1.3 | open | gap | No input contract or end-to-end handling for retry/timeout/circuit-breaker/fallback/rate-limit annotations exists yet. |
+| R1.2 | closed | done | Fail-stop baseline semantics, three sampling modes, timeout/partial degradation handling, and the external Sheaft fault contract are implemented and tested. |
+| R1.3 | open | partial | Retry/timeout/circuit-breaker inputs from Bering `1.1.0` and the Sheaft fault contract are now handled; fallback/rate-limit annotations still remain outside the implemented surface. |
 
 ### R2. Model discovery from artifacts
 
@@ -95,7 +95,7 @@ This file captures the repository-side audit performed on 2026-03-11 and synced 
 | R6.3 | closed | done | The repository already functions as the open reference consumer implementation. |
 | R6.4 | closed | done | Contract release workflow, release checklist, and CI verification against published Bering release metadata are now in-repo. |
 | R6.5 | closed | done | Compatibility matrix is now published in-repo, linked from `README.md`, and guarded in CI when contract pin files change. |
-| R6.6 | open | partial | Project-level contract policy, deprecated warn/fail behavior, CLI/config controls, and CI fixtures now exist; the registry still exposes only the current upstream schema line, so non-latest end-to-end coverage remains open. |
+| R6.6 | closed | done | Project-level contract policy now coexists with real dual-line support, end-to-end `1.0.0`/`1.1.0` contract tests, and cross-line artifact baseline comparison coverage. |
 
 ### R7. Commercialization without lock-in
 
@@ -130,14 +130,14 @@ This file captures the repository-side audit performed on 2026-03-11 and synced 
 ## Prioritized Backlog After Audit
 
 1. R4.3: expand applicability boundaries into concrete do-not-trust signals and detector heuristics.
-2. R6.6: add a real non-latest supported Bering contract line and close the remaining end-to-end gap.
-3. R1.2: document and test the extension contract for timeout/partial/gray failure modes.
-4. R9.1: add a why mode for gate decisions on top of current report/diff output.
-5. R4.2: publish release-grade quality metrics for Sheaft-on-Bering.
+2. R1.3: finish the remaining fallback/rate-limit annotation surface or explicitly close it out of scope.
+3. R9.1: add a why mode for gate decisions on top of current report/diff output.
+4. R4.2: publish release-grade quality metrics for Sheaft-on-Bering.
+5. R3.2: decide whether analysis extensibility should become a real plugin surface or stay intentionally in-core.
 
 ## Current Execution Note
 
-- Synced GitHub closures on 2026-03-11: `R1.1`, `R3.3`, `R5.5`, `R5.6`, `R6.4`, `R6.5`.
+- Repository-side audit refreshed on 2026-03-22 after dual-line and advanced-analysis implementation landed locally.
+- After the `v0.2.0` release is published, the next GitHub sync should close `R6.6`, close `R1.2`, narrow `R1.3`, and open the next release-tracking issue for the following technical-preview tag.
 - Added explicit release-tracking traceability on 2026-03-14 via [#78](https://github.com/MB3R-Lab/Sheaft/issues/78), which is closed because the public `v0.1.0` technical preview shipped.
-- `R6.6` is now partially implemented locally via contract policy config, runtime enforcement, report metadata, and CI fixtures.
 - The next highest-priority repo task is **R4.3: expand applicability boundaries into concrete do-not-trust signals and detector heuristics**.

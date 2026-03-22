@@ -2,7 +2,7 @@ pipeline {
   agent any
 
   environment {
-    BERING_ARTIFACT_SOURCE = 'examples/outputs/snapshot.sample.json'
+    BERING_ARTIFACT_SOURCE = 'examples/outputs/snapshot-v1.1.0.sample.json'
   }
 
   options {
@@ -33,7 +33,7 @@ pipeline {
           docker build -f build/Dockerfile -t sheaft:ci .
           docker run --rm -v "$WORKSPACE:/workspace" -w /workspace sheaft:ci run \
             --model artifacts/input.json \
-            --analysis configs/analysis.example.yaml \
+            --analysis configs/analysis.v1.1.example.yaml \
             --out-dir out
         '''
       }

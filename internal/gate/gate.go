@@ -32,6 +32,7 @@ type ProfileEvaluation struct {
 	Profile                 string           `json:"profile"`
 	Decision                string           `json:"decision"`
 	FailedEndpoints         []string         `json:"failed_endpoints"`
+	FailedAssertions        []string         `json:"failed_assertions,omitempty"`
 	EndpointsBelowThreshold int              `json:"endpoints_below_threshold"`
 	EndpointResults         []EndpointResult `json:"endpoint_results"`
 	Aggregate               *AggregateResult `json:"aggregate,omitempty"`
@@ -42,6 +43,7 @@ type Evaluation struct {
 	Decision              string                    `json:"decision"`
 	EvaluationRule        config.GateEvaluationRule `json:"evaluation_rule,omitempty"`
 	FailedEndpoints       []string                  `json:"failed_endpoints"`
+	FailedAssertions      []string                  `json:"failed_assertions,omitempty"`
 	FailedProfiles        []string                  `json:"failed_profiles,omitempty"`
 	EndpointResults       []EndpointResult          `json:"endpoint_results"`
 	ProfileEvaluations    []ProfileEvaluation       `json:"profile_evaluations,omitempty"`
@@ -105,6 +107,7 @@ func EvaluateProfiles(outputs []simulation.ProfileOutput, gateCfg config.GateCon
 	aggregateFailedProfiles := 0
 	passingProfiles := 0
 	unionFailedEndpoints := map[string]struct{}{}
+	unionFailedAssertions := map[string]struct{}{}
 
 	for _, output := range outputs {
 		profileEval := evaluateProfile(output, gateCfg)
@@ -118,9 +121,13 @@ func EvaluateProfiles(outputs []simulation.ProfileOutput, gateCfg config.GateCon
 		for _, endpoint := range profileEval.FailedEndpoints {
 			unionFailedEndpoints[endpoint] = struct{}{}
 		}
+		for _, assertion := range profileEval.FailedAssertions {
+			unionFailedAssertions[assertion] = struct{}{}
+		}
 		if len(eval.EndpointResults) == 0 {
 			eval.EndpointResults = slices.Clone(profileEval.EndpointResults)
 			eval.FailedEndpoints = slices.Clone(profileEval.FailedEndpoints)
+			eval.FailedAssertions = slices.Clone(profileEval.FailedAssertions)
 		}
 	}
 
@@ -149,6 +156,14 @@ func EvaluateProfiles(outputs []simulation.ProfileOutput, gateCfg config.GateCon
 	slices.Sort(failedEndpoints)
 	if len(failedEndpoints) > 0 {
 		eval.FailedEndpoints = failedEndpoints
+	}
+	if len(unionFailedAssertions) > 0 {
+		failedAssertions := make([]string, 0, len(unionFailedAssertions))
+		for assertion := range unionFailedAssertions {
+			failedAssertions = append(failedAssertions, assertion)
+		}
+		slices.Sort(failedAssertions)
+		eval.FailedAssertions = failedAssertions
 	}
 
 	switch gateCfg.Mode {
@@ -197,6 +212,7 @@ func evaluateProfile(output simulation.ProfileOutput, gateCfg config.GateConfig)
 
 	results := make([]EndpointResult, 0, len(endpointIDs))
 	failed := make([]string, 0)
+	failedAssertions := make([]string, 0)
 	for _, endpointID := range endpointIDs {
 		threshold := gateCfg.GlobalThreshold
 		if specific, ok := gateCfg.EndpointThresholds[endpointID]; ok {
@@ -238,11 +254,18 @@ func evaluateProfile(output simulation.ProfileOutput, gateCfg config.GateConfig)
 			Status:       classify(gateCfg.Mode, aggregateFailed),
 		}
 	}
+	for _, assertion := range output.Assertions {
+		if assertion.Status == StatusPass {
+			continue
+		}
+		failedAssertions = append(failedAssertions, formatAssertionFailure(assertion))
+	}
 
 	return ProfileEvaluation{
 		Profile:                 output.Name,
-		Decision:                aggregateDecision(gateCfg.Mode, len(failed) > 0 || aggregateFailed),
+		Decision:                aggregateDecision(gateCfg.Mode, len(failed) > 0 || aggregateFailed || len(failedAssertions) > 0),
 		FailedEndpoints:         failed,
+		FailedAssertions:        failedAssertions,
 		EndpointsBelowThreshold: len(failed),
 		EndpointResults:         results,
 		Aggregate:               aggregate,
@@ -284,4 +307,11 @@ func aggregateDecision(mode config.PolicyMode, failed bool) string {
 
 func isValidMode(mode config.PolicyMode) bool {
 	return mode == config.ModeWarn || mode == config.ModeFail || mode == config.ModeReport
+}
+
+func formatAssertionFailure(result simulation.AssertionResult) string {
+	if result.Available {
+		return fmt.Sprintf("%s %s %s %.4f (actual=%.4f)", result.Metric, result.Target.Type, result.Op, result.Expected, result.ActualValue)
+	}
+	return fmt.Sprintf("%s %s unavailable: %s", result.Metric, result.Target.Type, result.Reason)
 }

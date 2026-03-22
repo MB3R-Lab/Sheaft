@@ -32,11 +32,12 @@ type Summary struct {
 }
 
 type PolicyEvaluation struct {
-	Mode            string   `json:"mode"`
-	Decision        string   `json:"decision"`
-	FailedEndpoints []string `json:"failed_endpoints"`
-	FailedProfiles  []string `json:"failed_profiles,omitempty"`
-	EvaluationRule  string   `json:"evaluation_rule,omitempty"`
+	Mode             string   `json:"mode"`
+	Decision         string   `json:"decision"`
+	FailedEndpoints  []string `json:"failed_endpoints"`
+	FailedAssertions []string `json:"failed_assertions,omitempty"`
+	FailedProfiles   []string `json:"failed_profiles,omitempty"`
+	EvaluationRule   string   `json:"evaluation_rule,omitempty"`
 }
 
 type InputArtifact struct {
@@ -93,11 +94,13 @@ type ProfileParameters struct {
 	SamplingMode       StringParameter `json:"sampling_mode"`
 	FailureProbability FloatParameter  `json:"failure_probability"`
 	FixedKFailures     IntParameter    `json:"fixed_k_failures"`
+	FaultProfile       StringParameter `json:"fault_profile"`
 	EndpointWeights    ParameterStatus `json:"endpoint_weights"`
 }
 
 type CalibrationParameters struct {
 	PredicateOverlay  ParameterStatus `json:"predicate_overlay"`
+	FaultContract     ParameterStatus `json:"fault_contract"`
 	JourneyOverrides  ParameterStatus `json:"journey_overrides"`
 	Baselines         ParameterStatus `json:"baselines"`
 	HistoricalSignals ParameterStatus `json:"historical_signals"`
@@ -144,6 +147,16 @@ type ProfileDiff struct {
 	UnweightedAggregate Delta          `json:"unweighted_aggregate"`
 	Decision            StatusDelta    `json:"decision"`
 	Endpoints           []EndpointDiff `json:"endpoints"`
+	AdvancedMetrics     []MetricDiff   `json:"advanced_metrics,omitempty"`
+}
+
+type MetricDiff struct {
+	Metric     string `json:"metric"`
+	TargetType string `json:"target_type"`
+	Target     string `json:"target"`
+	Status     string `json:"status"`
+	Reason     string `json:"reason,omitempty"`
+	Delta      *Delta `json:"delta,omitempty"`
 }
 
 type Diff struct {
@@ -211,11 +224,12 @@ func ComposeAnalysis(meta artifact.Loaded, simOut simulation.AnalysisOutput, eva
 			RiskScore:                        1 - simOut.CrossProfileWeighted,
 		},
 		PolicyEvaluation: PolicyEvaluation{
-			Mode:            string(eval.Mode),
-			Decision:        eval.Decision,
-			FailedEndpoints: slices.Clone(eval.FailedEndpoints),
-			FailedProfiles:  slices.Clone(eval.FailedProfiles),
-			EvaluationRule:  string(eval.EvaluationRule),
+			Mode:             string(eval.Mode),
+			Decision:         eval.Decision,
+			FailedEndpoints:  slices.Clone(eval.FailedEndpoints),
+			FailedAssertions: slices.Clone(eval.FailedAssertions),
+			FailedProfiles:   slices.Clone(eval.FailedProfiles),
+			EvaluationRule:   string(eval.EvaluationRule),
 		},
 		InputArtifact: &InputArtifact{
 			Path:            meta.Metadata.Path,
@@ -299,6 +313,10 @@ func buildParameters(cfg config.AnalysisConfig, meta artifact.Loaded) *Parameter
 				Value:  int64(profile.FixedKFailures),
 				Source: string(profileSources.FixedKFailures),
 			},
+			FaultProfile: StringParameter{
+				Value:  profile.FaultProfile,
+				Source: string(profileSources.FaultProfile),
+			},
 			EndpointWeights: parameterStatusForWeights(profileSources.EndpointWeights, meta.WeightsSource),
 		})
 	}
@@ -313,6 +331,13 @@ func buildParameters(cfg config.AnalysisConfig, meta artifact.Loaded) *Parameter
 				cfg.PredicateContract,
 				nil,
 				"using artifact predicates or legacy path resolution without external predicate overlay",
+			),
+			FaultContract: parameterStatus(
+				cfg.FaultContract != "",
+				cfg.Sources.FaultContract,
+				cfg.FaultContract,
+				nil,
+				"no fault contract configured; advanced fault profiles are inactive",
 			),
 			JourneyOverrides: parameterStatus(
 				cfg.Journeys != "",
@@ -486,7 +511,8 @@ func Compare(current Report, reference Report, name string) Diff {
 				Reference: refProfile.Decision,
 				Changed:   profile.Decision != refProfile.Decision,
 			},
-			Endpoints: endpoints,
+			Endpoints:       endpoints,
+			AdvancedMetrics: compareAdvancedMetrics(profile.Simulation, refProfile.Simulation),
 		})
 	}
 	return diff
@@ -681,4 +707,115 @@ func firstNonZero(values ...float64) float64 {
 		}
 	}
 	return 0
+}
+
+func compareAdvancedMetrics(current simulation.ProfileOutput, reference simulation.ProfileOutput) []MetricDiff {
+	currentMetrics := collectAdvancedMetrics(current.Advanced)
+	referenceMetrics := collectAdvancedMetrics(reference.Advanced)
+	if len(currentMetrics) == 0 && len(referenceMetrics) == 0 {
+		return nil
+	}
+	keys := make([]string, 0, len(currentMetrics)+len(referenceMetrics))
+	seen := map[string]struct{}{}
+	for key := range currentMetrics {
+		keys = append(keys, key)
+		seen[key] = struct{}{}
+	}
+	for key := range referenceMetrics {
+		if _, ok := seen[key]; ok {
+			continue
+		}
+		keys = append(keys, key)
+	}
+	slices.Sort(keys)
+
+	out := make([]MetricDiff, 0, len(keys))
+	for _, key := range keys {
+		currentMetric, currentOK := currentMetrics[key]
+		referenceMetric, referenceOK := referenceMetrics[key]
+		diff := MetricDiff{
+			Metric:     metricNameFromKey(key, 0),
+			TargetType: metricNameFromKey(key, 1),
+			Target:     metricNameFromKey(key, 2),
+		}
+		switch {
+		case !currentOK || !referenceOK:
+			diff.Status = "non_comparable"
+			diff.Reason = "metric missing on one side"
+		case !currentMetric.available:
+			diff.Status = "non_comparable"
+			diff.Reason = currentMetric.reason
+		case !referenceMetric.available:
+			diff.Status = "non_comparable"
+			diff.Reason = referenceMetric.reason
+		default:
+			deltaValue := delta(currentMetric.value, referenceMetric.value)
+			diff.Status = "comparable"
+			diff.Delta = &deltaValue
+		}
+		out = append(out, diff)
+	}
+	return out
+}
+
+type numericMetric struct {
+	value     float64
+	available bool
+	reason    string
+}
+
+func collectAdvancedMetrics(advanced *simulation.AdvancedProfile) map[string]numericMetric {
+	if advanced == nil {
+		return nil
+	}
+	out := map[string]numericMetric{}
+	if advanced.BlastRadius != nil {
+		out[metricKey("blast_radius_service_count", "profile", "profile")] = numericMetric{
+			value:     float64(advanced.BlastRadius.ServiceCount.Value),
+			available: advanced.BlastRadius.ServiceCount.Available,
+			reason:    advanced.BlastRadius.ServiceCount.Reason,
+		}
+		out[metricKey("blast_radius_endpoint_count", "profile", "profile")] = numericMetric{
+			value:     float64(advanced.BlastRadius.EndpointCount.Value),
+			available: advanced.BlastRadius.EndpointCount.Available,
+			reason:    advanced.BlastRadius.EndpointCount.Reason,
+		}
+	}
+	for _, path := range advanced.Paths {
+		out[metricKey("expected_success_rate", "path", path.PathID)] = numericMetric{
+			value:     path.ExpectedSuccessRate.Value,
+			available: path.ExpectedSuccessRate.Available,
+			reason:    path.ExpectedSuccessRate.Reason,
+		}
+		out[metricKey("max_amplification_factor", "path", path.PathID)] = numericMetric{
+			value:     path.MaxAmplificationFactor.Value,
+			available: path.MaxAmplificationFactor.Available,
+			reason:    path.MaxAmplificationFactor.Reason,
+		}
+		out[metricKey("timeout_mismatch_count", "path", path.PathID)] = numericMetric{
+			value:     float64(path.TimeoutMismatchCount.Value),
+			available: path.TimeoutMismatchCount.Available,
+			reason:    path.TimeoutMismatchCount.Reason,
+		}
+	}
+	for _, edge := range advanced.Edges {
+		out[metricKey("max_amplification_factor", "edge", edge.EdgeID)] = numericMetric{
+			value:     edge.MaxAmplificationFactor.Value,
+			available: edge.MaxAmplificationFactor.Available,
+			reason:    edge.MaxAmplificationFactor.Reason,
+		}
+	}
+	return out
+}
+
+func metricKey(metric, targetType, target string) string {
+	return metric + "\x00" + targetType + "\x00" + target
+}
+
+func metricNameFromKey(key string, idx int) string {
+	parts := strings.Split(key, "\x00")
+	if idx < 0 || idx >= len(parts) {
+		return ""
+	}
+	return parts[idx]
 }

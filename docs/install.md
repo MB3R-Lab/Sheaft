@@ -1,6 +1,6 @@
 # Install
 
-The current public technical preview is `v0.1.1`. Prefer release assets for evaluation and automation; use `go install` or `go build` as fallback paths.
+The current public technical preview is `v0.2.0`. Prefer release assets for evaluation and automation; use `go install` or `go build` as fallback paths.
 
 The machine-readable entrypoint for release consumers is `release-manifest.json`. It records exact archive names, checksums, image references, chart version, and the default config pack asset for a given release.
 
@@ -72,7 +72,9 @@ Chart modes:
 
 Each release includes a versioned default config pack archive with checked-in examples:
 
-- example analysis config
+- example baseline analysis config
+- example versioned advanced analysis config
+- example fault contract
 - example gate policy
 - example predicate contract
 - example serve config

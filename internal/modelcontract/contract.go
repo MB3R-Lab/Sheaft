@@ -8,15 +8,27 @@ import (
 )
 
 const (
-	BeringModelV100Name    = "io.mb3r.bering.model"
+	BeringModelName        = "io.mb3r.bering.model"
+	BeringModelV100Name    = BeringModelName
 	BeringModelV100Version = "1.0.0"
 	BeringModelV100URI     = "https://mb3r-lab.github.io/Bering/schema/model/v1.0.0/model.schema.json"
 	BeringModelV100Digest  = "sha256:272277c093f37580adcd2dded225bd37c86539d642d7910baad7e4228227d1a7"
 
-	BeringSnapshotV100Name    = "io.mb3r.bering.snapshot"
+	BeringModelV110Name    = BeringModelName
+	BeringModelV110Version = "1.1.0"
+	BeringModelV110URI     = "https://mb3r-lab.github.io/Bering/schema/model/v1.1.0/model.schema.json"
+	BeringModelV110Digest  = "sha256:bc9a60736c9e6bda9599243fd68f293b88f42ade65321d8267369a5c3214779a"
+
+	BeringSnapshotName        = "io.mb3r.bering.snapshot"
+	BeringSnapshotV100Name    = BeringSnapshotName
 	BeringSnapshotV100Version = "1.0.0"
 	BeringSnapshotV100URI     = "https://mb3r-lab.github.io/Bering/schema/snapshot/v1.0.0/snapshot.schema.json"
 	BeringSnapshotV100Digest  = "sha256:87e4e887ed4a37b72f6136e268b73552eccb92941c4de2c6f3a514dd066ea972"
+
+	BeringSnapshotV110Name    = BeringSnapshotName
+	BeringSnapshotV110Version = "1.1.0"
+	BeringSnapshotV110URI     = "https://mb3r-lab.github.io/Bering/schema/snapshot/v1.1.0/snapshot.schema.json"
+	BeringSnapshotV110Digest  = "sha256:53b127608b2aaa4fabb352b998cd6b2c5ed558764729a09abea56f4f9b40fa01"
 
 	ExpectedSchemaName    = BeringModelV100Name
 	ExpectedSchemaVersion = BeringModelV100Version
@@ -24,11 +36,17 @@ const (
 	ExpectedSchemaDigest  = BeringModelV100Digest
 )
 
-//go:embed schema/model.schema.json
+//go:embed schema/model.v1.0.0.schema.json
 var VendoredSchema string
 
-//go:embed schema/snapshot.schema.json
+//go:embed schema/model.v1.1.0.schema.json
+var VendoredModelV110Schema string
+
+//go:embed schema/snapshot.v1.0.0.schema.json
 var VendoredSnapshotSchema string
+
+//go:embed schema/snapshot.v1.1.0.schema.json
+var VendoredSnapshotV110Schema string
 
 type ArtifactKind string
 
@@ -61,10 +79,24 @@ var supportedContracts = []SupportedContract{
 		Kind:    KindModel,
 	},
 	{
+		Name:    BeringModelV110Name,
+		Version: BeringModelV110Version,
+		URI:     BeringModelV110URI,
+		Digest:  BeringModelV110Digest,
+		Kind:    KindModel,
+	},
+	{
 		Name:    BeringSnapshotV100Name,
 		Version: BeringSnapshotV100Version,
 		URI:     BeringSnapshotV100URI,
 		Digest:  BeringSnapshotV100Digest,
+		Kind:    KindSnapshot,
+	},
+	{
+		Name:    BeringSnapshotV110Name,
+		Version: BeringSnapshotV110Version,
+		URI:     BeringSnapshotV110URI,
+		Digest:  BeringSnapshotV110Digest,
 		Kind:    KindSnapshot,
 	},
 }
@@ -88,6 +120,24 @@ func ExpectedSnapshotRef() SchemaRef {
 		Version: BeringSnapshotV100Version,
 		URI:     BeringSnapshotV100URI,
 		Digest:  BeringSnapshotV100Digest,
+	}
+}
+
+func ExpectedModelV110Ref() SchemaRef {
+	return SchemaRef{
+		Name:    BeringModelV110Name,
+		Version: BeringModelV110Version,
+		URI:     BeringModelV110URI,
+		Digest:  BeringModelV110Digest,
+	}
+}
+
+func ExpectedSnapshotV110Ref() SchemaRef {
+	return SchemaRef{
+		Name:    BeringSnapshotV110Name,
+		Version: BeringSnapshotV110Version,
+		URI:     BeringSnapshotV110URI,
+		Digest:  BeringSnapshotV110Digest,
 	}
 }
 

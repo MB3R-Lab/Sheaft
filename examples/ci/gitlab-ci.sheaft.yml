@@ -3,7 +3,7 @@ stages:
   - posture
 
 variables:
-  BERING_ARTIFACT_SOURCE: examples/outputs/snapshot.sample.json
+  BERING_ARTIFACT_SOURCE: examples/outputs/snapshot-v1.1.0.sample.json
   SHEAFT_IMAGE: "$CI_REGISTRY_IMAGE/sheaft-ci:$CI_COMMIT_SHA"
 
 bering_artifact:
@@ -31,7 +31,7 @@ sheaft_gate:
       artifacts: true
   script:
     - docker build -f build/Dockerfile -t "$SHEAFT_IMAGE" .
-    - docker run --rm -v "$CI_PROJECT_DIR:/workspace" -w /workspace "$SHEAFT_IMAGE" run --model artifacts/input.json --analysis configs/analysis.example.yaml --out-dir out
+    - docker run --rm -v "$CI_PROJECT_DIR:/workspace" -w /workspace "$SHEAFT_IMAGE" run --model artifacts/input.json --analysis configs/analysis.v1.1.example.yaml --out-dir out
   artifacts:
     when: always
     expire_in: 14 days

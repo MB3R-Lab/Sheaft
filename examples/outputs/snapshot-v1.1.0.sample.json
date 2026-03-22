@@ -1,0 +1,351 @@
+{
+  "snapshot_id": "snap-v11-0001",
+  "topology_version": "topology-checkout-v11",
+  "window_start": "2026-03-22T00:00:00Z",
+  "window_end": "2026-03-22T00:05:00Z",
+  "ingest": {
+    "spans": 36,
+    "traces": 9,
+    "dropped_spans": 0,
+    "late_spans": 0
+  },
+  "counts": {
+    "services": 3,
+    "edges": 2,
+    "endpoints": 2
+  },
+  "coverage": {
+    "confidence": 0.95,
+    "service_support_min": 1,
+    "edge_support_min": 1,
+    "endpoint_support_min": 1
+  },
+  "sources": [
+    {
+      "type": "traces",
+      "connector": "trace_file",
+      "ref": "bering://fixtures/checkout-v11",
+      "observations": 36
+    }
+  ],
+  "diff": {
+    "added_services": 3,
+    "removed_services": 0,
+    "changed_services": 0,
+    "added_edges": 2,
+    "removed_edges": 0,
+    "changed_edges": 0,
+    "added_endpoints": 2,
+    "removed_endpoints": 0,
+    "changed_endpoints": 0
+  },
+  "discovery": {
+    "services": [
+      {
+        "id": "gateway",
+        "name": "gateway",
+        "replicas": 1,
+        "support": {
+          "observations": 9,
+          "trace_count": 9
+        },
+        "metadata": {
+          "labels": {
+            "team": "edge"
+          }
+        }
+      },
+      {
+        "id": "checkout",
+        "name": "checkout",
+        "replicas": 2,
+        "support": {
+          "observations": 9,
+          "trace_count": 9
+        },
+        "metadata": {
+          "failure_eligible": true,
+          "labels": {
+            "team": "commerce"
+          },
+          "placements": [
+            {
+              "replicas": 1,
+              "labels": {
+                "az": "us-east-1a",
+                "replica_group": "blue"
+              }
+            },
+            {
+              "replicas": 1,
+              "labels": {
+                "az": "us-east-1b",
+                "replica_group": "green"
+              }
+            }
+          ],
+          "shared_resource_refs": ["db:payments"]
+        }
+      },
+      {
+        "id": "payment",
+        "name": "payment",
+        "replicas": 1,
+        "support": {
+          "observations": 9,
+          "trace_count": 9
+        },
+        "metadata": {
+          "failure_eligible": true,
+          "labels": {
+            "team": "payments"
+          },
+          "shared_resource_refs": ["db:payments"]
+        }
+      }
+    ],
+    "edges": [
+      {
+        "id": "gateway|checkout|sync|true",
+        "from": "gateway",
+        "to": "checkout",
+        "kind": "sync",
+        "blocking": true,
+        "support": {
+          "observations": 9,
+          "trace_count": 9
+        },
+        "resilience": {
+          "request_timeout_ms": 4500,
+          "retry": {
+            "max_attempts": 2
+          },
+          "circuit_breaker": {
+            "enabled": true,
+            "max_requests": 2
+          }
+        },
+        "observed": {
+          "latency_ms": {
+            "p90": 800
+          },
+          "error_rate": 0.02
+        }
+      },
+      {
+        "id": "checkout|payment|sync|true",
+        "from": "checkout",
+        "to": "payment",
+        "kind": "sync",
+        "blocking": true,
+        "support": {
+          "observations": 9,
+          "trace_count": 9
+        },
+        "resilience": {
+          "request_timeout_ms": 4000,
+          "retry": {
+            "max_attempts": 3
+          },
+          "circuit_breaker": {
+            "enabled": true,
+            "max_requests": 3
+          }
+        },
+        "observed": {
+          "latency_ms": {
+            "p90": 1200
+          },
+          "error_rate": 0.05
+        }
+      }
+    ],
+    "endpoints": [
+      {
+        "id": "gateway:POST /checkout",
+        "entry_service": "gateway",
+        "method": "POST",
+        "path": "/checkout",
+        "support": {
+          "observations": 9,
+          "trace_count": 9
+        },
+        "metadata": {
+          "weight": 0.8
+        }
+      },
+      {
+        "id": "gateway:GET /explicit",
+        "entry_service": "gateway",
+        "method": "GET",
+        "path": "/explicit",
+        "support": {
+          "observations": 9,
+          "trace_count": 9
+        },
+        "metadata": {
+          "predicate_ref": "explicit.flow",
+          "weight": 0.2
+        }
+      }
+    ]
+  },
+  "model": {
+    "services": [
+      {
+        "id": "gateway",
+        "name": "gateway",
+        "replicas": 1,
+        "metadata": {
+          "labels": {
+            "team": "edge"
+          }
+        }
+      },
+      {
+        "id": "checkout",
+        "name": "checkout",
+        "replicas": 2,
+        "metadata": {
+          "failure_eligible": true,
+          "labels": {
+            "team": "commerce"
+          },
+          "placements": [
+            {
+              "replicas": 1,
+              "labels": {
+                "az": "us-east-1a",
+                "replica_group": "blue"
+              }
+            },
+            {
+              "replicas": 1,
+              "labels": {
+                "az": "us-east-1b",
+                "replica_group": "green"
+              }
+            }
+          ],
+          "shared_resource_refs": ["db:payments"]
+        }
+      },
+      {
+        "id": "payment",
+        "name": "payment",
+        "replicas": 1,
+        "metadata": {
+          "failure_eligible": true,
+          "labels": {
+            "team": "payments"
+          },
+          "shared_resource_refs": ["db:payments"]
+        }
+      }
+    ],
+    "edges": [
+      {
+        "id": "gateway|checkout|sync|true",
+        "from": "gateway",
+        "to": "checkout",
+        "kind": "sync",
+        "blocking": true,
+        "resilience": {
+          "request_timeout_ms": 4500,
+          "retry": {
+            "max_attempts": 2
+          },
+          "circuit_breaker": {
+            "enabled": true,
+            "max_requests": 2
+          }
+        },
+        "observed": {
+          "latency_ms": {
+            "p90": 800
+          },
+          "error_rate": 0.02
+        }
+      },
+      {
+        "id": "checkout|payment|sync|true",
+        "from": "checkout",
+        "to": "payment",
+        "kind": "sync",
+        "blocking": true,
+        "resilience": {
+          "request_timeout_ms": 4000,
+          "retry": {
+            "max_attempts": 3
+          },
+          "circuit_breaker": {
+            "enabled": true,
+            "max_requests": 3
+          }
+        },
+        "observed": {
+          "latency_ms": {
+            "p90": 1200
+          },
+          "error_rate": 0.05
+        }
+      }
+    ],
+    "endpoints": [
+      {
+        "id": "gateway:POST /checkout",
+        "entry_service": "gateway",
+        "success_predicate_ref": "gateway:POST /checkout",
+        "method": "POST",
+        "path": "/checkout",
+        "metadata": {
+          "weight": 0.8
+        }
+      },
+      {
+        "id": "gateway:GET /explicit",
+        "entry_service": "gateway",
+        "success_predicate_ref": "explicit.flow",
+        "method": "GET",
+        "path": "/explicit",
+        "metadata": {
+          "weight": 0.2
+        }
+      }
+    ],
+    "predicates": {
+      "explicit.flow": {
+        "type": "all_of",
+        "services": ["gateway", "checkout", "payment"]
+      }
+    },
+    "endpoint_weights": {
+      "gateway:POST /checkout": 0.8,
+      "gateway:GET /explicit": 0.2
+    },
+    "metadata": {
+      "source_type": "bering",
+      "source_ref": "bering://fixtures/checkout-v11",
+      "discovered_at": "2026-03-22T00:00:00Z",
+      "confidence": 0.95,
+      "schema": {
+        "name": "io.mb3r.bering.model",
+        "version": "1.1.0",
+        "uri": "https://mb3r-lab.github.io/Bering/schema/model/v1.1.0/model.schema.json",
+        "digest": "sha256:bc9a60736c9e6bda9599243fd68f293b88f42ade65321d8267369a5c3214779a"
+      }
+    }
+  },
+  "metadata": {
+    "source_type": "bering",
+    "source_ref": "bering://fixtures/checkout-v11",
+    "emitted_at": "2026-03-22T00:05:00Z",
+    "confidence": 0.95,
+    "schema": {
+      "name": "io.mb3r.bering.snapshot",
+      "version": "1.1.0",
+      "uri": "https://mb3r-lab.github.io/Bering/schema/snapshot/v1.1.0/snapshot.schema.json",
+      "digest": "sha256:53b127608b2aaa4fabb352b998cd6b2c5ed558764729a09abea56f4f9b40fa01"
+    }
+  }
+}

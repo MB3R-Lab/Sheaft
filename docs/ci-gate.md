@@ -21,7 +21,7 @@ Generated artifacts:
 ```bash
 sheaft run \
   --model path/to/artifact.json \
-  --analysis configs/analysis.example.yaml \
+  --analysis configs/analysis.v1.1.example.yaml \
   --out-dir out
 ```
 
@@ -53,7 +53,7 @@ In the example templates below, replace the sample `BERING_ARTIFACT_SOURCE` valu
 
 ## Strict Schema Checks
 
-Sheaft is a strict downstream consumer. `sheaft run` and `sheaft simulate` will fail with exit code `1` when the incoming artifact declares an unsupported contract, mismatched schema URI, or mismatched digest.
+Sheaft is a strict downstream consumer. `sheaft run` and `sheaft simulate` will fail with exit code `1` when the incoming artifact declares an unsupported contract, mismatched schema URI, or mismatched digest. Supported Bering contract lines are `1.0.0` and `1.1.0`; `1.0.0` remains the baseline comparison line.
 
 No extra CI flag is needed for strict checking: it is already part of artifact loading.
 
@@ -92,7 +92,7 @@ The GitHub Actions workflow at `.github/workflows/ci-template-smoke.yml` runs bo
 name: sheaft-gate
 on: [pull_request]
 env:
-  BERING_ARTIFACT_SOURCE: examples/outputs/snapshot.sample.json
+  BERING_ARTIFACT_SOURCE: examples/outputs/snapshot-v1.1.0.sample.json
 jobs:
   bering-artifact:
     runs-on: ubuntu-latest
@@ -125,7 +125,7 @@ jobs:
         run: |
           docker run --rm -v "$PWD:/workspace" -w /workspace sheaft:ci run \
             --model artifacts/input.json \
-            --analysis configs/analysis.example.yaml \
+            --analysis configs/analysis.v1.1.example.yaml \
             --out-dir out
       - name: Upload Sheaft outputs
         uses: actions/upload-artifact@v4
@@ -146,7 +146,7 @@ stages:
   - posture
 
 variables:
-  BERING_ARTIFACT_SOURCE: examples/outputs/snapshot.sample.json
+  BERING_ARTIFACT_SOURCE: examples/outputs/snapshot-v1.1.0.sample.json
   SHEAFT_IMAGE: "$CI_REGISTRY_IMAGE/sheaft-ci:$CI_COMMIT_SHA"
 
 bering_artifact:
@@ -174,7 +174,7 @@ sheaft_gate:
       artifacts: true
   script:
     - docker build -f build/Dockerfile -t "$SHEAFT_IMAGE" .
-    - docker run --rm -v "$CI_PROJECT_DIR:/workspace" -w /workspace "$SHEAFT_IMAGE" run --model artifacts/input.json --analysis configs/analysis.example.yaml --out-dir out
+    - docker run --rm -v "$CI_PROJECT_DIR:/workspace" -w /workspace "$SHEAFT_IMAGE" run --model artifacts/input.json --analysis configs/analysis.v1.1.example.yaml --out-dir out
   artifacts:
     when: always
     expire_in: 14 days
@@ -189,7 +189,7 @@ sheaft_gate:
 pipeline {
   agent any
   environment {
-    BERING_ARTIFACT_SOURCE = 'examples/outputs/snapshot.sample.json'
+    BERING_ARTIFACT_SOURCE = 'examples/outputs/snapshot-v1.1.0.sample.json'
   }
   options {
     timestamps()
@@ -216,7 +216,7 @@ pipeline {
           docker build -f build/Dockerfile -t sheaft:ci .
           docker run --rm -v "$WORKSPACE:/workspace" -w /workspace sheaft:ci run \
             --model artifacts/input.json \
-            --analysis configs/analysis.example.yaml \
+            --analysis configs/analysis.v1.1.example.yaml \
             --out-dir out
         '''
       }

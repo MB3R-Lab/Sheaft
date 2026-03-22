@@ -1,0 +1,231 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://mb3r-lab.github.io/Bering/schema/model/v1.1.0/model.schema.json",
+  "title": "BeringResilienceModel",
+  "type": "object",
+  "required": [
+    "services",
+    "edges",
+    "endpoints",
+    "metadata"
+  ],
+  "properties": {
+    "services": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/service" }
+    },
+    "edges": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/edge" }
+    },
+    "endpoints": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/endpoint" }
+    },
+    "metadata": {
+      "type": "object",
+      "required": [
+        "source_type",
+        "source_ref",
+        "discovered_at",
+        "confidence",
+        "schema"
+      ],
+      "properties": {
+        "source_type": { "type": "string" },
+        "source_ref": { "type": "string" },
+        "discovered_at": { "type": "string", "format": "date-time" },
+        "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+        "schema": { "$ref": "#/$defs/schemaRef" }
+      }
+    }
+  },
+  "$defs": {
+    "schemaRef": {
+      "type": "object",
+      "required": ["name", "version", "uri", "digest"],
+      "properties": {
+        "name": { "type": "string" },
+        "version": { "type": "string" },
+        "uri": { "type": "string" },
+        "digest": { "type": "string" }
+      }
+    },
+    "commonMetadata": {
+      "type": "object",
+      "properties": {
+        "labels": {
+          "type": "object",
+          "additionalProperties": { "type": "string" }
+        },
+        "tags": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "slo_refs": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    },
+    "placement": {
+      "type": "object",
+      "required": ["replicas"],
+      "properties": {
+        "replicas": { "type": "integer", "minimum": 0 },
+        "labels": {
+          "type": "object",
+          "additionalProperties": { "type": "string" }
+        }
+      }
+    },
+    "serviceMetadata": {
+      "allOf": [
+        { "$ref": "#/$defs/commonMetadata" },
+        {
+          "type": "object",
+          "properties": {
+            "failure_eligible": { "type": "boolean" },
+            "placements": {
+              "type": "array",
+              "items": { "$ref": "#/$defs/placement" }
+            },
+            "shared_resource_refs": {
+              "type": "array",
+              "items": { "type": "string" }
+            }
+          }
+        }
+      ]
+    },
+    "edgeMetadata": {
+      "allOf": [
+        { "$ref": "#/$defs/commonMetadata" },
+        {
+          "type": "object",
+          "properties": {
+            "weight": { "type": "number", "minimum": 0 }
+          }
+        }
+      ]
+    },
+    "endpointMetadata": {
+      "allOf": [
+        { "$ref": "#/$defs/commonMetadata" },
+        {
+          "type": "object",
+          "properties": {
+            "weight": { "type": "number", "minimum": 0 }
+          }
+        }
+      ]
+    },
+    "backoffPolicy": {
+      "type": "object",
+      "properties": {
+        "initial_ms": { "type": "integer", "minimum": 0 },
+        "max_ms": { "type": "integer", "minimum": 0 },
+        "multiplier": { "type": "number", "minimum": 0 },
+        "jitter": { "type": "string" }
+      }
+    },
+    "retryPolicy": {
+      "type": "object",
+      "properties": {
+        "max_attempts": { "type": "integer", "minimum": 0 },
+        "budget_cap": { "type": "number", "minimum": 0 },
+        "retry_on": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "backoff": { "$ref": "#/$defs/backoffPolicy" }
+      }
+    },
+    "circuitBreakerPolicy": {
+      "type": "object",
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "max_pending_requests": { "type": "integer", "minimum": 0 },
+        "max_requests": { "type": "integer", "minimum": 0 },
+        "max_connections": { "type": "integer", "minimum": 0 },
+        "consecutive_5xx": { "type": "integer", "minimum": 0 },
+        "interval_ms": { "type": "integer", "minimum": 0 },
+        "base_ejection_time_ms": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "resiliencePolicy": {
+      "type": "object",
+      "properties": {
+        "request_timeout_ms": { "type": "integer", "minimum": 0 },
+        "per_try_timeout_ms": { "type": "integer", "minimum": 0 },
+        "retry": { "$ref": "#/$defs/retryPolicy" },
+        "circuit_breaker": { "$ref": "#/$defs/circuitBreakerPolicy" }
+      }
+    },
+    "latencySummary": {
+      "type": "object",
+      "properties": {
+        "p50": { "type": "number", "minimum": 0 },
+        "p90": { "type": "number", "minimum": 0 },
+        "p95": { "type": "number", "minimum": 0 },
+        "p99": { "type": "number", "minimum": 0 }
+      }
+    },
+    "observedEdge": {
+      "type": "object",
+      "properties": {
+        "latency_ms": { "$ref": "#/$defs/latencySummary" },
+        "error_rate": { "type": "number", "minimum": 0, "maximum": 1 }
+      }
+    },
+    "policyScope": {
+      "type": "object",
+      "properties": {
+        "source_endpoint_id": { "type": "string" },
+        "source_route": { "type": "string" },
+        "method": { "type": "string" },
+        "operation": { "type": "string" }
+      }
+    },
+    "service": {
+      "type": "object",
+      "required": ["id", "name", "replicas"],
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "replicas": { "type": "integer", "minimum": 0 },
+        "metadata": { "$ref": "#/$defs/serviceMetadata" }
+      }
+    },
+    "edge": {
+      "type": "object",
+      "required": ["id", "from", "to", "kind", "blocking"],
+      "properties": {
+        "id": { "type": "string" },
+        "from": { "type": "string" },
+        "to": { "type": "string" },
+        "kind": {
+          "type": "string",
+          "enum": ["sync", "async"]
+        },
+        "blocking": { "type": "boolean" },
+        "metadata": { "$ref": "#/$defs/edgeMetadata" },
+        "resilience": { "$ref": "#/$defs/resiliencePolicy" },
+        "observed": { "$ref": "#/$defs/observedEdge" },
+        "policy_scope": { "$ref": "#/$defs/policyScope" }
+      }
+    },
+    "endpoint": {
+      "type": "object",
+      "required": ["id", "entry_service", "success_predicate_ref"],
+      "properties": {
+        "id": { "type": "string" },
+        "entry_service": { "type": "string" },
+        "success_predicate_ref": { "type": "string" },
+        "method": { "type": "string" },
+        "path": { "type": "string" },
+        "metadata": { "$ref": "#/$defs/endpointMetadata" }
+      }
+    }
+  }
+}

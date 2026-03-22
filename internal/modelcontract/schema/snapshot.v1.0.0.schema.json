@@ -1,0 +1,330 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://mb3r-lab.github.io/Bering/schema/snapshot/v1.0.0/snapshot.schema.json",
+  "title": "BeringDiscoverySnapshot",
+  "type": "object",
+  "required": [
+    "snapshot_id",
+    "topology_version",
+    "window_start",
+    "window_end",
+    "ingest",
+    "counts",
+    "coverage",
+    "sources",
+    "diff",
+    "discovery",
+    "model",
+    "metadata"
+  ],
+  "properties": {
+    "snapshot_id": { "type": "string" },
+    "topology_version": { "type": "string" },
+    "window_start": { "type": "string", "format": "date-time" },
+    "window_end": { "type": "string", "format": "date-time" },
+    "ingest": {
+      "type": "object",
+      "required": ["spans", "traces", "dropped_spans", "late_spans"],
+      "properties": {
+        "spans": { "type": "integer", "minimum": 0 },
+        "traces": { "type": "integer", "minimum": 0 },
+        "dropped_spans": { "type": "integer", "minimum": 0 },
+        "late_spans": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "counts": {
+      "type": "object",
+      "required": ["services", "edges", "endpoints"],
+      "properties": {
+        "services": { "type": "integer", "minimum": 0 },
+        "edges": { "type": "integer", "minimum": 0 },
+        "endpoints": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "coverage": {
+      "type": "object",
+      "required": ["confidence", "service_support_min", "edge_support_min", "endpoint_support_min"],
+      "properties": {
+        "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+        "service_support_min": { "type": "integer", "minimum": 0 },
+        "edge_support_min": { "type": "integer", "minimum": 0 },
+        "endpoint_support_min": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "sources": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["type"],
+        "properties": {
+          "type": { "type": "string" },
+          "connector": { "type": "string" },
+          "ref": { "type": "string" },
+          "observations": { "type": "integer", "minimum": 0 }
+        }
+      }
+    },
+    "diff": {
+      "type": "object",
+      "required": [
+        "added_services",
+        "removed_services",
+        "changed_services",
+        "added_edges",
+        "removed_edges",
+        "changed_edges",
+        "added_endpoints",
+        "removed_endpoints",
+        "changed_endpoints"
+      ],
+      "properties": {
+        "added_services": { "type": "integer", "minimum": 0 },
+        "removed_services": { "type": "integer", "minimum": 0 },
+        "changed_services": { "type": "integer", "minimum": 0 },
+        "added_edges": { "type": "integer", "minimum": 0 },
+        "removed_edges": { "type": "integer", "minimum": 0 },
+        "changed_edges": { "type": "integer", "minimum": 0 },
+        "added_endpoints": { "type": "integer", "minimum": 0 },
+        "removed_endpoints": { "type": "integer", "minimum": 0 },
+        "changed_endpoints": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "discovery": {
+      "type": "object",
+      "required": ["services", "edges", "endpoints"],
+      "properties": {
+        "services": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/serviceRecord" }
+        },
+        "edges": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/edgeRecord" }
+        },
+        "endpoints": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/endpointRecord" }
+        },
+        "overlays": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["name", "precedence"],
+            "properties": {
+              "name": { "type": "string" },
+              "ref": { "type": "string" },
+              "precedence": { "type": "integer", "minimum": 0 }
+            }
+          }
+        }
+      }
+    },
+    "model": {
+      "type": "object",
+      "required": ["services", "edges", "endpoints", "metadata"],
+      "properties": {
+        "services": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["id", "name", "replicas"],
+            "properties": {
+              "id": { "type": "string" },
+              "name": { "type": "string" },
+              "replicas": { "type": "integer", "minimum": 0 }
+            }
+          }
+        },
+        "edges": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["from", "to", "kind", "blocking"],
+            "properties": {
+              "from": { "type": "string" },
+              "to": { "type": "string" },
+              "kind": { "type": "string", "enum": ["sync", "async"] },
+              "blocking": { "type": "boolean" }
+            }
+          }
+        },
+        "endpoints": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["id", "entry_service", "success_predicate_ref"],
+            "properties": {
+              "id": { "type": "string" },
+              "entry_service": { "type": "string" },
+              "success_predicate_ref": { "type": "string" }
+            }
+          }
+        },
+        "metadata": {
+          "type": "object",
+          "required": ["source_type", "source_ref", "discovered_at", "confidence", "schema"],
+          "properties": {
+            "source_type": { "type": "string" },
+            "source_ref": { "type": "string" },
+            "discovered_at": { "type": "string", "format": "date-time" },
+            "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+            "schema": { "$ref": "#/$defs/schemaRef" }
+          }
+        }
+      }
+    },
+    "metadata": {
+      "type": "object",
+      "required": ["source_type", "source_ref", "emitted_at", "confidence", "schema"],
+      "properties": {
+        "source_type": { "type": "string" },
+        "source_ref": { "type": "string" },
+        "emitted_at": { "type": "string", "format": "date-time" },
+        "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+        "schema": { "$ref": "#/$defs/schemaRef" }
+      }
+    }
+  },
+  "$defs": {
+    "schemaRef": {
+      "type": "object",
+      "required": ["name", "version", "uri", "digest"],
+      "properties": {
+        "name": { "type": "string" },
+        "version": { "type": "string" },
+        "uri": { "type": "string" },
+        "digest": { "type": "string" }
+      }
+    },
+    "provenance": {
+      "type": "object",
+      "required": ["type"],
+      "properties": {
+        "type": { "type": "string" },
+        "connector": { "type": "string" },
+        "name": { "type": "string" },
+        "ref": { "type": "string" },
+        "precedence": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "support": {
+      "type": "object",
+      "required": ["observations", "trace_count"],
+      "properties": {
+        "observations": { "type": "integer", "minimum": 0 },
+        "trace_count": { "type": "integer", "minimum": 0 },
+        "evidence": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    },
+    "commonMetadata": {
+      "type": "object",
+      "properties": {
+        "labels": {
+          "type": "object",
+          "additionalProperties": { "type": "string" }
+        },
+        "tags": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "slo_refs": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "attributes": {
+          "type": "object",
+          "additionalProperties": { "type": "string" }
+        }
+      }
+    },
+    "serviceRecord": {
+      "type": "object",
+      "required": ["id", "name", "replicas", "support"],
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "replicas": { "type": "integer", "minimum": 0 },
+        "support": { "$ref": "#/$defs/support" },
+        "first_seen": { "type": "string", "format": "date-time" },
+        "last_seen": { "type": "string", "format": "date-time" },
+        "provenance": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/provenance" }
+        },
+        "metadata": {
+          "allOf": [
+            { "$ref": "#/$defs/commonMetadata" },
+            {
+              "type": "object",
+              "properties": {
+                "failure_eligible": { "type": "boolean" },
+                "replicas_override": { "type": "integer", "minimum": 0 }
+              }
+            }
+          ]
+        }
+      }
+    },
+    "edgeRecord": {
+      "type": "object",
+      "required": ["id", "from", "to", "kind", "blocking", "support"],
+      "properties": {
+        "id": { "type": "string" },
+        "from": { "type": "string" },
+        "to": { "type": "string" },
+        "kind": { "type": "string", "enum": ["sync", "async"] },
+        "blocking": { "type": "boolean" },
+        "support": { "$ref": "#/$defs/support" },
+        "first_seen": { "type": "string", "format": "date-time" },
+        "last_seen": { "type": "string", "format": "date-time" },
+        "provenance": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/provenance" }
+        },
+        "metadata": {
+          "allOf": [
+            { "$ref": "#/$defs/commonMetadata" },
+            {
+              "type": "object",
+              "properties": {
+                "weight": { "type": "number" }
+              }
+            }
+          ]
+        }
+      }
+    },
+    "endpointRecord": {
+      "type": "object",
+      "required": ["id", "entry_service", "support"],
+      "properties": {
+        "id": { "type": "string" },
+        "entry_service": { "type": "string" },
+        "method": { "type": "string" },
+        "path": { "type": "string" },
+        "support": { "$ref": "#/$defs/support" },
+        "first_seen": { "type": "string", "format": "date-time" },
+        "last_seen": { "type": "string", "format": "date-time" },
+        "provenance": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/provenance" }
+        },
+        "metadata": {
+          "allOf": [
+            { "$ref": "#/$defs/commonMetadata" },
+            {
+              "type": "object",
+              "properties": {
+                "weight": { "type": "number" },
+                "predicate_ref": { "type": "string" }
+              }
+            }
+          ]
+        }
+      }
+    }
+  }
+}

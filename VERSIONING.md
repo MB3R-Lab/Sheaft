@@ -33,7 +33,17 @@ This is compatibility metadata, not ownership metadata.
 - Defaults to the app version for a tagged release
 - Recorded in `release-manifest.json` under `chart.version`
 
-## 4. OCI Image Tags
+## 4. Sheaft-Owned Config and Overlay Schemas
+
+- Analysis config:
+  - `1.0` is the baseline analysis surface
+  - `1.1` adds `fault_contract`, `profiles[].fault_profile`, and artifact-vs-artifact baselines
+- Fault contract:
+  - `1.0` is the first separate Sheaft-owned schema for advanced faults and assertions
+
+These versions are owned by Sheaft, not by Bering. They can evolve without changing the upstream Bering contract versions.
+
+## 5. OCI Image Tags
 
 Each release image is published with:
 
@@ -43,7 +53,7 @@ Each release image is published with:
 
 `release-manifest.json` records the image references and, for published releases, the image digest.
 
-## 5. Checksums and SBOMs
+## 6. Checksums and SBOMs
 
 - Every archive has a SHA-256 checksum in the release checksums file.
 - Every archive gets an SBOM artifact.

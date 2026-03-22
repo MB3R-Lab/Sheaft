@@ -1,0 +1,67 @@
+schema_version: "1.0"
+profiles:
+  az-us-east-1a-outage:
+    faults:
+      - type: correlated_failure_domain
+        selector:
+          placement_labels:
+            az: us-east-1a
+        only_failure_eligible: true
+    assertions:
+      - metric: blast_radius_endpoint_count
+        target:
+          type: profile
+        op: "<="
+        value: 2
+
+  payment-brownout:
+    faults:
+      - type: edge_partial_degradation
+        selector:
+          edge_ids:
+            - checkout|payment|sync|true
+        error_rate: 0.35
+        latency_ms:
+          p90: 5000
+    assertions:
+      - metric: expected_success_rate
+        target:
+          type: path
+          services:
+            - gateway
+            - checkout
+            - payment
+        op: ">="
+        value: 0.10
+      - metric: max_amplification_factor
+        target:
+          type: path
+          services:
+            - gateway
+            - checkout
+            - payment
+        op: "<="
+        value: 10
+      - metric: timeout_mismatch_count
+        target:
+          type: path
+          services:
+            - gateway
+            - checkout
+            - payment
+        op: ">="
+        value: 1
+
+  checkout-payment-cut:
+    faults:
+      - type: edge_fail_stop
+        selector:
+          edge_ids:
+            - checkout|payment|sync|true
+
+  shared-db-outage:
+    faults:
+      - type: correlated_failure_domain
+        selector:
+          shared_resource_refs:
+            - db:payments

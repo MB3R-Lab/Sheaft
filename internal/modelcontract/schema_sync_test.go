@@ -17,7 +17,14 @@ func TestAPISchemaStaysInSyncWithVendoredSchema(t *testing.T) {
 	}
 
 	pkgDir := filepath.Dir(thisFile)
-	for _, name := range []string{"model.schema.json", "snapshot.schema.json"} {
+	for _, name := range []string{
+		"model.schema.json",
+		"snapshot.schema.json",
+		"model.v1.0.0.schema.json",
+		"snapshot.v1.0.0.schema.json",
+		"model.v1.1.0.schema.json",
+		"snapshot.v1.1.0.schema.json",
+	} {
 		vendoredPath := filepath.Join(pkgDir, "schema", name)
 		apiPath := filepath.Join(pkgDir, "..", "..", "api", "schema", name)
 

@@ -5,7 +5,7 @@ on:
   workflow_dispatch:
 
 env:
-  BERING_ARTIFACT_SOURCE: examples/outputs/snapshot.sample.json
+  BERING_ARTIFACT_SOURCE: examples/outputs/snapshot-v1.1.0.sample.json
 
 jobs:
   bering-artifact:
@@ -40,7 +40,7 @@ jobs:
         run: |
           docker run --rm -v "$PWD:/workspace" -w /workspace sheaft:ci run \
             --model artifacts/input.json \
-            --analysis configs/analysis.example.yaml \
+            --analysis configs/analysis.v1.1.example.yaml \
             --out-dir out
       - name: Upload Sheaft outputs
         uses: actions/upload-artifact@v4

@@ -56,8 +56,8 @@ Usage examples:
 
 ```bash
 sheaft run \
-  --model examples/outputs/snapshot.sample.json \
-  --analysis configs/analysis.example.yaml \
+  --model examples/outputs/snapshot-v1.1.0.sample.json \
+  --analysis configs/analysis.v1.1.example.yaml \
   --contract-policy configs/contract-policy.example.yaml \
   --out-dir out
 ```
@@ -68,7 +68,7 @@ contract_policy:
   allowed_contracts:
     - kind: snapshot
       name: io.mb3r.bering.snapshot
-      versions: ["1.0.0"]
+      versions: ["1.0.0", "1.1.0"]
 ```
 
 When a contract is still supported globally but deprecated for a given project, Sheaft can either:
@@ -79,7 +79,10 @@ When a contract is still supported globally but deprecated for a given project, 
 ## Current Scope
 
 - Bering owns upstream schema publication and evolution.
-- Sheaft declares compatibility with Bering release lines.
+- Sheaft declares compatibility with Bering `1.0.0` and `1.1.0` model/snapshot release lines.
+- `1.0.0` remains the baseline fail-stop semantics line and the cross-version comparison reference.
+- `1.1.0` enables additive path-aware timeout, retry, placement, shared-resource, and edge-scoped analysis when the artifact carries that metadata.
+- Missing advanced metadata is surfaced as unavailable rather than guessed.
 - Changing the Sheaft app version does not automatically widen or narrow compatibility.
 
 See [docs/compatibility-matrix.md](compatibility-matrix.md) for the human-readable matrix and [VERSIONING.md](../VERSIONING.md) for version-surface rules.

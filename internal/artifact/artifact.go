@@ -76,17 +76,86 @@ type SnapshotDiff struct {
 }
 
 type SnapshotDiscovery struct {
-	Services  []json.RawMessage           `json:"services"`
-	Edges     []json.RawMessage           `json:"edges"`
+	Services  []SnapshotDiscoveryService  `json:"services"`
+	Edges     []SnapshotDiscoveryEdge     `json:"edges"`
 	Endpoints []SnapshotDiscoveryEndpoint `json:"endpoints"`
+	Overlays  []SnapshotOverlay           `json:"overlays,omitempty"`
+}
+
+type SnapshotOverlay struct {
+	Name       string `json:"name"`
+	Ref        string `json:"ref,omitempty"`
+	Precedence int    `json:"precedence"`
+}
+
+type SnapshotSupport struct {
+	Observations int      `json:"observations"`
+	TraceCount   int      `json:"trace_count"`
+	Evidence     []string `json:"evidence,omitempty"`
+}
+
+type SnapshotProvenance struct {
+	Type       string `json:"type"`
+	Connector  string `json:"connector,omitempty"`
+	Name       string `json:"name,omitempty"`
+	Ref        string `json:"ref,omitempty"`
+	Precedence int    `json:"precedence,omitempty"`
+}
+
+type SnapshotDiscoveryService struct {
+	ID         string                           `json:"id"`
+	Name       string                           `json:"name"`
+	Replicas   int                              `json:"replicas"`
+	Support    SnapshotSupport                  `json:"support"`
+	FirstSeen  string                           `json:"first_seen,omitempty"`
+	LastSeen   string                           `json:"last_seen,omitempty"`
+	Provenance []SnapshotProvenance             `json:"provenance,omitempty"`
+	Metadata   SnapshotServiceDiscoveryMetadata `json:"metadata,omitempty"`
+}
+
+type SnapshotServiceDiscoveryMetadata struct {
+	model.CommonMetadata
+	FailureEligible    *bool             `json:"failure_eligible,omitempty"`
+	ReplicasOverride   *int              `json:"replicas_override,omitempty"`
+	Placements         []model.Placement `json:"placements,omitempty"`
+	SharedResourceRefs []string          `json:"shared_resource_refs,omitempty"`
+}
+
+type SnapshotDiscoveryEdge struct {
+	ID          string                  `json:"id"`
+	From        string                  `json:"from"`
+	To          string                  `json:"to"`
+	Kind        model.EdgeKind          `json:"kind"`
+	Blocking    bool                    `json:"blocking"`
+	Support     SnapshotSupport         `json:"support"`
+	FirstSeen   string                  `json:"first_seen,omitempty"`
+	LastSeen    string                  `json:"last_seen,omitempty"`
+	Provenance  []SnapshotProvenance    `json:"provenance,omitempty"`
+	Metadata    SnapshotEdgeMetadata    `json:"metadata,omitempty"`
+	Resilience  *model.ResiliencePolicy `json:"resilience,omitempty"`
+	Observed    *model.ObservedEdge     `json:"observed,omitempty"`
+	PolicyScope *model.PolicyScope      `json:"policy_scope,omitempty"`
+}
+
+type SnapshotEdgeMetadata struct {
+	model.CommonMetadata
+	Weight *float64 `json:"weight,omitempty"`
 }
 
 type SnapshotDiscoveryEndpoint struct {
-	ID       string                   `json:"id"`
-	Metadata SnapshotEndpointMetadata `json:"metadata"`
+	ID           string                   `json:"id"`
+	EntryService string                   `json:"entry_service"`
+	Method       string                   `json:"method,omitempty"`
+	Path         string                   `json:"path,omitempty"`
+	Support      SnapshotSupport          `json:"support"`
+	FirstSeen    string                   `json:"first_seen,omitempty"`
+	LastSeen     string                   `json:"last_seen,omitempty"`
+	Provenance   []SnapshotProvenance     `json:"provenance,omitempty"`
+	Metadata     SnapshotEndpointMetadata `json:"metadata,omitempty"`
 }
 
 type SnapshotEndpointMetadata struct {
+	model.CommonMetadata
 	Weight       *float64 `json:"weight,omitempty"`
 	PredicateRef string   `json:"predicate_ref,omitempty"`
 }
@@ -114,6 +183,7 @@ type Metadata struct {
 type Loaded struct {
 	Metadata        Metadata                         `json:"metadata"`
 	Model           model.ResilienceModel            `json:"model"`
+	Snapshot        *SnapshotEnvelope                `json:"snapshot,omitempty"`
 	Predicates      map[string]predicates.Definition `json:"predicates,omitempty"`
 	EndpointWeights map[string]float64               `json:"endpoint_weights,omitempty"`
 	PredicateSource string                           `json:"predicate_source"`
@@ -199,6 +269,9 @@ func loadSnapshot(path string, raw []byte, digest string, contract modelcontract
 		return Loaded{}, fmt.Errorf("decode snapshot json: %w", err)
 	}
 	mdl := snapshot.Model
+	if _, err := modelcontract.Resolve(modelcontract.SchemaRef(mdl.Metadata.Schema)); err != nil {
+		return Loaded{}, fmt.Errorf("validate snapshot nested model contract: %w", err)
+	}
 	if mdl.Metadata.TopologyVersion == "" && strings.TrimSpace(snapshot.TopologyVersion) != "" {
 		mdl.Metadata.TopologyVersion = snapshot.TopologyVersion
 	}
@@ -232,6 +305,7 @@ func loadSnapshot(path string, raw []byte, digest string, contract modelcontract
 			TopologyVersion: firstNonEmpty(snapshot.TopologyVersion, mdl.Metadata.TopologyVersion),
 		},
 		Model:           mdl,
+		Snapshot:        &snapshot,
 		Predicates:      preds,
 		EndpointWeights: weights,
 		PredicateSource: sourceOrDefault(len(preds) > 0, predicateSource),

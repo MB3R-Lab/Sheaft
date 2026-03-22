@@ -11,7 +11,7 @@
   "properties": {
     "schema_version": {
       "type": "string",
-      "const": "1.0"
+      "enum": ["1.0", "1.1"]
     },
     "seed": {
       "type": "integer"
@@ -41,6 +41,9 @@
       "type": "string"
     },
     "predicate_contract": {
+      "type": "string"
+    },
+    "fault_contract": {
       "type": "string"
     },
     "endpoint_weights": {
@@ -96,6 +99,9 @@
           "fixed_k_failures": {
             "type": "integer",
             "minimum": 0
+          },
+          "fault_profile": {
+            "type": "string"
           },
           "endpoint_weights": {
             "type": "object",

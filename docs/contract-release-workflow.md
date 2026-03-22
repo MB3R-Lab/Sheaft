@@ -16,8 +16,8 @@ The canonical published Bering release manifest currently consumed by Sheaft is:
 
 - `https://mb3r-lab.github.io/Bering/schema/index.json`
 
-Sheaft CI verifies that this published metadata matches the pinned model contract in `internal/modelcontract/contract.go`.
-Published remote schema sync is verified separately for both the model and snapshot contracts.
+Sheaft CI verifies that this published metadata matches the currently published `1.1.0` model and snapshot contracts in `internal/modelcontract/contract.go`.
+Published remote schema sync is verified separately for every supported versioned model and snapshot schema mirror.
 
 ## Release Policy
 
@@ -29,8 +29,8 @@ When Bering publishes a new contract line that Sheaft wants to support:
 2. Bering updates `schema/index.json` so `name`, `version`, `uri`, and `digest` match the released schema.
 3. Sheaft updates:
    - `internal/modelcontract/contract.go`
-   - vendored schema snapshot under `internal/modelcontract/schema/`
-   - mirrored public schema under `api/schema/`
+   - vendored versioned schema snapshots under `internal/modelcontract/schema/`
+   - mirrored public versioned schemas under `api/schema/`
    - `compatibility-manifest.json`
    - [compatibility matrix](compatibility-matrix.md)
 4. Sheaft CI must pass:
@@ -65,4 +65,4 @@ If the new Bering contract is not backward compatible for Sheaft:
 
 ## Current Scope Limitation
 
-The published upstream release manifest currently checked by Sheaft still covers the Bering model contract only. Snapshot compatibility is now verified via the published snapshot schema URL and strict local pins, but not yet via an equivalent upstream snapshot release-manifest document.
+`schema/index.json` tracks the latest published Bering contract line. Older supported lines remain pinned and verified through their exact published versioned schema URLs plus the checked-in versioned schema mirrors.

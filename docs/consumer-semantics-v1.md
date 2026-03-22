@@ -1,6 +1,6 @@
 # Sheaft Consumer Semantics v1
 
-This document defines how Sheaft v1 consumes supported upstream artifact contracts and overlays during analysis and gate evaluation.
+This document defines the baseline `1.0.0` semantics line in Sheaft.
 
 ## Version Scope
 
@@ -9,7 +9,7 @@ This semantics profile is bound to the currently supported contracts:
 - `io.mb3r.bering.model@1.0.0`
 - `io.mb3r.bering.snapshot@1.0.0`
 
-Contract pins, URIs, and digests are tracked in [compatibility-matrix.md](compatibility-matrix.md).
+Contract pins, URIs, and digests are tracked in [compatibility-matrix.md](compatibility-matrix.md). The richer `1.1.0` analysis line is defined separately in [consumer-semantics-v2.md](consumer-semantics-v2.md).
 
 ## Consumer Pipeline
 

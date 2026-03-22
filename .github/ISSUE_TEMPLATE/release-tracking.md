@@ -18,6 +18,8 @@ labels: ["area: ci", "area: docs", "type: task"]
 - [ ] checked-in sample `run` smoke path passes
 - [ ] checked-in sample `serve` config starts successfully
 - [ ] reproducible release packaging path is green
+- [ ] `compatibility-manifest.json` and `release-manifest.json` are regenerated and validated
+- [ ] default config pack contents match the release contract and examples shipped in the tag
 - [ ] release archives/checksums/SBOMs are attached
 
 ## First-user surface
@@ -26,6 +28,9 @@ labels: ["area: ci", "area: docs", "type: task"]
 - [ ] Quickstart is copy-paste friendly
 - [ ] release status is clearly stated
 - [ ] compatibility with supported upstream contracts is documented
+- [ ] release notes clearly distinguish public release behavior from unreleased `main`
+- [ ] baseline `1.0.0` versus advanced `1.1.0` behavior is documented when dual-line support is shipped
+- [ ] artifact-vs-artifact baseline comparison and fault-contract surfaces are documented when shipped
 - [ ] changelog / release notes are ready
 
 ## Out of scope

@@ -1,0 +1,123 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/MB3R-Lab/Sheaft/api/schema/fault-contract.schema.json",
+  "title": "SheaftFaultContractV1",
+  "type": "object",
+  "required": ["schema_version", "profiles"],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "const": "1.0"
+    },
+    "profiles": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "faults": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["type", "selector"],
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "enum": [
+                    "correlated_failure_domain",
+                    "edge_fail_stop",
+                    "edge_partial_degradation",
+                    "service_partial_degradation"
+                  ]
+                },
+                "selector": {
+                  "type": "object",
+                  "properties": {
+                    "service_ids": {
+                      "type": "array",
+                      "items": { "type": "string" }
+                    },
+                    "service_labels": {
+                      "type": "object",
+                      "additionalProperties": { "type": "string" }
+                    },
+                    "placement_labels": {
+                      "type": "object",
+                      "additionalProperties": { "type": "string" }
+                    },
+                    "shared_resource_refs": {
+                      "type": "array",
+                      "items": { "type": "string" }
+                    },
+                    "edge_ids": {
+                      "type": "array",
+                      "items": { "type": "string" }
+                    }
+                  }
+                },
+                "only_failure_eligible": {
+                  "type": "boolean"
+                },
+                "error_rate": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                "latency_ms": {
+                  "type": "object",
+                  "properties": {
+                    "p50": { "type": "number", "minimum": 0 },
+                    "p90": { "type": "number", "minimum": 0 },
+                    "p95": { "type": "number", "minimum": 0 },
+                    "p99": { "type": "number", "minimum": 0 }
+                  }
+                }
+              }
+            }
+          },
+          "assertions": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["metric", "target", "op", "value"],
+              "properties": {
+                "metric": {
+                  "type": "string",
+                  "enum": [
+                    "expected_success_rate",
+                    "max_amplification_factor",
+                    "timeout_mismatch_count",
+                    "blast_radius_service_count",
+                    "blast_radius_endpoint_count"
+                  ]
+                },
+                "target": {
+                  "type": "object",
+                  "required": ["type"],
+                  "properties": {
+                    "type": {
+                      "type": "string",
+                      "enum": ["endpoint", "path", "edge", "profile"]
+                    },
+                    "endpoint_id": { "type": "string" },
+                    "services": {
+                      "type": "array",
+                      "items": { "type": "string" }
+                    },
+                    "edge_id": { "type": "string" }
+                  }
+                },
+                "op": {
+                  "type": "string",
+                  "enum": [">=", "<=", "=="]
+                },
+                "value": {
+                  "type": "number"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

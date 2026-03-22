@@ -214,6 +214,7 @@ func evaluateReportProfiles(rep report.Report, analysisCfg config.AnalysisConfig
 			WeightedAggregate:    profile.Simulation.WeightedAggregate,
 			UnweightedAggregate:  profile.Simulation.UnweightedAggregate,
 			EndpointAvailability: profile.Simulation.EndpointAvailability,
+			Assertions:           profile.Simulation.Assertions,
 		})
 	}
 	return gate.EvaluateProfiles(outputs, analysisCfg.Gate)

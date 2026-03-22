@@ -1,0 +1,146 @@
+{
+  "services": [
+    {
+      "id": "gateway",
+      "name": "gateway",
+      "replicas": 1,
+      "metadata": {
+        "labels": {
+          "team": "edge"
+        }
+      }
+    },
+    {
+      "id": "checkout",
+      "name": "checkout",
+      "replicas": 2,
+      "metadata": {
+        "failure_eligible": true,
+        "labels": {
+          "team": "commerce"
+        },
+        "placements": [
+          {
+            "replicas": 1,
+            "labels": {
+              "az": "us-east-1a",
+              "replica_group": "blue"
+            }
+          },
+          {
+            "replicas": 1,
+            "labels": {
+              "az": "us-east-1b",
+              "replica_group": "green"
+            }
+          }
+        ],
+        "shared_resource_refs": ["db:payments"]
+      }
+    },
+    {
+      "id": "payment",
+      "name": "payment",
+      "replicas": 1,
+      "metadata": {
+        "failure_eligible": true,
+        "labels": {
+          "team": "payments"
+        },
+        "shared_resource_refs": ["db:payments"]
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "gateway|checkout|sync|true",
+      "from": "gateway",
+      "to": "checkout",
+      "kind": "sync",
+      "blocking": true,
+      "resilience": {
+        "request_timeout_ms": 4500,
+        "retry": {
+          "max_attempts": 2
+        },
+        "circuit_breaker": {
+          "enabled": true,
+          "max_requests": 2
+        }
+      },
+      "observed": {
+        "latency_ms": {
+          "p90": 800
+        },
+        "error_rate": 0.02
+      }
+    },
+    {
+      "id": "checkout|payment|sync|true",
+      "from": "checkout",
+      "to": "payment",
+      "kind": "sync",
+      "blocking": true,
+      "resilience": {
+        "request_timeout_ms": 4000,
+        "retry": {
+          "max_attempts": 3
+        },
+        "circuit_breaker": {
+          "enabled": true,
+          "max_requests": 3
+        }
+      },
+      "observed": {
+        "latency_ms": {
+          "p90": 1200
+        },
+        "error_rate": 0.05
+      }
+    }
+  ],
+  "endpoints": [
+    {
+      "id": "gateway:POST /checkout",
+      "entry_service": "gateway",
+      "success_predicate_ref": "gateway:POST /checkout",
+      "method": "POST",
+      "path": "/checkout",
+      "metadata": {
+        "weight": 0.8
+      }
+    },
+    {
+      "id": "gateway:GET /explicit",
+      "entry_service": "gateway",
+      "success_predicate_ref": "explicit.flow",
+      "method": "GET",
+      "path": "/explicit",
+      "metadata": {
+        "weight": 0.2
+      }
+    }
+  ],
+  "predicates": {
+    "explicit.flow": {
+      "type": "all_of",
+      "services": ["gateway", "checkout", "payment"]
+    }
+  },
+  "endpoint_weights": {
+    "gateway:POST /checkout": 0.8,
+    "gateway:GET /explicit": 0.2
+  },
+  "metadata": {
+    "source_type": "bering",
+    "source_ref": "bering://fixtures/checkout-v11-model",
+    "discovered_at": "2026-03-22T00:00:00Z",
+    "confidence": 0.95,
+    "schema": {
+      "name": "io.mb3r.bering.model",
+      "version": "1.1.0",
+      "uri": "https://mb3r-lab.github.io/Bering/schema/model/v1.1.0/model.schema.json",
+      "digest": "sha256:bc9a60736c9e6bda9599243fd68f293b88f42ade65321d8267369a5c3214779a"
+    }
+  }
+}

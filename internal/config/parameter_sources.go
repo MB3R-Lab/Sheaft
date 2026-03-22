@@ -10,16 +10,17 @@ const (
 )
 
 type ParameterSources struct {
-	ConfigSource       ParameterSource                 `json:"-" yaml:"-"`
-	Seed               ParameterSource                 `json:"-" yaml:"-"`
-	Trials             ParameterSource                 `json:"-" yaml:"-"`
-	SamplingMode       ParameterSource                 `json:"-" yaml:"-"`
-	FailureProbability ParameterSource                 `json:"-" yaml:"-"`
-	FixedKFailures     ParameterSource                 `json:"-" yaml:"-"`
-	EndpointWeights    ParameterSource                 `json:"-" yaml:"-"`
-	Journeys           ParameterSource                 `json:"-" yaml:"-"`
-	PredicateContract  ParameterSource                 `json:"-" yaml:"-"`
-	Baselines          ParameterSource                 `json:"-" yaml:"-"`
+	ConfigSource       ParameterSource                    `json:"-" yaml:"-"`
+	Seed               ParameterSource                    `json:"-" yaml:"-"`
+	Trials             ParameterSource                    `json:"-" yaml:"-"`
+	SamplingMode       ParameterSource                    `json:"-" yaml:"-"`
+	FailureProbability ParameterSource                    `json:"-" yaml:"-"`
+	FixedKFailures     ParameterSource                    `json:"-" yaml:"-"`
+	EndpointWeights    ParameterSource                    `json:"-" yaml:"-"`
+	Journeys           ParameterSource                    `json:"-" yaml:"-"`
+	PredicateContract  ParameterSource                    `json:"-" yaml:"-"`
+	FaultContract      ParameterSource                    `json:"-" yaml:"-"`
+	Baselines          ParameterSource                    `json:"-" yaml:"-"`
 	Profiles           map[string]ProfileParameterSources `json:"-" yaml:"-"`
 }
 
@@ -28,6 +29,7 @@ type ProfileParameterSources struct {
 	SamplingMode       ParameterSource `json:"-" yaml:"-"`
 	FailureProbability ParameterSource `json:"-" yaml:"-"`
 	FixedKFailures     ParameterSource `json:"-" yaml:"-"`
+	FaultProfile       ParameterSource `json:"-" yaml:"-"`
 	EndpointWeights    ParameterSource `json:"-" yaml:"-"`
 }
 
@@ -42,6 +44,7 @@ func BuildAnalysisParameterSources(raw, normalized AnalysisConfig) ParameterSour
 		EndpointWeights:    pickSource(len(raw.EndpointWeights) > 0, ParameterSourceOverride, ParameterSourceDefault),
 		Journeys:           pickSource(raw.Journeys != "", ParameterSourceOverride, ParameterSourceDefault),
 		PredicateContract:  pickSource(raw.PredicateContract != "", ParameterSourceExternal, ParameterSourceDefault),
+		FaultContract:      pickSource(raw.FaultContract != "", ParameterSourceExternal, ParameterSourceDefault),
 		Baselines:          pickSource(len(raw.Baselines) > 0, ParameterSourceExternal, ParameterSourceDefault),
 		Profiles:           make(map[string]ProfileParameterSources, len(normalized.Profiles)),
 	}
@@ -61,6 +64,7 @@ func BuildAnalysisParameterSources(raw, normalized AnalysisConfig) ParameterSour
 			SamplingMode:       inheritedSource(rawProfile.SamplingMode != "", sources.SamplingMode),
 			FailureProbability: inheritedSource(rawProfile.FailureProbability != 0, sources.FailureProbability),
 			FixedKFailures:     inheritedSource(rawProfile.FixedKFailures != 0, sources.FixedKFailures),
+			FaultProfile:       inheritedSource(rawProfile.FaultProfile != "", sources.FaultContract),
 			EndpointWeights:    inheritedSource(len(rawProfile.EndpointWeights) > 0, sources.EndpointWeights),
 		}
 	}
@@ -79,6 +83,7 @@ func BuildPolicyParameterSources(normalized AnalysisConfig) ParameterSources {
 		EndpointWeights:    ParameterSourceDefault,
 		Journeys:           ParameterSourceDefault,
 		PredicateContract:  ParameterSourceDefault,
+		FaultContract:      ParameterSourceDefault,
 		Baselines:          ParameterSourceDefault,
 		Profiles:           make(map[string]ProfileParameterSources, len(normalized.Profiles)),
 	}
@@ -89,6 +94,7 @@ func BuildPolicyParameterSources(normalized AnalysisConfig) ParameterSources {
 			SamplingMode:       ParameterSourcePolicy,
 			FailureProbability: ParameterSourcePolicy,
 			FixedKFailures:     ParameterSourceDefault,
+			FaultProfile:       ParameterSourceDefault,
 			EndpointWeights:    ParameterSourceDefault,
 		}
 	}

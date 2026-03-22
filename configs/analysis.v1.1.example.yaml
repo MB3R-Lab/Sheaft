@@ -1,0 +1,24 @@
+schema_version: "1.1"
+seed: 42
+trials: 12000
+sampling_mode: independent_replica
+failure_probability: 0.03
+
+fault_contract: configs/fault-contract.example.yaml
+
+baselines:
+  - name: bering-1.0.0-baseline
+    path: examples/outputs/snapshot-v1.0.0.sample.json
+
+profiles:
+  - name: steady-state
+  - name: az-us-east-1a-outage
+    fault_profile: az-us-east-1a-outage
+  - name: payment-brownout
+    fault_profile: payment-brownout
+  - name: checkout-payment-cut
+    fault_profile: checkout-payment-cut
+
+gate:
+  mode: fail
+  default_action: fail

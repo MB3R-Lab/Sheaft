@@ -10,8 +10,9 @@ import (
 )
 
 const (
-	AnalysisSchemaVersion = "1.0"
-	ServeSchemaVersion    = "1.0"
+	AnalysisSchemaVersion     = "1.0"
+	AnalysisSchemaVersionV110 = "1.1"
+	ServeSchemaVersion        = "1.0"
 )
 
 const (
@@ -36,6 +37,7 @@ type AnalysisConfig struct {
 	FixedKFailures     int                `json:"fixed_k_failures,omitempty" yaml:"fixed_k_failures,omitempty"`
 	Journeys           string             `json:"journeys,omitempty" yaml:"journeys,omitempty"`
 	PredicateContract  string             `json:"predicate_contract,omitempty" yaml:"predicate_contract,omitempty"`
+	FaultContract      string             `json:"fault_contract,omitempty" yaml:"fault_contract,omitempty"`
 	EndpointWeights    map[string]float64 `json:"endpoint_weights,omitempty" yaml:"endpoint_weights,omitempty"`
 	Profiles           []Profile          `json:"profiles,omitempty" yaml:"profiles,omitempty"`
 	Baselines          []BaselineRef      `json:"baselines,omitempty" yaml:"baselines,omitempty"`
@@ -50,6 +52,7 @@ type Profile struct {
 	SamplingMode       string             `json:"sampling_mode,omitempty" yaml:"sampling_mode,omitempty"`
 	FailureProbability float64            `json:"failure_probability,omitempty" yaml:"failure_probability,omitempty"`
 	FixedKFailures     int                `json:"fixed_k_failures,omitempty" yaml:"fixed_k_failures,omitempty"`
+	FaultProfile       string             `json:"fault_profile,omitempty" yaml:"fault_profile,omitempty"`
 	EndpointWeights    map[string]float64 `json:"endpoint_weights,omitempty" yaml:"endpoint_weights,omitempty"`
 }
 
@@ -209,11 +212,14 @@ func (c AnalysisConfig) Normalized() AnalysisConfig {
 }
 
 func (c AnalysisConfig) Validate() error {
-	if c.SchemaVersion != AnalysisSchemaVersion {
-		return fmt.Errorf("unsupported analysis schema_version: got %q want %q", c.SchemaVersion, AnalysisSchemaVersion)
+	if c.SchemaVersion != AnalysisSchemaVersion && c.SchemaVersion != AnalysisSchemaVersionV110 {
+		return fmt.Errorf("unsupported analysis schema_version: got %q want one of %q, %q", c.SchemaVersion, AnalysisSchemaVersion, AnalysisSchemaVersionV110)
 	}
 	if len(c.Profiles) == 0 {
 		return errors.New("analysis requires at least one profile")
+	}
+	if c.SchemaVersion == AnalysisSchemaVersion && strings.TrimSpace(c.FaultContract) != "" {
+		return fmt.Errorf("analysis schema_version %q does not support fault_contract; use %q", AnalysisSchemaVersion, AnalysisSchemaVersionV110)
 	}
 	profileNames := make(map[string]struct{}, len(c.Profiles))
 	for _, baseline := range c.Baselines {
@@ -238,6 +244,9 @@ func (c AnalysisConfig) Validate() error {
 	for _, profile := range c.Profiles {
 		if strings.TrimSpace(profile.Name) == "" {
 			return errors.New("profile name cannot be empty")
+		}
+		if c.SchemaVersion == AnalysisSchemaVersion && strings.TrimSpace(profile.FaultProfile) != "" {
+			return fmt.Errorf("profile %q uses fault_profile but analysis schema_version %q does not support it; use %q", profile.Name, AnalysisSchemaVersion, AnalysisSchemaVersionV110)
 		}
 		if _, exists := profileNames[profile.Name]; exists {
 			return fmt.Errorf("duplicate profile name: %s", profile.Name)
@@ -424,6 +433,7 @@ func (c *ServeConfig) ResolveRelativePaths(baseDir string) {
 func (c *AnalysisConfig) ResolveRelativePaths(baseDir string) {
 	c.Journeys = resolveRelative(baseDir, c.Journeys)
 	c.PredicateContract = resolveRelative(baseDir, c.PredicateContract)
+	c.FaultContract = resolveRelative(baseDir, c.FaultContract)
 	for i := range c.Baselines {
 		c.Baselines[i].Path = resolveRelative(baseDir, c.Baselines[i].Path)
 	}

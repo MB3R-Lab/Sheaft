@@ -1,11 +1,14 @@
 package analyzer
 
 import (
+	"encoding/json"
 	"fmt"
+	"os"
 	"time"
 
 	"github.com/MB3R-Lab/Sheaft/internal/artifact"
 	"github.com/MB3R-Lab/Sheaft/internal/config"
+	"github.com/MB3R-Lab/Sheaft/internal/faults"
 	"github.com/MB3R-Lab/Sheaft/internal/gate"
 	"github.com/MB3R-Lab/Sheaft/internal/journeys"
 	"github.com/MB3R-Lab/Sheaft/internal/predicates"
@@ -14,11 +17,11 @@ import (
 )
 
 type Result struct {
-	Artifact        artifact.Loaded
-	ContractPolicy  config.ContractPolicyDecision
-	Simulation      simulation.AnalysisOutput
-	Evaluation      gate.Evaluation
-	Report          report.Report
+	Artifact       artifact.Loaded
+	ContractPolicy config.ContractPolicyDecision
+	Simulation     simulation.AnalysisOutput
+	Evaluation     gate.Evaluation
+	Report         report.Report
 }
 
 func AnalyzeFile(path string, cfg config.AnalysisConfig, previous *report.Report) (Result, error) {
@@ -43,6 +46,7 @@ func AnalyzeLoaded(loaded artifact.Loaded, cfg config.AnalysisConfig, previous *
 
 	overlayPredicates := map[string]predicates.Definition{}
 	overlayWeights := map[string]float64{}
+	var faultContract *faults.Contract
 	if cfg.PredicateContract != "" {
 		contract, err := predicates.Load(cfg.PredicateContract)
 		if err != nil {
@@ -56,6 +60,13 @@ func AnalyzeLoaded(loaded artifact.Loaded, cfg config.AnalysisConfig, previous *
 		if len(overlayWeights) > 0 {
 			loaded.WeightsSource = artifact.ProvenanceExternal
 		}
+	}
+	if cfg.FaultContract != "" {
+		contract, err := faults.Load(cfg.FaultContract)
+		if err != nil {
+			return Result{}, fmt.Errorf("load fault contract: %w", err)
+		}
+		faultContract = &contract
 	}
 
 	journeyOverrides := map[string][][]string{}
@@ -78,15 +89,17 @@ func AnalyzeLoaded(loaded artifact.Loaded, cfg config.AnalysisConfig, previous *
 			SamplingMode:       profile.SamplingMode,
 			FailureProbability: profile.FailureProbability,
 			FixedKFailures:     profile.FixedKFailures,
+			FaultProfile:       profile.FaultProfile,
 			EndpointWeights:    profile.EndpointWeights,
 		})
 	}
 
-	simOut, err := simulation.RunProfiles(loaded.Model, simulation.AnalysisParams{
+	simOut, err := simulation.RunArtifactProfiles(loaded, simulation.AnalysisParams{
 		Seed:             cfg.Seed,
 		JourneyOverrides: journeyOverrides,
 		PredicateSet:     mergePredicates(loaded.Predicates, overlayPredicates),
 		DefaultWeights:   mergeWeights(loaded.EndpointWeights, overlayWeights, cfg.EndpointWeights),
+		FaultContract:    faultContract,
 		Profiles:         profiles,
 	})
 	if err != nil {
@@ -101,7 +114,7 @@ func AnalyzeLoaded(loaded artifact.Loaded, cfg config.AnalysisConfig, previous *
 	rep := report.ComposeAnalysis(loaded, simOut, eval, cfg, contractDecision, loaded.Model.Metadata.Confidence, time.Now(), time.Since(started))
 	rep.SetPreviousDiff(previous)
 
-	baselines, err := loadBaselines(cfg.Baselines)
+	baselines, err := loadBaselines(cfg.Baselines, cfg)
 	if err != nil {
 		return Result{}, err
 	}
@@ -116,19 +129,64 @@ func AnalyzeLoaded(loaded artifact.Loaded, cfg config.AnalysisConfig, previous *
 	}, nil
 }
 
-func loadBaselines(refs []config.BaselineRef) (map[string]report.Report, error) {
+func loadBaselines(refs []config.BaselineRef, cfg config.AnalysisConfig) (map[string]report.Report, error) {
 	if len(refs) == 0 {
 		return nil, nil
 	}
 	out := make(map[string]report.Report, len(refs))
 	for _, ref := range refs {
-		rep, err := report.Load(ref.Path)
+		kind, err := baselineKind(ref.Path)
 		if err != nil {
 			return nil, fmt.Errorf("load baseline %q: %w", ref.Name, err)
 		}
-		out[ref.Name] = rep
+		switch kind {
+		case "report":
+			rep, err := report.Load(ref.Path)
+			if err != nil {
+				return nil, fmt.Errorf("load baseline %q: %w", ref.Name, err)
+			}
+			out[ref.Name] = rep
+		case "artifact":
+			loaded, err := artifact.Load(ref.Path)
+			if err != nil {
+				return nil, fmt.Errorf("load baseline artifact %q: %w", ref.Name, err)
+			}
+			baselineCfg := cfg
+			baselineCfg.Baselines = nil
+			baselineCfg.ContractPolicy = config.ContractPolicy{}
+			result, err := AnalyzeLoaded(loaded, baselineCfg, nil)
+			if err != nil {
+				return nil, fmt.Errorf("analyze baseline artifact %q: %w", ref.Name, err)
+			}
+			out[ref.Name] = result.Report
+		default:
+			return nil, fmt.Errorf("unsupported baseline kind %q", kind)
+		}
 	}
 	return out, nil
+}
+
+func baselineKind(path string) (string, error) {
+	raw, err := os.ReadFile(path)
+	if err != nil {
+		return "", fmt.Errorf("read baseline file: %w", err)
+	}
+	var probe struct {
+		Simulation       json.RawMessage `json:"simulation"`
+		PolicyEvaluation json.RawMessage `json:"policy_evaluation"`
+		Metadata         json.RawMessage `json:"metadata"`
+		Model            json.RawMessage `json:"model"`
+	}
+	if err := json.Unmarshal(raw, &probe); err != nil {
+		return "", fmt.Errorf("decode baseline file: %w", err)
+	}
+	if len(probe.Simulation) > 0 && len(probe.PolicyEvaluation) > 0 {
+		return "report", nil
+	}
+	if len(probe.Metadata) > 0 || len(probe.Model) > 0 {
+		return "artifact", nil
+	}
+	return "", fmt.Errorf("baseline file is neither a Sheaft report nor a supported artifact")
 }
 
 func mergePredicates(base map[string]predicates.Definition, overrides map[string]predicates.Definition) map[string]predicates.Definition {

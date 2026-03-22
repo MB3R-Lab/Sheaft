@@ -13,24 +13,6 @@ fi
 # shellcheck source=scripts/ci/contract-constants.sh
 . "${HELPER_FILE}"
 
-MODEL_URI="$(extract_const ExpectedSchemaURI)"
-MODEL_DIGEST="$(extract_const ExpectedSchemaDigest)"
-MODEL_VERSION="$(extract_const ExpectedSchemaVersion)"
-
-SNAPSHOT_URI="$(extract_const BeringSnapshotV100URI)"
-SNAPSHOT_DIGEST="$(extract_const BeringSnapshotV100Digest)"
-SNAPSHOT_VERSION="$(extract_const BeringSnapshotV100Version)"
-
-if [ -z "${MODEL_URI}" ] || [ -z "${MODEL_DIGEST}" ] || [ -z "${MODEL_VERSION}" ]; then
-  echo "Failed to read model schema constants from ${CONTRACT_FILE}" >&2
-  exit 1
-fi
-
-if [ -z "${SNAPSHOT_URI}" ] || [ -z "${SNAPSHOT_DIGEST}" ] || [ -z "${SNAPSHOT_VERSION}" ]; then
-  echo "Failed to read snapshot schema constants from ${CONTRACT_FILE}" >&2
-  exit 1
-fi
-
 TMP_DIR="$(mktemp -d)"
 trap 'rm -rf "${TMP_DIR}"' EXIT
 
@@ -113,18 +95,60 @@ check_schema_contract() {
   echo "Digest:  ${expected_digest}"
 }
 
-check_schema_contract \
-  "model" \
-  "${MODEL_URI}" \
-  "${MODEL_DIGEST}" \
-  "${MODEL_VERSION}" \
-  "${REPO_ROOT}/internal/modelcontract/schema/model.schema.json" \
-  "${REPO_ROOT}/api/schema/model.schema.json"
+check_contract_version() {
+  label="$1"
+  uri_const="$2"
+  digest_const="$3"
+  version_const="$4"
+  vendored_schema="$5"
+  api_schema="$6"
 
-check_schema_contract \
-  "snapshot" \
-  "${SNAPSHOT_URI}" \
-  "${SNAPSHOT_DIGEST}" \
-  "${SNAPSHOT_VERSION}" \
-  "${REPO_ROOT}/internal/modelcontract/schema/snapshot.schema.json" \
-  "${REPO_ROOT}/api/schema/snapshot.schema.json"
+  uri="$(extract_const "${uri_const}")"
+  digest="$(extract_const "${digest_const}")"
+  version="$(extract_const "${version_const}")"
+
+  if [ -z "${uri}" ] || [ -z "${digest}" ] || [ -z "${version}" ]; then
+    echo "Failed to read ${label} schema constants from ${CONTRACT_FILE}" >&2
+    exit 1
+  fi
+
+  check_schema_contract \
+    "${label}" \
+    "${uri}" \
+    "${digest}" \
+    "${version}" \
+    "${vendored_schema}" \
+    "${api_schema}"
+}
+
+check_contract_version \
+  "model-v1.0.0" \
+  "BeringModelV100URI" \
+  "BeringModelV100Digest" \
+  "BeringModelV100Version" \
+  "${REPO_ROOT}/internal/modelcontract/schema/model.v1.0.0.schema.json" \
+  "${REPO_ROOT}/api/schema/model.v1.0.0.schema.json"
+
+check_contract_version \
+  "snapshot-v1.0.0" \
+  "BeringSnapshotV100URI" \
+  "BeringSnapshotV100Digest" \
+  "BeringSnapshotV100Version" \
+  "${REPO_ROOT}/internal/modelcontract/schema/snapshot.v1.0.0.schema.json" \
+  "${REPO_ROOT}/api/schema/snapshot.v1.0.0.schema.json"
+
+check_contract_version \
+  "model-v1.1.0" \
+  "BeringModelV110URI" \
+  "BeringModelV110Digest" \
+  "BeringModelV110Version" \
+  "${REPO_ROOT}/internal/modelcontract/schema/model.v1.1.0.schema.json" \
+  "${REPO_ROOT}/api/schema/model.v1.1.0.schema.json"
+
+check_contract_version \
+  "snapshot-v1.1.0" \
+  "BeringSnapshotV110URI" \
+  "BeringSnapshotV110Digest" \
+  "BeringSnapshotV110Version" \
+  "${REPO_ROOT}/internal/modelcontract/schema/snapshot.v1.1.0.schema.json" \
+  "${REPO_ROOT}/api/schema/snapshot.v1.1.0.schema.json"

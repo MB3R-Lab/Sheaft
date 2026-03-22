@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/MB3R-Lab/Sheaft/internal/config"
+	"github.com/MB3R-Lab/Sheaft/internal/faults"
 	"github.com/MB3R-Lab/Sheaft/internal/model"
 	"github.com/MB3R-Lab/Sheaft/internal/predicates"
 )
@@ -27,6 +28,7 @@ type ProfileParams struct {
 	SamplingMode       string
 	FailureProbability float64
 	FixedKFailures     int
+	FaultProfile       string
 	EndpointWeights    map[string]float64
 }
 
@@ -35,6 +37,7 @@ type AnalysisParams struct {
 	JourneyOverrides map[string][][]string
 	PredicateSet     map[string]predicates.Definition
 	DefaultWeights   map[string]float64
+	FaultContract    *faults.Contract
 	Profiles         []ProfileParams
 }
 
@@ -50,16 +53,90 @@ type ProfileOutput struct {
 	SamplingMode         string             `json:"sampling_mode"`
 	FailureProbability   float64            `json:"failure_probability,omitempty"`
 	FixedKFailures       int                `json:"fixed_k_failures,omitempty"`
+	FaultProfile         string             `json:"fault_profile,omitempty"`
 	EndpointAvailability map[string]float64 `json:"endpoint_availability"`
 	EndpointWeights      map[string]float64 `json:"endpoint_weights,omitempty"`
 	WeightedAggregate    float64            `json:"weighted_aggregate"`
 	UnweightedAggregate  float64            `json:"unweighted_aggregate"`
+	Assertions           []AssertionResult  `json:"assertions,omitempty"`
+	Advanced             *AdvancedProfile   `json:"advanced,omitempty"`
 }
 
 type AnalysisOutput struct {
 	Profiles               []ProfileOutput `json:"profiles"`
 	CrossProfileWeighted   float64         `json:"cross_profile_weighted_aggregate"`
 	CrossProfileUnweighted float64         `json:"cross_profile_unweighted_aggregate"`
+}
+
+type MetricFloat struct {
+	Available  bool    `json:"available"`
+	Value      float64 `json:"value,omitempty"`
+	Reason     string  `json:"reason,omitempty"`
+	Provenance string  `json:"provenance,omitempty"`
+}
+
+type MetricInt struct {
+	Available  bool   `json:"available"`
+	Value      int    `json:"value,omitempty"`
+	Reason     string `json:"reason,omitempty"`
+	Provenance string `json:"provenance,omitempty"`
+}
+
+type FaultMatch struct {
+	FaultType                 string          `json:"fault_type"`
+	Selector                  faults.Selector `json:"selector"`
+	MatchedServiceIDs         []string        `json:"matched_service_ids,omitempty"`
+	MatchedPlacementBucketIDs []string        `json:"matched_placement_bucket_ids,omitempty"`
+	MatchedEdgeIDs            []string        `json:"matched_edge_ids,omitempty"`
+	MatchedEndpointIDs        []string        `json:"matched_endpoint_ids,omitempty"`
+	MatchedSharedResources    []string        `json:"matched_shared_resources,omitempty"`
+}
+
+type BlastRadius struct {
+	ServiceCount  MetricInt `json:"service_count"`
+	EndpointCount MetricInt `json:"endpoint_count"`
+	ServiceIDs    []string  `json:"service_ids,omitempty"`
+	EndpointIDs   []string  `json:"endpoint_ids,omitempty"`
+}
+
+type EndpointAdvanced struct {
+	EndpointID             string      `json:"endpoint_id"`
+	ExpectedSuccessRate    MetricFloat `json:"expected_success_rate"`
+	MaxAmplificationFactor MetricFloat `json:"max_amplification_factor"`
+}
+
+type PathAdvanced struct {
+	PathID                 string      `json:"path_id"`
+	Services               []string    `json:"services"`
+	EdgeIDs                []string    `json:"edge_ids"`
+	ExpectedSuccessRate    MetricFloat `json:"expected_success_rate"`
+	MaxAmplificationFactor MetricFloat `json:"max_amplification_factor"`
+	TimeoutMismatchCount   MetricInt   `json:"timeout_mismatch_count"`
+}
+
+type EdgeAdvanced struct {
+	EdgeID                 string      `json:"edge_id"`
+	MaxAmplificationFactor MetricFloat `json:"max_amplification_factor"`
+}
+
+type AssertionResult struct {
+	Metric      string                 `json:"metric"`
+	Target      faults.AssertionTarget `json:"target"`
+	Op          string                 `json:"op"`
+	Expected    float64                `json:"expected"`
+	Status      string                 `json:"status"`
+	Available   bool                   `json:"available"`
+	ActualValue float64                `json:"actual_value,omitempty"`
+	Reason      string                 `json:"reason,omitempty"`
+}
+
+type AdvancedProfile struct {
+	ActiveFaultProfile string             `json:"active_fault_profile,omitempty"`
+	FaultMatches       []FaultMatch       `json:"fault_matches,omitempty"`
+	BlastRadius        *BlastRadius       `json:"blast_radius,omitempty"`
+	Endpoints          []EndpointAdvanced `json:"endpoints,omitempty"`
+	Paths              []PathAdvanced     `json:"paths,omitempty"`
+	Edges              []EdgeAdvanced     `json:"edges,omitempty"`
 }
 
 func Run(mdl model.ResilienceModel, params Params) (Output, error) {
@@ -165,6 +242,7 @@ func runProfile(profile ProfileParams, endpointIDs []string, serviceIDs []string
 		SamplingMode:         profile.SamplingMode,
 		FailureProbability:   profile.FailureProbability,
 		FixedKFailures:       profile.FixedKFailures,
+		FaultProfile:         profile.FaultProfile,
 		EndpointAvailability: availability,
 		EndpointWeights:      weights,
 		WeightedAggregate:    weighted,

@@ -1,5 +1,37 @@
 # Changelog
 
+## v0.2.0 - 2026-03-22
+
+Technical-preview feature release that turns Sheaft into a real dual-line downstream consumer for Bering `1.0.0` and `1.1.0`, while keeping `1.0.0` as the baseline semantics line.
+
+Included in this release:
+
+- strict dual support for Bering `io.mb3r.bering.model@1.0.0` / `@1.1.0`
+- strict dual support for Bering `io.mb3r.bering.snapshot@1.0.0` / `@1.1.0`
+- versioned `analysis` config `1.1` plus a separate Sheaft fault contract `1.0`
+- typed `1.1.0` metadata loading for edge IDs, placements, shared resources, retries, timeouts, and observed summaries
+- placement-aware and edge-aware advanced analysis, including timeout mismatch, retry amplification, blast radius, and asymmetric edge faults
+- artifact-vs-artifact baseline comparison across contract lines through the existing `analysis.baselines` flow
+
+Stable within the `v0.2.0` preview:
+
+- strict acceptance of supported `1.0.0` and `1.1.0` Bering model/snapshot contracts
+- deterministic batch execution and deterministic baseline comparison for a fixed artifact, config, and seed
+- fail-stop baseline semantics for `1.0.0`
+- honest advanced diagnostics for timeout mismatch, retry amplification, blast radius, and asymmetric edge faults when metadata exists
+
+Still experimental in `v0.2.0`:
+
+- long-running `serve` / `watch` service mode
+- local `discover` helper
+- broader operator-facing packaging and operational conventions around image/chart deployment
+
+Known limitations:
+
+- no live chaos execution, traffic generation, or new discovery pipeline is added in this release
+- explicit legacy predicates remain service-based unless explicit path/journey information exists
+- advanced metrics stay unavailable when the artifact or external contract does not provide the required metadata
+
 ## v0.1.1 - 2026-03-14
 
 Patch technical-preview release focused on restoring the advertised snapshot compatibility surface with current Bering `io.mb3r.bering.snapshot@1.0.0`.

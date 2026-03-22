@@ -161,6 +161,73 @@ func TestLoad_CheckedInSnapshotSample(t *testing.T) {
 	}
 }
 
+func TestLoad_CheckedInSnapshotV110Sample(t *testing.T) {
+	t.Parallel()
+
+	_, thisFile, _, ok := runtime.Caller(0)
+	if !ok {
+		t.Fatal("runtime.Caller failed")
+	}
+	path := filepath.Join(filepath.Dir(thisFile), "..", "..", "examples", "outputs", "snapshot-v1.1.0.sample.json")
+
+	loaded, err := Load(path)
+	if err != nil {
+		t.Fatalf("Load checked-in snapshot v1.1.0 sample failed: %v", err)
+	}
+	if loaded.Metadata.Kind != modelcontract.KindSnapshot {
+		t.Fatalf("expected snapshot kind, got %s", loaded.Metadata.Kind)
+	}
+	if loaded.Metadata.Contract.Version != modelcontract.BeringSnapshotV110Version {
+		t.Fatalf("unexpected snapshot contract version: %+v", loaded.Metadata.Contract)
+	}
+	if loaded.Snapshot == nil {
+		t.Fatal("expected typed snapshot metadata for v1.1.0 artifact")
+	}
+	if loaded.Model.Edges[0].ID == "" {
+		t.Fatal("expected edge ids to be preserved for v1.1.0 model")
+	}
+}
+
+func TestLoad_CheckedInModelV110Sample(t *testing.T) {
+	t.Parallel()
+
+	_, thisFile, _, ok := runtime.Caller(0)
+	if !ok {
+		t.Fatal("runtime.Caller failed")
+	}
+	path := filepath.Join(filepath.Dir(thisFile), "..", "..", "examples", "outputs", "model-v1.1.0.sample.json")
+
+	loaded, err := Load(path)
+	if err != nil {
+		t.Fatalf("Load checked-in model v1.1.0 sample failed: %v", err)
+	}
+	if loaded.Metadata.Kind != modelcontract.KindModel {
+		t.Fatalf("expected model kind, got %s", loaded.Metadata.Kind)
+	}
+	if loaded.Metadata.Contract.Version != modelcontract.BeringModelV110Version {
+		t.Fatalf("unexpected model contract version: %+v", loaded.Metadata.Contract)
+	}
+}
+
+func TestLoad_RejectsDigestMismatchForSupportedVersion(t *testing.T) {
+	t.Parallel()
+
+	path := filepath.Join(t.TempDir(), "model.json")
+	mdl := testModel()
+	mdl.Metadata.Schema.Digest = "sha256:badbadbad"
+	if err := model.WriteToFile(path, mdl); err != nil {
+		t.Fatalf("write model: %v", err)
+	}
+
+	_, err := Load(path)
+	if err == nil {
+		t.Fatal("expected digest mismatch error")
+	}
+	if !strings.Contains(err.Error(), "digest mismatch") {
+		t.Fatalf("expected digest mismatch error, got %v", err)
+	}
+}
+
 func testModel() model.ResilienceModel {
 	return model.ResilienceModel{
 		Services: []model.Service{

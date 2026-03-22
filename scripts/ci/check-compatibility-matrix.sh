@@ -42,22 +42,51 @@ require_in_file() {
   fi
 }
 
-MODEL_NAME="$(extract_const BeringModelV100Name)"
-MODEL_VERSION="$(extract_const BeringModelV100Version)"
-MODEL_URI="$(extract_const BeringModelV100URI)"
-MODEL_DIGEST="$(extract_const BeringModelV100Digest)"
+require_contract_in_matrix() {
+  name_const="$1"
+  version_const="$2"
+  uri_const="$3"
+  digest_const="$4"
+  label="$5"
 
-SNAPSHOT_NAME="$(extract_const BeringSnapshotV100Name)"
-SNAPSHOT_VERSION="$(extract_const BeringSnapshotV100Version)"
-SNAPSHOT_URI="$(extract_const BeringSnapshotV100URI)"
-SNAPSHOT_DIGEST="$(extract_const BeringSnapshotV100Digest)"
+  name="$(extract_const "${name_const}")"
+  version="$(extract_const "${version_const}")"
+  uri="$(extract_const "${uri_const}")"
+  digest="$(extract_const "${digest_const}")"
 
-require_in_file "${MODEL_NAME}@${MODEL_VERSION}" "${MATRIX_FILE}" "model contract"
-require_in_file "${MODEL_URI}" "${MATRIX_FILE}" "model uri"
-require_in_file "${MODEL_DIGEST}" "${MATRIX_FILE}" "model digest"
-require_in_file "${SNAPSHOT_NAME}@${SNAPSHOT_VERSION}" "${MATRIX_FILE}" "snapshot contract"
-require_in_file "${SNAPSHOT_URI}" "${MATRIX_FILE}" "snapshot uri"
-require_in_file "${SNAPSHOT_DIGEST}" "${MATRIX_FILE}" "snapshot digest"
+  require_in_file "${name}@${version}" "${MATRIX_FILE}" "${label} contract"
+  require_in_file "${uri}" "${MATRIX_FILE}" "${label} uri"
+  require_in_file "${digest}" "${MATRIX_FILE}" "${label} digest"
+}
+
+require_contract_in_matrix \
+  "BeringModelV100Name" \
+  "BeringModelV100Version" \
+  "BeringModelV100URI" \
+  "BeringModelV100Digest" \
+  "model v1.0.0"
+
+require_contract_in_matrix \
+  "BeringSnapshotV100Name" \
+  "BeringSnapshotV100Version" \
+  "BeringSnapshotV100URI" \
+  "BeringSnapshotV100Digest" \
+  "snapshot v1.0.0"
+
+require_contract_in_matrix \
+  "BeringModelV110Name" \
+  "BeringModelV110Version" \
+  "BeringModelV110URI" \
+  "BeringModelV110Digest" \
+  "model v1.1.0"
+
+require_contract_in_matrix \
+  "BeringSnapshotV110Name" \
+  "BeringSnapshotV110Version" \
+  "BeringSnapshotV110URI" \
+  "BeringSnapshotV110Digest" \
+  "snapshot v1.1.0"
+
 require_in_file "docs/compatibility-matrix.md" "${README_FILE}" "README reference"
 
 if [ -n "${BASE_REF}" ]; then
@@ -69,9 +98,17 @@ if [ -n "${BASE_REF}" ]; then
   contract_changes="$(git diff --name-only "${BASE_REF}"...HEAD -- \
     internal/modelcontract/contract.go \
     internal/modelcontract/schema/model.schema.json \
+    internal/modelcontract/schema/model.v1.0.0.schema.json \
+    internal/modelcontract/schema/model.v1.1.0.schema.json \
     internal/modelcontract/schema/snapshot.schema.json \
+    internal/modelcontract/schema/snapshot.v1.0.0.schema.json \
+    internal/modelcontract/schema/snapshot.v1.1.0.schema.json \
     api/schema/model.schema.json \
-    api/schema/snapshot.schema.json)"
+    api/schema/model.v1.0.0.schema.json \
+    api/schema/model.v1.1.0.schema.json \
+    api/schema/snapshot.schema.json \
+    api/schema/snapshot.v1.0.0.schema.json \
+    api/schema/snapshot.v1.1.0.schema.json)"
   matrix_changes="$(git diff --name-only "${BASE_REF}"...HEAD -- docs/compatibility-matrix.md)"
 
   if [ -n "${contract_changes}" ] && [ -z "${matrix_changes}" ]; then
@@ -83,5 +120,7 @@ if [ -n "${BASE_REF}" ]; then
 fi
 
 echo "Compatibility matrix check passed"
-echo "Model:    ${MODEL_NAME}@${MODEL_VERSION}"
-echo "Snapshot: ${SNAPSHOT_NAME}@${SNAPSHOT_VERSION}"
+echo "Model:    $(extract_const BeringModelV100Name)@$(extract_const BeringModelV100Version)"
+echo "Snapshot: $(extract_const BeringSnapshotV100Name)@$(extract_const BeringSnapshotV100Version)"
+echo "Model:    $(extract_const BeringModelV110Name)@$(extract_const BeringModelV110Version)"
+echo "Snapshot: $(extract_const BeringSnapshotV110Name)@$(extract_const BeringSnapshotV110Version)"

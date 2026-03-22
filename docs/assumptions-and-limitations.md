@@ -4,14 +4,17 @@
 
 - Input topology and endpoint metadata are produced upstream.
 - Supported contracts are explicitly versioned and whitelisted.
-- Failure modeling is fail-stop and profile-driven.
+- `1.0.0` semantics are fail-stop and profile-driven.
+- `1.1.0` advanced analysis depends on explicit retry, timeout, latency, placement, and shared-resource metadata.
 - Weighted aggregates reflect configured workload mix, not observed runtime traffic by default.
 
 ## Current Limitations
 
-- No correlated shock or latency distribution modeling.
+- No live chaos execution or traffic generation.
 - No automatic discovery ownership in production flow.
-- Baseline comparison currently expects report artifacts as the baseline data source.
+- Baseline comparison accepts prior reports and raw supported artifacts, but only overlapping metrics are directly comparable.
+- Missing advanced metadata is reported as unavailable instead of being synthesized.
+- Explicit predicates remain service-based; edge-aware behavior requires journey data or path diagnostics.
 - Directory watch mode selects the newest matching file; it does not merge multiple artifacts.
 
 ## Guidance

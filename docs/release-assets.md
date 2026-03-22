@@ -53,6 +53,8 @@ For GitHub, GitLab, Jenkins, or an internal release pipeline:
 
 The default config pack is a first-class release asset so downstream automation can start from versioned examples instead of copying files from the repository tree.
 
+Pack contents are release-specific. A newer repository `main` branch can contain examples that are not part of the latest published tag, so downstream consumers should trust the tagged pack archive and `release-manifest.json`, not the moving repository head.
+
 Use it when:
 
 - bootstrapping CI gates
