@@ -17,10 +17,8 @@ The current public release is `v0.2.0`. The `v0.2.x` line is an experimental pub
 
 Stable within the `v0.2.0` technical preview:
 
-- strict acceptance of `io.mb3r.bering.model@1.0.0`
-- strict acceptance of `io.mb3r.bering.snapshot@1.0.0`
-- strict acceptance of `io.mb3r.bering.model@1.1.0`
-- strict acceptance of `io.mb3r.bering.snapshot@1.1.0`
+- strict acceptance of the baseline Bering contract line: `io.mb3r.bering.model@1.0.0` and `io.mb3r.bering.snapshot@1.0.0`
+- strict acceptance of the advanced Bering contract line: `io.mb3r.bering.model@1.1.0` and `io.mb3r.bering.snapshot@1.1.0`
 - batch CLI command names and core flow: `simulate`, `gate`, `run`
 - deterministic batch execution for a fixed seed and config
 - cross-line baseline comparison through `analysis.baselines`
@@ -37,6 +35,8 @@ Experimental in `v0.2.x`:
 ## Supported upstream contracts
 
 Sheaft validates artifacts against an explicit whitelist.
+
+These are alternative accepted upstream contract lines for incoming artifacts, not simultaneous version dependencies for a single artifact.
 
 - `io.mb3r.bering.model@1.0.0`
 - `io.mb3r.bering.snapshot@1.0.0`
