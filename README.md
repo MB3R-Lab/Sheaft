@@ -17,7 +17,7 @@ Sheaft consumes already-produced model or snapshot artifacts, runs deterministic
 It stays downstream of topology discovery. The public surface in this repository is the CLI and release assets around:
 
 - batch commands: `simulate`, `gate`, `run`
-- service commands: `serve`, `watch`
+- service command: `serve`, which runs the artifact watch loop; `watch` is kept as a compatibility alias for the same service path
 
 ## Stability / Release Status
 
@@ -35,7 +35,7 @@ Stable within the `v0.2.1` technical preview:
 
 Experimental in `v0.2.x`:
 
-- long-running `serve` / `watch` posture service
+- long-running `serve` posture service
 - richer analysis configuration beyond the legacy gate-policy subset
 - Helm chart and OCI image operational packaging
 - local `discover` helper, which is not the production discovery path
@@ -178,7 +178,7 @@ Sheaft is intentionally downstream of Bering artifacts and schemas.
 - `1.1.0` analysis is only as rich as the artifact metadata. Missing retry, timeout, latency, placement, or shared-resource metadata is reported as unavailable rather than guessed.
 - Legacy explicit predicates remain service-based even when `1.1.0` edge metadata is present. Edge faults and partial degradations affect journey-based analysis and diagnostics, not old explicit predicate semantics.
 - This release does not introduce or stabilize an upstream discovery pipeline. Discovery remains upstream; the local `discover` helper is experimental only.
-- `serve` / `watch` are suitable for technical-preview evaluation, not yet for a stable long-term operational contract.
+- `serve` and its watch loop are suitable for technical-preview evaluation, not yet for a stable long-term operational contract.
 - The richer analysis surface is available, but its configuration ergonomics and operational conventions may still change in later `0.x` releases.
 - Release automation is designed around GitHub Releases, release manifests, OCI image publication, and an OCI Helm chart; Windows release archives can be built, but they are not the primary tested surface in this preview.
 

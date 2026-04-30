@@ -22,3 +22,17 @@
 - Use Sheaft as a cheap, repeatable consumer-side posture check.
 - Treat low-confidence or degraded posture results as escalation inputs, not proof of runtime safety.
 - Keep thresholds and profile definitions environment-specific and explicit.
+
+## Planned Do-Not-Trust Signals
+
+The current product backlog treats these as the first detector candidates for R4.3. Until they are implemented as machine-readable report fields, reviewers should check them manually before using a Sheaft gate as a blocking release signal.
+
+- Trace-only artifacts with no explicit resilience metadata for retries, timeouts, circuit breakers, placements, or shared resources.
+- Low upstream discovery confidence or missing endpoint/path coverage on services that dominate the configured workload.
+- Advanced metrics marked unavailable on the same endpoint or path that drives a gate decision.
+- Baseline comparisons where the primary and baseline artifacts do not share overlapping metrics.
+- Directory watch inputs where multiple artifacts are expected to be merged; Sheaft currently selects the newest matching file instead.
+- Policy thresholds copied across environments without environment-specific failure assumptions.
+- Reports generated from stale artifacts whose provenance or generated-at timestamp does not match the release under review.
+
+Backlog outcome: these checks should become explicit report fields with detector ids, severity, affected endpoints or profiles, and suggested remediation.

@@ -14,7 +14,7 @@ GitHub issues remain the source of truth for roadmap tracking:
 - R9: https://github.com/MB3R-Lab/Sheaft/issues/39
 - R10: https://github.com/MB3R-Lab/Sheaft/issues/40
 
-This file captures the repository-side audit refreshed on 2026-03-22: current GitHub issue state versus what is actually implemented in this repository.
+This file captures the repository-side audit refreshed on 2026-05-01: current GitHub issue state versus what is actually implemented in this repository.
 
 ## Release Tracking State
 
@@ -33,7 +33,7 @@ This file captures the repository-side audit refreshed on 2026-03-22: current Gi
 | R2 | closed | done | Artifact discovery/ingestion, provenance, incomplete telemetry handling, and diff-capable artifacts are present and covered by tests. |
 | R3 | open | partial | Reproducible analysis and explicit parameter/calibration provenance are now in place, but pluginization and scale benchmarks are still backlog items. |
 | R4 | open | partial | External benchmark contract and limitations docs exist, but the public benchmark suite and release-grade quality reports are not yet in-repo. |
-| R5 | open | partial | CI gate, service mode, output artifacts, and validated cross-CI handoff smoke pipelines are implemented; chaos triage remains the main workflow gap. |
+| R5 | open | partial | CI gate, `serve` watch-loop mode, output artifacts, and validated cross-CI handoff smoke pipelines are implemented; chaos triage remains the main workflow gap. |
 | R6 | closed | done | Strict contract pinning, conformance checks, vendored schemas, compatibility matrix, contract release workflow, and real dual-line `1.0.0`/`1.1.0` support are now implemented end to end. |
 | R7 | open | gap | No open-core/export playbook material exists yet beyond issue-level planning. |
 | R8 | open | gap | Security/privacy work is not yet implemented beyond lightweight assumptions/limitations guidance. |
@@ -81,7 +81,7 @@ This file captures the repository-side audit refreshed on 2026-03-22: current Gi
 | Issue | GitHub state | Repo reality | Notes |
 | --- | --- | --- | --- |
 | R5.1 | closed | done | `run`, `gate`, exit codes, and CI-oriented batch flow are implemented and documented. |
-| R5.2 | closed | done | `serve`/`watch`, status endpoints, history, and metrics cover the observability workflow. |
+| R5.2 | closed | done | `serve`, its artifact watch loop, status endpoints, history, and metrics cover the observability workflow. |
 | R5.3 | open | gap | No chaos experiment suggestion engine or triage output exists yet. |
 | R5.4 | closed | done | `model.json`, `report.json`, and `summary.md` outputs are generated consistently. |
 | R5.5 | closed | done | Example templates are now backed by a template convention checker, a native/docker smoke script, and a GitHub Actions smoke workflow. |
@@ -128,17 +128,60 @@ This file captures the repository-side audit refreshed on 2026-03-22: current Gi
 | R10.1 | closed | done | Research artifacts and references are linked from `README.md`. |
 | R10.2 | open | gap | No explicit comparison with alternatives has been published yet. |
 
+## Product Capability Milestones
+
+The next roadmap should prioritize trust and operator actionability before broadening the analysis surface. The current CLI and service flows already produce posture outputs; the product gap is proving when those outputs should be trusted, explaining why a decision happened, and turning elevated risk into a useful next action.
+
+### Trustable Gate
+
+Goal: make `sheaft gate` defensible in real delivery pipelines.
+
+- R4.3: publish concrete do-not-trust signals and detector heuristics for low-quality Bering artifacts.
+- R4.1: provide a reproducible public benchmark slice for Sheaft-on-Bering.
+- R4.2: publish release-grade quality metrics on that fixed benchmark slice.
+- R3.4: publish a large-snapshot workload profile, runtime SLA, and perf benchmark.
+
+### Explainable Decision
+
+Goal: make every elevated risk traceable from decision to evidence.
+
+- R9.1: add why mode for gate decisions.
+- R9.2: add a debugging toolkit for contract, path, and policy inspection.
+- R9.3: explain dependency-level causes for posture diffs and serve-mode regressions.
+
+### Actionable Resilience
+
+Goal: connect posture findings to engineering work.
+
+- R1.3: either finish fallback/rate-limit interpretation or explicitly narrow it out of scope.
+- R5.3: generate prioritized chaos-triage suggestions from Bering-driven risk outputs.
+
+### Adoption And Enterprise Readiness
+
+Goal: make the Bering -> Sheaft workflow repeatable beyond a technical preview.
+
+- R7.3: publish a pilot-to-production playbook with success metrics.
+- R7.1: define the open-core boundary for the consumer product.
+- R7.2: document an export/portability bundle.
+- R8.1: implement consumer-side data minimization for reports, artifacts, and logs.
+- R8.2: define RBAC, multi-tenancy, and audit-log requirements before promoting service mode beyond preview.
+
 ## Prioritized Backlog After Audit
 
 1. R4.3: expand applicability boundaries into concrete do-not-trust signals and detector heuristics.
-2. R1.3: finish the remaining fallback/rate-limit annotation surface or explicitly close it out of scope.
-3. R9.1: add a why mode for gate decisions on top of current report/diff output.
-4. R4.2: publish release-grade quality metrics for Sheaft-on-Bering.
-5. R3.2: decide whether analysis extensibility should become a real plugin surface or stay intentionally in-core.
+2. R4.1: publish the fixed benchmark slice needed for quality claims.
+3. R4.2: publish release-grade quality metrics for Sheaft-on-Bering.
+4. R9.1: add a why mode for gate decisions on top of current report/diff output.
+5. R9.2: add a debugging toolkit for common contract, path, and policy failures.
+6. R9.3: add dependency-level explanations for diffs and serve-mode regressions.
+7. R3.4: publish a large-snapshot workload profile, runtime SLA, and perf benchmark.
+8. R5.3: add chaos-triage suggestions from Bering-driven risk outputs.
+9. R1.3: finish the remaining fallback/rate-limit annotation surface or explicitly close it out of scope.
+10. R7.3: publish the pilot-to-production playbook.
+11. R3.2: decide whether analysis extensibility should become a real plugin surface or stay intentionally in-core after the trust/explainability backlog is no longer blocking adoption.
 
 ## Current Execution Note
 
-- Repository-side audit refreshed on 2026-03-22 after dual-line and advanced-analysis implementation landed locally.
-- After the `v0.2.0` release is published, the next GitHub sync should close `R6.6`, close `R1.2`, narrow `R1.3`, and open the next release-tracking issue for the following technical-preview tag.
-- Added explicit release-tracking traceability on 2026-03-14 via [#78](https://github.com/MB3R-Lab/Sheaft/issues/78), which is closed because the public `v0.1.0` technical preview shipped.
+- Repository-side audit refreshed on 2026-05-01 after the `v0.2.1` technical-preview release and the product-capability backlog review.
+- GitHub issue [#71](https://github.com/MB3R-Lab/Sheaft/issues/71) should stay aligned with this file: latest release `v0.2.1`, active milestone `Post-v0.2.1 technical preview`, and the same trust-first priority order.
 - The next highest-priority repo task is **R4.3: expand applicability boundaries into concrete do-not-trust signals and detector heuristics**.
