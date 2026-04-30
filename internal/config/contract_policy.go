@@ -1,6 +1,7 @@
 package config
 
 import (
+	"errors"
 	"fmt"
 	"slices"
 	"strings"
@@ -17,9 +18,9 @@ const (
 )
 
 type ContractPolicy struct {
-	AllowedKinds        []string                    `json:"allowed_kinds,omitempty" yaml:"allowed_kinds,omitempty"`
-	AllowedContracts    []ContractPolicySelector    `json:"allowed_contracts,omitempty" yaml:"allowed_contracts,omitempty"`
-	DeprecatedAction    ContractPolicyAction        `json:"deprecated_action,omitempty" yaml:"deprecated_action,omitempty"`
+	AllowedKinds        []string                     `json:"allowed_kinds,omitempty" yaml:"allowed_kinds,omitempty"`
+	AllowedContracts    []ContractPolicySelector     `json:"allowed_contracts,omitempty" yaml:"allowed_contracts,omitempty"`
+	DeprecatedAction    ContractPolicyAction         `json:"deprecated_action,omitempty" yaml:"deprecated_action,omitempty"`
 	DeprecatedContracts []DeprecatedContractSelector `json:"deprecated_contracts,omitempty" yaml:"deprecated_contracts,omitempty"`
 }
 
@@ -165,7 +166,7 @@ func (p ContractPolicy) Evaluate(contract modelcontract.SupportedContract) (Cont
 				Status:  ContractPolicyStatusDeprecated,
 				Action:  string(action),
 				Message: message,
-			}, fmt.Errorf(message)
+			}, errors.New(message)
 		}
 		return ContractPolicyDecision{
 			Status:  ContractPolicyStatusDeprecated,
