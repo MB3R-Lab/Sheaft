@@ -67,8 +67,17 @@ metrics:
 env: []
 envFrom: []
 resources: {}
-podSecurityContext: {}
-securityContext: {}
+podSecurityContext:
+  fsGroup: 65532
+securityContext:
+  runAsNonRoot: true
+  runAsUser: 65532
+  runAsGroup: 65532
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+  capabilities:
+    drop:
+      - ALL
 podAnnotations: {}
 imagePullSecrets: []
 extraVolumes: []
