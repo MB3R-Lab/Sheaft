@@ -74,6 +74,13 @@ type StatusProfile struct {
 	EndpointsBelowThreshold int     `json:"endpoints_below_threshold"`
 }
 
+const (
+	serverReadHeaderTimeout = 5 * time.Second
+	serverReadTimeout       = 30 * time.Second
+	serverWriteTimeout      = 30 * time.Second
+	serverIdleTimeout       = 60 * time.Second
+)
+
 type realClock struct{}
 
 func (realClock) Now() time.Time { return time.Now() }
@@ -140,10 +147,7 @@ func (s *Service) Run(ctx context.Context) error {
 	mux.HandleFunc("/history", s.handleHistory)
 	mux.Handle("/metrics", promhttp.HandlerFor(s.registry, promhttp.HandlerOpts{EnableOpenMetrics: true}))
 
-	server := &http.Server{
-		Addr:    s.cfg.Listen,
-		Handler: mux,
-	}
+	server := newHTTPServer(s.cfg.Listen, mux)
 
 	errCh := make(chan error, 1)
 	go func() {
@@ -174,6 +178,17 @@ func (s *Service) Handler() http.Handler {
 	mux.HandleFunc("/history", s.handleHistory)
 	mux.Handle("/metrics", promhttp.HandlerFor(s.registry, promhttp.HandlerOpts{EnableOpenMetrics: true}))
 	return mux
+}
+
+func newHTTPServer(addr string, handler http.Handler) *http.Server {
+	return &http.Server{
+		Addr:              addr,
+		Handler:           handler,
+		ReadHeaderTimeout: serverReadHeaderTimeout,
+		ReadTimeout:       serverReadTimeout,
+		WriteTimeout:      serverWriteTimeout,
+		IdleTimeout:       serverIdleTimeout,
+	}
 }
 
 func (s *Service) watchLoop(ctx context.Context) {

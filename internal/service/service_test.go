@@ -167,6 +167,24 @@ func TestWatchLoop_InvalidPollIntervalSetsErrorInsteadOfPanicking(t *testing.T) 
 	}
 }
 
+func TestHTTPServerAppliesTimeouts(t *testing.T) {
+	t.Parallel()
+
+	server := newHTTPServer(":0", http.NewServeMux())
+	if server.ReadHeaderTimeout != serverReadHeaderTimeout {
+		t.Fatalf("ReadHeaderTimeout mismatch: got=%s want=%s", server.ReadHeaderTimeout, serverReadHeaderTimeout)
+	}
+	if server.ReadTimeout != serverReadTimeout {
+		t.Fatalf("ReadTimeout mismatch: got=%s want=%s", server.ReadTimeout, serverReadTimeout)
+	}
+	if server.WriteTimeout != serverWriteTimeout {
+		t.Fatalf("WriteTimeout mismatch: got=%s want=%s", server.WriteTimeout, serverWriteTimeout)
+	}
+	if server.IdleTimeout != serverIdleTimeout {
+		t.Fatalf("IdleTimeout mismatch: got=%s want=%s", server.IdleTimeout, serverIdleTimeout)
+	}
+}
+
 func testModel(replicas int, topologyVersion string) model.ResilienceModel {
 	return model.ResilienceModel{
 		Services: []model.Service{
