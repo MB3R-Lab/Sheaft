@@ -199,11 +199,20 @@ func (s *Service) watchLoop(ctx context.Context) {
 		w, err := fsnotify.NewWatcher()
 		if err == nil {
 			for _, path := range s.locator.WatchPaths() {
-				_ = w.Add(path)
+				if err := w.Add(path); err != nil {
+					_ = w.Close()
+					s.setError(fmt.Errorf("watch artifact path %q: %w", path, err))
+					return
+				}
 			}
 			watcher = w
 			events = w.Events
 			watchErrors = w.Errors
+		} else {
+			s.setError(fmt.Errorf("create filesystem watcher: %w", err))
+			if !s.watchPolling() {
+				return
+			}
 		}
 	}
 	if watcher != nil {
@@ -229,11 +238,19 @@ func (s *Service) watchLoop(ctx context.Context) {
 			if err := s.recomputeIfChanged(false); err != nil {
 				s.setError(err)
 			}
-		case <-events:
+		case _, ok := <-events:
+			if !ok {
+				events = nil
+				continue
+			}
 			if err := s.recomputeIfChanged(false); err != nil {
 				s.setError(err)
 			}
-		case err := <-watchErrors:
+		case err, ok := <-watchErrors:
+			if !ok {
+				watchErrors = nil
+				continue
+			}
 			if err != nil {
 				s.setError(err)
 			}

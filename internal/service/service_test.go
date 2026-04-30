@@ -167,6 +167,59 @@ func TestWatchLoop_InvalidPollIntervalSetsErrorInsteadOfPanicking(t *testing.T) 
 	}
 }
 
+func TestWatchLoop_ReportsFilesystemWatchAddError(t *testing.T) {
+	t.Parallel()
+
+	watchFS := true
+	watchPolling := false
+	missingPath := filepath.Join(t.TempDir(), "missing")
+	svc := newWithDeps(
+		config.ServeConfig{
+			SchemaVersion: config.ServeSchemaVersion,
+			Artifact: config.ArtifactSource{
+				Path: missingPath,
+				Mode: "file",
+			},
+			WatchFS:      &watchFS,
+			WatchPolling: &watchPolling,
+			History: config.HistoryConfig{
+				MaxItems: 1,
+			},
+		},
+		config.Policy{
+			Mode:               config.ModeWarn,
+			DefaultAction:      config.ModeWarn,
+			GlobalThreshold:    0.9,
+			FailureProbability: 0.1,
+			Trials:             100,
+		}.ToAnalysisConfig().Normalized(),
+		realClock{},
+		staticLocator{watchPaths: []string{missingPath}},
+		nil,
+		analyzer.AnalyzeLoaded,
+		prometheus.NewRegistry(),
+	)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	done := make(chan struct{})
+	go func() {
+		defer close(done)
+		svc.watchLoop(ctx)
+	}()
+
+	select {
+	case <-done:
+	case <-time.After(2 * time.Second):
+		t.Fatal("watchLoop did not return after fsnotify add error")
+	}
+
+	status := svc.CurrentStatus()
+	if !strings.Contains(status.LastError, "watch artifact path") {
+		t.Fatalf("expected watch path error, got %+v", status)
+	}
+}
+
 func TestHTTPServerAppliesTimeouts(t *testing.T) {
 	t.Parallel()
 
@@ -183,6 +236,19 @@ func TestHTTPServerAppliesTimeouts(t *testing.T) {
 	if server.IdleTimeout != serverIdleTimeout {
 		t.Fatalf("IdleTimeout mismatch: got=%s want=%s", server.IdleTimeout, serverIdleTimeout)
 	}
+}
+
+type staticLocator struct {
+	resolved   string
+	watchPaths []string
+}
+
+func (l staticLocator) Resolve() (string, error) {
+	return l.resolved, nil
+}
+
+func (l staticLocator) WatchPaths() []string {
+	return l.watchPaths
 }
 
 func testModel(replicas int, topologyVersion string) model.ResilienceModel {
