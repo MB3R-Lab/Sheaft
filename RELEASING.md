@@ -10,6 +10,8 @@ The canonical release contract is the generated payload:
 
 GitHub Releases publish that payload, but GitHub metadata is not the source of truth.
 
+`compatibility-manifest.json` is intentionally checked in because it mirrors the current strict upstream contract pins and is drift-checked in CI. `release-manifest.json` is release-specific and must not be committed from `main`; it is generated during `make release-dry-run`, `make release-local`, and tag-driven release publishing, then uploaded as a release asset.
+
 ## Ownership Boundary
 
 - Bering owns upstream artifact schemas and release metadata.

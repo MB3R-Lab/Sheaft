@@ -6,11 +6,11 @@ The canonical files are:
 
 - `dist/`
 - `compatibility-manifest.json`
-- `release-manifest.json`
+- `release-manifest.json` as a generated release asset, not a committed `main`-branch file
 
 ## Asset Inventory
 
-`release-manifest.json` describes:
+The release asset `release-manifest.json` describes:
 
 - product name
 - app version

@@ -1,6 +1,7 @@
 # Binaries
 bin/
 dist/
+release-manifest.json
 *.exe
 *.dll
 *.so

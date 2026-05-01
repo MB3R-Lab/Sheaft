@@ -6,7 +6,7 @@ Sheaft has multiple version surfaces. They are related, but they are not interch
 
 - Format: `X.Y.Z`
 - Source of truth for tagged releases: Git tag `vX.Y.Z`
-- Stored in `release-manifest.json` as `app_version`
+- Stored in the generated release asset `release-manifest.json` as `app_version`
 - Controls binary archive names, chart packaging version override, and image release tags
 
 ## 2. Upstream Contract Compatibility
@@ -31,7 +31,7 @@ This is compatibility metadata, not ownership metadata.
 - Format: `X.Y.Z`
 - Published as an OCI chart, not through a classic Helm repository
 - Defaults to the app version for a tagged release
-- Recorded in `release-manifest.json` under `chart.version`
+- Recorded in the generated release asset `release-manifest.json` under `chart.version`
 
 ## 4. Sheaft-Owned Config and Overlay Schemas
 
