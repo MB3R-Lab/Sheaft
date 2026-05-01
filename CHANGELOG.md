@@ -1,5 +1,27 @@
 # Changelog
 
+## v0.2.3 - 2026-05-01
+
+Technical-preview patch release focused on Kubernetes handoff reliability for the `v0.2.x` line.
+
+Included in this release:
+
+- fixed `serve` / `watch` startup when the configured artifact file appears after the service starts
+- kept polling active when filesystem watcher setup cannot attach to a not-yet-created artifact directory and `watch_polling` is enabled
+- added regression coverage for late Bering artifact handoff in service mode
+
+Stable within the `v0.2.3` preview:
+
+- the same strict `1.0.0` and `1.1.0` Bering contract acceptance introduced in `v0.2.0`
+- deterministic batch analysis, baseline comparison, and CI gate behavior from the `v0.2.0` line
+- service mode can recover when a downstream chart starts Sheaft before the first Bering artifact exists
+
+Still experimental in `v0.2.3`:
+
+- long-running `serve` / `watch` service mode remains technical-preview surface
+- local `discover` helper
+- broader operator-facing packaging and operational conventions around image/chart deployment
+
 ## v0.2.2 - 2026-05-01
 
 Technical-preview patch release focused on post-audit hardening for the `v0.2.x` line.

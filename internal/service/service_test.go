@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -218,6 +219,66 @@ func TestWatchLoop_ReportsFilesystemWatchAddError(t *testing.T) {
 	if !strings.Contains(status.LastError, "watch artifact path") {
 		t.Fatalf("expected watch path error, got %+v", status)
 	}
+}
+
+func TestWatchLoop_FallsBackToPollingWhenWatchPathAppearsLate(t *testing.T) {
+	t.Parallel()
+
+	dir := t.TempDir()
+	artifactPath := filepath.Join(dir, "missing", "latest.json")
+	watchFS := true
+	watchPolling := true
+	serveCfg := config.ServeConfig{
+		SchemaVersion: config.ServeSchemaVersion,
+		Artifact: config.ArtifactSource{
+			Path: artifactPath,
+			Mode: "file",
+		},
+		PollInterval: "50ms",
+		WatchFS:      &watchFS,
+		WatchPolling: &watchPolling,
+		History: config.HistoryConfig{
+			MaxItems: 1,
+		},
+	}.Normalized()
+	svc := newWithDeps(
+		serveCfg,
+		config.Policy{
+			Mode:               config.ModeWarn,
+			DefaultAction:      config.ModeWarn,
+			GlobalThreshold:    0.9,
+			FailureProbability: 0.1,
+			Trials:             100,
+		}.ToAnalysisConfig().Normalized(),
+		realClock{},
+		newLocator(serveCfg.Artifact),
+		nil,
+		analyzer.AnalyzeLoaded,
+		prometheus.NewRegistry(),
+	)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	go svc.watchLoop(ctx)
+
+	if err := os.MkdirAll(filepath.Dir(artifactPath), 0o755); err != nil {
+		t.Fatalf("create artifact dir: %v", err)
+	}
+	if err := model.WriteToFile(artifactPath, testModel(2, "topology-late")); err != nil {
+		t.Fatalf("write late model: %v", err)
+	}
+
+	deadline := time.Now().Add(3 * time.Second)
+	for time.Now().Before(deadline) {
+		current := svc.CurrentReport()
+		if current != nil && current.InputArtifact != nil && current.InputArtifact.TopologyVersion == "topology-late" {
+			return
+		}
+		time.Sleep(50 * time.Millisecond)
+	}
+
+	status := svc.CurrentStatus()
+	t.Fatalf("expected current report after late artifact appears, status=%+v", status)
 }
 
 func TestHTTPServerAppliesTimeouts(t *testing.T) {

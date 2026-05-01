@@ -198,16 +198,22 @@ func (s *Service) watchLoop(ctx context.Context) {
 	if s.watchFS() {
 		w, err := fsnotify.NewWatcher()
 		if err == nil {
+			watchReady := true
 			for _, path := range s.locator.WatchPaths() {
 				if err := w.Add(path); err != nil {
 					_ = w.Close()
 					s.setError(fmt.Errorf("watch artifact path %q: %w", path, err))
-					return
+					watchReady = false
+					break
 				}
 			}
-			watcher = w
-			events = w.Events
-			watchErrors = w.Errors
+			if watchReady {
+				watcher = w
+				events = w.Events
+				watchErrors = w.Errors
+			} else if !s.watchPolling() {
+				return
+			}
 		} else {
 			s.setError(fmt.Errorf("create filesystem watcher: %w", err))
 			if !s.watchPolling() {
