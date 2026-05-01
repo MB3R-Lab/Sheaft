@@ -1,5 +1,30 @@
 # Changelog
 
+## v0.2.2 - 2026-05-01
+
+Technical-preview patch release focused on post-audit hardening for the `v0.2.x` line.
+
+Included in this release:
+
+- clarified roadmap and assumptions docs so product priorities match the tracker-backed backlog
+- hardened `serve` with explicit HTTP read-header, read, write, and idle timeouts
+- fixed watch-loop error handling so filesystem watcher setup/add failures are reported and closed watcher channels do not spin
+- moved release workflow, Docker builder, and module toolchain pins to Go `1.26.2`
+- fixed Go `1.26` vet compatibility in contract policy errors
+- hardened the default Helm chart security context to run non-root, drop capabilities, and use a read-only root filesystem
+
+Stable within the `v0.2.2` preview:
+
+- the same strict `1.0.0` and `1.1.0` Bering contract acceptance introduced in `v0.2.0`
+- the same deterministic baseline comparison and advanced analysis behavior shipped in `v0.2.0`
+- release validation is clean under `go test`, `go vet`, chart validation, and `govulncheck`
+
+Still experimental in `v0.2.2`:
+
+- long-running `serve` / `watch` service mode remains technical-preview surface despite the hardening fixes
+- local `discover` helper
+- broader operator-facing packaging and operational conventions around image/chart deployment
+
 ## v0.2.1 - 2026-03-22
 
 Technical-preview patch release focused on post-release hardening for the `v0.2.0` line.

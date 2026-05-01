@@ -18,12 +18,12 @@ This file captures the repository-side audit refreshed on 2026-05-01: current Gi
 
 ## Release Tracking State
 
-- Latest public release shipped: [Sheaft v0.2.1 technical preview](https://github.com/MB3R-Lab/Sheaft/releases/tag/v0.2.1)
-- Historical shipped milestones: `v0.1.0 technical preview`, `v0.1.1 technical preview`, `v0.2.0 technical preview`, `v0.2.1 technical preview`
-- Active backlog milestone: `Post-v0.2.1 technical preview`
-- Previous release-tracking issue: [#80](https://github.com/MB3R-Lab/Sheaft/issues/80)
-- Current release-tracking issue: [#81](https://github.com/MB3R-Lab/Sheaft/issues/81)
-- GitHub issue and milestone sync was refreshed after the `v0.2.1` patch release so the tracker now reflects the shipped release state.
+- Latest public release shipped: [Sheaft v0.2.2 technical preview](https://github.com/MB3R-Lab/Sheaft/releases/tag/v0.2.2)
+- Historical shipped milestones: `v0.1.0 technical preview`, `v0.1.1 technical preview`, `v0.2.0 technical preview`, `v0.2.1 technical preview`, `v0.2.2 technical preview`
+- Active backlog milestone: `Post-v0.2.2 technical preview`
+- Previous release-tracking issue: [#81](https://github.com/MB3R-Lab/Sheaft/issues/81)
+- Current release-tracking issue: TBD after the `v0.2.2` release is published.
+- GitHub issue and milestone sync was refreshed after the `v0.2.2` patch release so the tracker now reflects the shipped release state.
 
 ## Audit Summary
 
@@ -182,6 +182,6 @@ Goal: make the Bering -> Sheaft workflow repeatable beyond a technical preview.
 
 ## Current Execution Note
 
-- Repository-side audit refreshed on 2026-05-01 after the `v0.2.1` technical-preview release and the product-capability backlog review.
-- GitHub issue [#71](https://github.com/MB3R-Lab/Sheaft/issues/71) should stay aligned with this file: latest release `v0.2.1`, active milestone `Post-v0.2.1 technical preview`, and the same trust-first priority order.
+- Repository-side audit refreshed on 2026-05-01 for the `v0.2.2` technical-preview patch release and the product-capability backlog review.
+- GitHub issue [#71](https://github.com/MB3R-Lab/Sheaft/issues/71) should stay aligned with this file: latest release `v0.2.2`, active milestone `Post-v0.2.2 technical preview`, and the same trust-first priority order.
 - The next highest-priority repo task is **R4.3: expand applicability boundaries into concrete do-not-trust signals and detector heuristics**.
