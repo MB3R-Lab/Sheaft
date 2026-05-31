@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/MB3R-Lab/Sheaft/internal/benchmark"
 	"github.com/MB3R-Lab/Sheaft/internal/release"
 )
 
@@ -33,6 +34,8 @@ func main() {
 		runValidateReleaseManifest(os.Args[2:])
 	case "validate-chart":
 		runValidateChart(os.Args[2:])
+	case "benchmark-slice":
+		runBenchmarkSlice(os.Args[2:])
 	default:
 		usage()
 		os.Exit(1)
@@ -49,6 +52,7 @@ func usage() {
 	fmt.Fprintln(os.Stderr, "  releasectl release-manifest [--dist dist] [--out release-manifest.json]")
 	fmt.Fprintln(os.Stderr, "  releasectl validate-release-manifest [--manifest release-manifest.json]")
 	fmt.Fprintln(os.Stderr, "  releasectl validate-chart [--chart-dir charts/sheaft]")
+	fmt.Fprintln(os.Stderr, "  releasectl benchmark-slice [--manifest benchmarks/fixed-slice/manifest.json] [--out-dir .tmp/benchmark-slice]")
 }
 
 func runCompatibilityManifest(args []string) {
@@ -194,6 +198,29 @@ func runValidateChart(args []string) {
 
 	if err := release.ValidateChart(*chartDir); err != nil {
 		fail(err)
+	}
+}
+
+func runBenchmarkSlice(args []string) {
+	fs := flag.NewFlagSet("benchmark-slice", flag.ExitOnError)
+	manifestPath := fs.String("manifest", benchmark.DefaultManifestPath, "Path to benchmark manifest")
+	outDir := fs.String("out-dir", benchmark.DefaultOutputDir, "Path to benchmark output directory")
+	_ = fs.Parse(args)
+
+	quality, err := benchmark.Run(benchmark.RunOptions{
+		RepositoryRoot: ".",
+		ManifestPath:   *manifestPath,
+		OutputDir:      *outDir,
+	})
+	if err != nil {
+		fail(err)
+	}
+	fmt.Printf("benchmark: %s\n", quality.BenchmarkName)
+	fmt.Printf("status: %s\n", quality.Status)
+	fmt.Printf("report: %s\n", quality.Outputs.Report)
+	fmt.Printf("quality report: %s\n", quality.Outputs.QualityReport)
+	if quality.Status != "pass" {
+		os.Exit(1)
 	}
 }
 

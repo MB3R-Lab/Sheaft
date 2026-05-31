@@ -1,5 +1,32 @@
 # Changelog
 
+## v0.2.4 - 2026-05-31
+
+Technical-preview feature release focused on trustable gate evidence, benchmark packaging, and explainable gate decisions for the `v0.2.x` line.
+
+Included in this release:
+
+- added a fixed Sheaft-on-Bering benchmark slice with `make benchmark-slice` and a versioned manifest under `benchmarks/fixed-slice`
+- added benchmark quality reporting with repeatability, confidence, advanced-metric availability, baseline-diff, contract, and cross-profile checks
+- added machine-readable gate decision reasons in `report.json` and a Why section in `summary.md`
+- added `sheaft gate --why` and `sheaft run --why` for human-readable gate explanations
+- added the benchmark manifest to the default config pack and the benchmark slice to release dry-run validation
+- refreshed roadmap, release tracking, and assumptions documentation after closing R4.1, R4.2, R4.3, and R9.1
+
+Stable within the `v0.2.4` preview:
+
+- the same strict `1.0.0` and `1.1.0` Bering contract acceptance introduced in `v0.2.0`
+- deterministic batch analysis, baseline comparison, and CI gate behavior from the `v0.2.0` line
+- release validation now includes the fixed benchmark slice and quality-report generation
+- gate decisions now carry threshold, aggregate, and assertion causes for release review
+
+Still experimental in `v0.2.4`:
+
+- long-running `serve` / `watch` service mode remains technical-preview surface
+- local `discover` helper
+- broader operator-facing packaging and operational conventions around image/chart deployment
+- benchmark scale and external quality datasets remain outside this repository
+
 ## v0.2.3 - 2026-05-01
 
 Technical-preview patch release focused on Kubernetes handoff reliability for the `v0.2.x` line.

@@ -1,0 +1,20 @@
+{
+  "schema_version": "1.0",
+  "name": "sheaft-on-bering-fixed-slice",
+  "description": "Small release-quality benchmark slice for deterministic Sheaft-on-Bering posture checks.",
+  "artifact": "examples/outputs/snapshot-v1.1.0.sample.json",
+  "analysis": "configs/analysis.v1.1.example.yaml",
+  "expected": {
+    "decision": "fail",
+    "contract_name": "io.mb3r.bering.snapshot",
+    "contract_version": "1.1.0",
+    "profiles": 4,
+    "min_confidence": 0.9,
+    "max_unavailable_advanced_metrics": 0,
+    "require_baseline_diff": true
+  },
+  "quality_gates": {
+    "require_repeatable_stable_report": true,
+    "min_cross_profile_weighted_availability": 0.5
+  }
+}

@@ -14,3 +14,4 @@ examples/outputs/snapshot-v1.1.0.sample.json
 examples/outputs/report.sample.json
 examples/outputs/posture-generated/report.json
 examples/outputs/posture-generated/summary.md
+benchmarks/fixed-slice/manifest.json

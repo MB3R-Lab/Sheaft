@@ -24,6 +24,8 @@ The release asset `release-manifest.json` describes:
 - compatibility manifest reference
 - default config pack references
 
+The GitHub Release also publishes the fixed benchmark slice quality report as release evidence. It is generated during the release job from the same benchmark manifest shipped in the default config pack.
+
 ## Why Two Manifests Exist
 
 `compatibility-manifest.json` answers:
@@ -60,3 +62,4 @@ Use it when:
 - bootstrapping CI gates
 - building a first Kubernetes values override
 - creating a baseline report bundle for tests
+- running the fixed benchmark slice manifest that ships with the default examples

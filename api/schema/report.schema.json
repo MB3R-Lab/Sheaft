@@ -59,6 +59,9 @@
             "minimum": 0,
             "maximum": 1
           },
+          "threshold_delta": {
+            "type": "number"
+          },
           "status": {
             "type": "string",
             "enum": [
@@ -136,6 +139,12 @@
             "type": "string"
           }
         },
+        "failed_assertions": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
         "failed_profiles": {
           "type": "array",
           "items": {
@@ -144,6 +153,50 @@
         },
         "evaluation_rule": {
           "type": "string"
+        },
+        "reasons": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "id",
+              "scope",
+              "status",
+              "message"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "scope": {
+                "type": "string"
+              },
+              "profile": {
+                "type": "string"
+              },
+              "endpoint_id": {
+                "type": "string"
+              },
+              "metric": {
+                "type": "string"
+              },
+              "status": {
+                "type": "string"
+              },
+              "availability": {
+                "type": "number"
+              },
+              "threshold": {
+                "type": "number"
+              },
+              "delta": {
+                "type": "number"
+              },
+              "message": {
+                "type": "string"
+              }
+            }
+          }
         }
       }
     },

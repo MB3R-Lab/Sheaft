@@ -51,6 +51,9 @@ jobs:
       - name: Package default config pack
         run: make default-config-pack APP_VERSION=${APP_VERSION#v}
 
+      - name: Run fixed benchmark slice
+        run: make benchmark-slice BENCHMARK_OUT_DIR=dist/benchmark-slice
+
       - name: Publish OCI image
         run: |
           OWNER_LC="$(printf '%s' "${GITHUB_REPOSITORY_OWNER}" | tr '[:upper:]' '[:lower:]')"
@@ -114,6 +117,9 @@ jobs:
               find dist/charts -maxdepth 1 -type f -name 'sheaft-*.tgz'
             } | sort
           )
+          if [ -f dist/benchmark-slice/quality-report.json ]; then
+            files+=("dist/benchmark-slice/quality-report.json")
+          fi
           files+=("compatibility-manifest.json")
           files+=("release-manifest.json")
           gh release upload "${TAG}" "${files[@]}" --clobber

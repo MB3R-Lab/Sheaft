@@ -30,8 +30,9 @@ BUILD_DATE ?= $(shell git log -1 --format=%cI 2>/dev/null || date -u +"%Y-%m-%dT
 endif
 DIST_DIR ?= dist
 PLATFORMS ?= linux/amd64,linux/arm64
+BENCHMARK_OUT_DIR ?= .tmp/benchmark-slice
 
-.PHONY: help build test lint smoke-examples docker-build docker-run-sample sample compatibility-manifest validate-compatibility-manifest validate-chart default-config-pack release-tools release-build image-dry-run image-local chart-package chart-publish-local release-manifest validate-release-manifest validate-release-assets release-dry-run release-local clean clean-dist
+.PHONY: help build test lint smoke-examples benchmark-slice docker-build docker-run-sample sample compatibility-manifest validate-compatibility-manifest validate-chart default-config-pack release-tools release-build image-dry-run image-local chart-package chart-publish-local release-manifest validate-release-manifest validate-release-assets release-dry-run release-local clean clean-dist
 
 ifeq ($(OS),Windows_NT)
 define MKDIR_P
@@ -57,6 +58,7 @@ help:
 	@echo "  test                       Run Go tests"
 	@echo "  lint                       Run go vet"
 	@echo "  smoke-examples             Build the CLI and smoke checked-in examples"
+	@echo "  benchmark-slice            Run the fixed Sheaft-on-Bering benchmark slice"
 	@echo "  docker-build               Build the local container image"
 	@echo "  docker-run-sample          Run sample pipeline in the container image"
 	@echo "  compatibility-manifest     Generate compatibility-manifest.json from strict contract pins"
@@ -84,6 +86,9 @@ ifeq ($(OS),Windows_NT)
 else
 	"$(POSIX_SH)" scripts/ci/smoke-examples.sh .tmp/smoke-examples ./bin/sheaft$(EXEEXT)
 endif
+
+benchmark-slice:
+	go run ./cmd/releasectl benchmark-slice --manifest benchmarks/fixed-slice/manifest.json --out-dir $(BENCHMARK_OUT_DIR)
 
 docker-build:
 	docker build -f build/Dockerfile -t $(IMAGE) .
@@ -156,7 +161,7 @@ validate-release-manifest:
 
 validate-release-assets: validate-compatibility-manifest validate-chart validate-release-manifest
 
-release-dry-run: compatibility-manifest test smoke-examples release-build default-config-pack image-dry-run chart-package release-manifest validate-release-assets
+release-dry-run: compatibility-manifest test smoke-examples benchmark-slice release-build default-config-pack image-dry-run chart-package release-manifest validate-release-assets
 
 release-local: compatibility-manifest test smoke-examples release-build
 ifeq ($(OS),Windows_NT)

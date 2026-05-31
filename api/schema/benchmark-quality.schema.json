@@ -1,0 +1,149 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/MB3R-Lab/Sheaft/api/schema/benchmark-quality.schema.json",
+  "title": "SheaftBenchmarkQualityReport",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "benchmark_name",
+    "status",
+    "generated_at",
+    "inputs",
+    "outputs",
+    "metrics",
+    "checks"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string"
+    },
+    "benchmark_name": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pass",
+        "fail"
+      ]
+    },
+    "generated_at": {
+      "type": "string"
+    },
+    "inputs": {
+      "type": "object",
+      "required": [
+        "artifact",
+        "analysis"
+      ],
+      "properties": {
+        "artifact": {
+          "type": "string"
+        },
+        "analysis": {
+          "type": "string"
+        }
+      }
+    },
+    "outputs": {
+      "type": "object",
+      "required": [
+        "model",
+        "report",
+        "summary",
+        "quality_report"
+      ],
+      "properties": {
+        "model": {
+          "type": "string"
+        },
+        "report": {
+          "type": "string"
+        },
+        "summary": {
+          "type": "string"
+        },
+        "quality_report": {
+          "type": "string"
+        }
+      }
+    },
+    "metrics": {
+      "type": "object",
+      "required": [
+        "decision",
+        "profile_count",
+        "confidence",
+        "cross_profile_weighted_availability",
+        "risk_score",
+        "unavailable_advanced_metrics",
+        "baseline_diff_count",
+        "stable_report_sha256",
+        "repeat_stable_report_sha256"
+      ],
+      "properties": {
+        "decision": {
+          "type": "string"
+        },
+        "profile_count": {
+          "type": "integer"
+        },
+        "confidence": {
+          "type": "number"
+        },
+        "cross_profile_weighted_availability": {
+          "type": "number"
+        },
+        "risk_score": {
+          "type": "number"
+        },
+        "unavailable_advanced_metrics": {
+          "type": "integer"
+        },
+        "baseline_diff_count": {
+          "type": "integer"
+        },
+        "stable_report_sha256": {
+          "type": "string"
+        },
+        "repeat_stable_report_sha256": {
+          "type": "string"
+        }
+      }
+    },
+    "checks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "status",
+          "expected",
+          "actual",
+          "message"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "pass",
+              "fail"
+            ]
+          },
+          "expected": {
+            "type": "string"
+          },
+          "actual": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

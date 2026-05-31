@@ -34,6 +34,12 @@ func TestEvaluate_ModeWarn(t *testing.T) {
 	if len(eval.FailedEndpoints) != 1 {
 		t.Fatalf("expected 1 failed endpoint, got %d", len(eval.FailedEndpoints))
 	}
+	if len(eval.Reasons) != 1 || eval.Reasons[0].ID != "endpoint_below_threshold" {
+		t.Fatalf("expected endpoint why reason, got %+v", eval.Reasons)
+	}
+	if eval.EndpointResults[0].ThresholdDelta == 0 && eval.EndpointResults[0].EndpointID == "frontend:GET /health" {
+		t.Fatalf("expected threshold delta to be recorded, got %+v", eval.EndpointResults[0])
+	}
 }
 
 func TestEvaluate_ModeFail(t *testing.T) {
@@ -84,5 +90,17 @@ func TestEvaluateProfiles_AssertionFailuresAffectGate(t *testing.T) {
 	}
 	if len(eval.FailedAssertions) != 1 {
 		t.Fatalf("expected failed assertion to be surfaced, got %+v", eval.FailedAssertions)
+	}
+	if len(eval.Reasons) == 0 {
+		t.Fatalf("expected why reasons for assertion failure, got %+v", eval)
+	}
+	foundAssertionReason := false
+	for _, reason := range eval.Reasons {
+		if reason.ID == "assertion_failed" {
+			foundAssertionReason = true
+		}
+	}
+	if !foundAssertionReason {
+		t.Fatalf("expected assertion_failed why reason, got %+v", eval.Reasons)
 	}
 }

@@ -18,12 +18,22 @@ This file captures the repository-side audit refreshed on 2026-05-01: current Gi
 
 ## Release Tracking State
 
-- Latest public release shipped: [Sheaft v0.2.3 technical preview](https://github.com/MB3R-Lab/Sheaft/releases/tag/v0.2.3)
-- Historical shipped milestones: `v0.1.0 technical preview`, `v0.1.1 technical preview`, `v0.2.0 technical preview`, `v0.2.1 technical preview`, `v0.2.2 technical preview`, `v0.2.3 technical preview`
-- Active backlog milestone: `Post-v0.2.3 technical preview`
+- Latest public release shipped: [Sheaft v0.2.4 technical preview](https://github.com/MB3R-Lab/Sheaft/releases/tag/v0.2.4)
+- Historical shipped milestones: `v0.1.0 technical preview`, `v0.1.1 technical preview`, `v0.2.0 technical preview`, `v0.2.1 technical preview`, `v0.2.2 technical preview`, `v0.2.3 technical preview`, `v0.2.4 technical preview`
+- Active backlog milestone: `Post-v0.2.4 technical preview`
 - Previous release-tracking issue: [#81](https://github.com/MB3R-Lab/Sheaft/issues/81)
-- Current release-tracking issue: TBD after the `v0.2.3` release is published.
-- GitHub issue and milestone sync was refreshed after the `v0.2.3` patch release so the tracker now reflects the shipped release state.
+- Current release-tracking issue: [#82](https://github.com/MB3R-Lab/Sheaft/issues/82)
+- GitHub issue and milestone sync was refreshed on 2026-05-31 while preparing the `v0.2.4` technical-preview release.
+
+## Previous Release/Package Checkpoint
+
+The published `v0.2.3` release payload was the baseline for the `v0.2.4` technical-preview cycle:
+
+- Release URL: https://github.com/MB3R-Lab/Sheaft/releases/tag/v0.2.3
+- Release manifest asset: `release-manifest.json` (`sha256:645a22a8f92d2320e69c47605bc58eb555c329c008b86e746b24bf5c63a256a2`)
+- Compatibility manifest asset: `compatibility-manifest.json` (`sha256:d6a7b7413081eaa5771e67647908ac383316f661662ddd80e0a9c2269b7c050e`)
+- Default config pack asset: `sheaft-default-config-pack_0.2.3.tar.gz` (`sha256:0a0f7dd8f533e144f883ce2822a98e83d23201066ed55085e142a61b3953920b`)
+- Helm chart package asset: `sheaft-0.2.3.tgz` (`sha256:9d052869c4d6c2c28dd6267a7cbb7eca41cd056e7cc4d4b7b43bc89ca09f0edc`)
 
 ## Audit Summary
 
@@ -32,12 +42,12 @@ This file captures the repository-side audit refreshed on 2026-05-01: current Gi
 | R1 | open | partial | Baseline semantics and the richer dual-line/fault-contract semantics are now implemented in-repo, but broader policy families such as rate-limit/fallback annotations are still incomplete. |
 | R2 | closed | done | Artifact discovery/ingestion, provenance, incomplete telemetry handling, and diff-capable artifacts are present and covered by tests. |
 | R3 | open | partial | Reproducible analysis and explicit parameter/calibration provenance are now in place, but pluginization and scale benchmarks are still backlog items. |
-| R4 | open | partial | External benchmark contract and limitations docs exist, but the public benchmark suite and release-grade quality reports are not yet in-repo. |
+| R4 | closed | done | The do-not-trust signal catalogue, fixed benchmark slice, quality report, and external benchmark contract are now in-repo. |
 | R5 | open | partial | CI gate, `serve` watch-loop mode, output artifacts, and validated cross-CI handoff smoke pipelines are implemented; chaos triage remains the main workflow gap. |
 | R6 | closed | done | Strict contract pinning, conformance checks, vendored schemas, compatibility matrix, contract release workflow, and real dual-line `1.0.0`/`1.1.0` support are now implemented end to end. |
 | R7 | open | gap | No open-core/export playbook material exists yet beyond issue-level planning. |
 | R8 | open | gap | Security/privacy work is not yet implemented beyond lightweight assumptions/limitations guidance. |
-| R9 | open | partial | Diff endpoints exist, but there is no why/debug UX or dependency-level explanation layer yet. |
+| R9 | open | partial | Gate why output now explains threshold/assertion causes, but the broader debugging toolkit and dependency-level explanation layer are still backlog items. |
 | R10 | open | partial | Research references are published in `README.md`, but community comparison/adoption collateral is still thin. |
 
 ## Task-Level Audit
@@ -72,9 +82,9 @@ This file captures the repository-side audit refreshed on 2026-05-01: current Gi
 
 | Issue | GitHub state | Repo reality | Notes |
 | --- | --- | --- | --- |
-| R4.1 | open | partial | `docs/benchmark-external.md` defines the external contract, but the actual benchmark suite is not in this repo. |
-| R4.2 | open | gap | No release-quality metrics report or fixed benchmark quality publication exists. |
-| R4.3 | open | partial | `docs/assumptions-and-limitations.md` documents some boundaries, but not yet the full "do-not-trust signals" catalogue with detector heuristics. |
+| R4.1 | closed | done | `benchmarks/fixed-slice/manifest.json`, `make benchmark-slice`, and `docs/benchmark-slice.md` now provide a reproducible public benchmark slice. |
+| R4.2 | closed | done | The fixed slice now emits `.tmp/benchmark-slice/quality-report.json` with release-quality checks for repeatability, decision stability, confidence, advanced metric availability, baseline diff coverage, and cross-profile weighted availability. |
+| R4.3 | closed | done | `docs/assumptions-and-limitations.md` now publishes a concrete do-not-trust signal catalogue with detector IDs, manual heuristics, severity, and remediation guidance. |
 
 ### R5. Integration into engineering workflows
 
@@ -117,7 +127,7 @@ This file captures the repository-side audit refreshed on 2026-05-01: current Gi
 
 | Issue | GitHub state | Repo reality | Notes |
 | --- | --- | --- | --- |
-| R9.1 | open | gap | CLI gate output is concise, but there is no dedicated why mode. |
+| R9.1 | closed | done | `policy_evaluation.reasons`, `summary.md` why output, and `sheaft gate/run --why` explain endpoint threshold, aggregate, and assertion causes. |
 | R9.2 | open | gap | No debugging toolkit exists for contract/path inspection beyond current tests and errors. |
 | R9.3 | open | partial | `current-diff` exposes diffs, but they stop at profile/endpoint deltas and do not explain dependency-level causes. |
 
@@ -136,16 +146,16 @@ The next roadmap should prioritize trust and operator actionability before broad
 
 Goal: make `sheaft gate` defensible in real delivery pipelines.
 
-- R4.3: publish concrete do-not-trust signals and detector heuristics for low-quality Bering artifacts.
-- R4.1: provide a reproducible public benchmark slice for Sheaft-on-Bering.
-- R4.2: publish release-grade quality metrics on that fixed benchmark slice.
+- R4.3: concrete do-not-trust signals and detector heuristics for low-quality Bering artifacts are now published.
+- R4.1: reproducible public benchmark slice for Sheaft-on-Bering is now published.
+- R4.2: release-grade quality metrics on that fixed benchmark slice are now published.
 - R3.4: publish a large-snapshot workload profile, runtime SLA, and perf benchmark.
 
 ### Explainable Decision
 
 Goal: make every elevated risk traceable from decision to evidence.
 
-- R9.1: add why mode for gate decisions.
+- R9.1: why mode for gate decisions is now available in reports, summaries, and CLI output.
 - R9.2: add a debugging toolkit for contract, path, and policy inspection.
 - R9.3: explain dependency-level causes for posture diffs and serve-mode regressions.
 
@@ -168,20 +178,20 @@ Goal: make the Bering -> Sheaft workflow repeatable beyond a technical preview.
 
 ## Prioritized Backlog After Audit
 
-1. R4.3: expand applicability boundaries into concrete do-not-trust signals and detector heuristics.
-2. R4.1: publish the fixed benchmark slice needed for quality claims.
-3. R4.2: publish release-grade quality metrics for Sheaft-on-Bering.
-4. R9.1: add a why mode for gate decisions on top of current report/diff output.
-5. R9.2: add a debugging toolkit for common contract, path, and policy failures.
-6. R9.3: add dependency-level explanations for diffs and serve-mode regressions.
-7. R3.4: publish a large-snapshot workload profile, runtime SLA, and perf benchmark.
-8. R5.3: add chaos-triage suggestions from Bering-driven risk outputs.
-9. R1.3: finish the remaining fallback/rate-limit annotation surface or explicitly close it out of scope.
-10. R7.3: publish the pilot-to-production playbook.
-11. R3.2: decide whether analysis extensibility should become a real plugin surface or stay intentionally in-core after the trust/explainability backlog is no longer blocking adoption.
+1. R9.2: add a debugging toolkit for common contract, path, and policy failures.
+2. R9.3: add dependency-level explanations for diffs and serve-mode regressions.
+3. R3.4: publish a large-snapshot workload profile, runtime SLA, and perf benchmark.
+4. R5.3: add chaos-triage suggestions from Bering-driven risk outputs.
+5. R1.3: finish the remaining fallback/rate-limit annotation surface or explicitly close it out of scope.
+6. R7.3: publish the pilot-to-production playbook.
+7. R3.2: decide whether analysis extensibility should become a real plugin surface or stay intentionally in-core after the trust/explainability backlog is no longer blocking adoption.
 
 ## Current Execution Note
 
 - Repository-side audit refreshed on 2026-05-01 for the `v0.2.3` technical-preview patch release and the product-capability backlog review.
-- GitHub issue [#71](https://github.com/MB3R-Lab/Sheaft/issues/71) should stay aligned with this file: latest release `v0.2.3`, active milestone `Post-v0.2.3 technical preview`, and the same trust-first priority order.
-- The next highest-priority repo task is **R4.3: expand applicability boundaries into concrete do-not-trust signals and detector heuristics**.
+- GitHub issue [#71](https://github.com/MB3R-Lab/Sheaft/issues/71) should stay aligned with this file: latest release `v0.2.4`, active milestone `Post-v0.2.4 technical preview`, and the same trust-first priority order.
+- Release/package tracking was synchronized on 2026-05-30: release-tracking issue [#81](https://github.com/MB3R-Lab/Sheaft/issues/81) now records the shipped `v0.2.3` payload, and [#82](https://github.com/MB3R-Lab/Sheaft/issues/82) tracks the next cycle.
+- R4.3 landed on 2026-05-30 as the first trustable-gate documentation step: `docs/assumptions-and-limitations.md` now contains the do-not-trust signal catalogue and detector field shape.
+- R4.1/R4.2 landed on 2026-05-31: `make benchmark-slice` now runs the fixed Sheaft-on-Bering benchmark and emits `quality-report.json`.
+- R9.1 landed on 2026-05-31: gate decisions now include machine-readable why reasons and CLI `--why` output.
+- The next highest-priority repo task is **R9.2: add a debugging toolkit for common contract, path, and policy failures**.

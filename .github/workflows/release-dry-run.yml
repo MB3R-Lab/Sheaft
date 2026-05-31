@@ -53,4 +53,5 @@ jobs:
             release-manifest.json
             charts/sheaft/**
             .tmp/smoke-examples/**
+            .tmp/benchmark-slice/**
           if-no-files-found: error

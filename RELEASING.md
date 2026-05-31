@@ -45,6 +45,7 @@ A successful tagged release publishes:
 - `compatibility-manifest.json`
 - `release-manifest.json`
 - default config pack archive
+- fixed benchmark quality report
 - versioned GitHub release notes from `release/<tag>.md`, when present
 
 ## Local Validation
@@ -82,12 +83,13 @@ On tag push it:
 
 1. runs tests;
 2. runs smoke checks against checked-in examples;
-3. builds release archives with GoReleaser;
-4. publishes the OCI image;
-5. publishes the OCI Helm chart;
-6. generates `release-manifest.json`;
-7. creates or updates the GitHub Release using `release/<tag>.md` when available;
-8. uploads the canonical payload to the GitHub Release.
+3. runs the fixed benchmark slice;
+4. builds release archives with GoReleaser;
+5. publishes the OCI image;
+6. publishes the OCI Helm chart;
+7. generates `release-manifest.json`;
+8. creates or updates the GitHub Release using `release/<tag>.md` when available;
+9. uploads the canonical payload to the GitHub Release.
 
 ## Generic CI Reuse
 

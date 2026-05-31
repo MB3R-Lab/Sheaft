@@ -32,12 +32,13 @@ type Summary struct {
 }
 
 type PolicyEvaluation struct {
-	Mode             string   `json:"mode"`
-	Decision         string   `json:"decision"`
-	FailedEndpoints  []string `json:"failed_endpoints"`
-	FailedAssertions []string `json:"failed_assertions,omitempty"`
-	FailedProfiles   []string `json:"failed_profiles,omitempty"`
-	EvaluationRule   string   `json:"evaluation_rule,omitempty"`
+	Mode             string                `json:"mode"`
+	Decision         string                `json:"decision"`
+	FailedEndpoints  []string              `json:"failed_endpoints"`
+	FailedAssertions []string              `json:"failed_assertions,omitempty"`
+	FailedProfiles   []string              `json:"failed_profiles,omitempty"`
+	EvaluationRule   string                `json:"evaluation_rule,omitempty"`
+	Reasons          []gate.DecisionReason `json:"reasons,omitempty"`
 }
 
 type InputArtifact struct {
@@ -119,6 +120,7 @@ type ProfileSummary struct {
 	Decision                string                   `json:"decision"`
 	EndpointsBelowThreshold int                      `json:"endpoints_below_threshold"`
 	Aggregate               *gate.AggregateResult    `json:"aggregate,omitempty"`
+	Reasons                 []gate.DecisionReason    `json:"reasons,omitempty"`
 }
 
 type Delta struct {
@@ -208,6 +210,7 @@ func Compose(simOut simulation.Output, eval gate.Evaluation, params simulation.P
 			Mode:            string(eval.Mode),
 			Decision:        eval.Decision,
 			FailedEndpoints: eval.FailedEndpoints,
+			Reasons:         slices.Clone(eval.Reasons),
 		},
 	}
 }
@@ -230,6 +233,7 @@ func ComposeAnalysis(meta artifact.Loaded, simOut simulation.AnalysisOutput, eva
 			FailedAssertions: slices.Clone(eval.FailedAssertions),
 			FailedProfiles:   slices.Clone(eval.FailedProfiles),
 			EvaluationRule:   string(eval.EvaluationRule),
+			Reasons:          slices.Clone(eval.Reasons),
 		},
 		InputArtifact: &InputArtifact{
 			Path:            meta.Metadata.Path,
@@ -282,6 +286,7 @@ func ComposeAnalysis(meta artifact.Loaded, simOut simulation.AnalysisOutput, eva
 			Decision:                profileEval.Decision,
 			EndpointsBelowThreshold: profileEval.EndpointsBelowThreshold,
 			Aggregate:               profileEval.Aggregate,
+			Reasons:                 slices.Clone(profileEval.Reasons),
 		})
 	}
 	return report
@@ -597,24 +602,44 @@ func WriteSummaryMarkdown(path string, rep Report) error {
 		b.WriteString("\n")
 	}
 
+	if len(rep.PolicyEvaluation.Reasons) > 0 {
+		b.WriteString("## Why\n\n")
+		for _, reason := range rep.PolicyEvaluation.Reasons {
+			b.WriteString(fmt.Sprintf("- `%s`", reason.ID))
+			if reason.Profile != "" {
+				b.WriteString(fmt.Sprintf(" profile=`%s`", reason.Profile))
+			}
+			if reason.EndpointID != "" {
+				b.WriteString(fmt.Sprintf(" endpoint=`%s`", reason.EndpointID))
+			}
+			if reason.Delta != nil {
+				b.WriteString(fmt.Sprintf(" delta=`%.4f`", *reason.Delta))
+			}
+			b.WriteString(fmt.Sprintf(": %s\n", reason.Message))
+		}
+		b.WriteString("\n")
+	}
+
 	b.WriteString("## Endpoint results\n\n")
 	for _, endpoint := range rep.EndpointResults {
 		if endpoint.Profile != "" {
 			b.WriteString(fmt.Sprintf(
-				"- `%s` / `%s`: availability=`%.4f`, threshold=`%.4f`, status=`%s`\n",
+				"- `%s` / `%s`: availability=`%.4f`, threshold=`%.4f`, delta=`%.4f`, status=`%s`\n",
 				endpoint.Profile,
 				endpoint.EndpointID,
 				endpoint.Availability,
 				endpoint.Threshold,
+				endpoint.ThresholdDelta,
 				endpoint.Status,
 			))
 			continue
 		}
 		b.WriteString(fmt.Sprintf(
-			"- `%s`: availability=`%.4f`, threshold=`%.4f`, status=`%s`\n",
+			"- `%s`: availability=`%.4f`, threshold=`%.4f`, delta=`%.4f`, status=`%s`\n",
 			endpoint.EndpointID,
 			endpoint.Availability,
 			endpoint.Threshold,
+			endpoint.ThresholdDelta,
 			endpoint.Status,
 		))
 	}

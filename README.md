@@ -5,7 +5,7 @@
 [![ci-template-smoke](https://img.shields.io/github/actions/workflow/status/MB3R-Lab/Sheaft/ci-template-smoke.yml?branch=main&label=ci-template-smoke)](https://github.com/MB3R-Lab/Sheaft/actions/workflows/ci-template-smoke.yml)
 [![schema-contract](https://img.shields.io/github/actions/workflow/status/MB3R-Lab/Sheaft/schema-contract.yml?branch=main&label=schema-contract)](https://github.com/MB3R-Lab/Sheaft/actions/workflows/schema-contract.yml)
 [![Go version](https://img.shields.io/github/go-mod/go-version/MB3R-Lab/Sheaft)](https://github.com/MB3R-Lab/Sheaft/blob/main/go.mod)
-[![Technical preview](https://img.shields.io/badge/preview-v0.2.3-orange)](https://github.com/MB3R-Lab/Sheaft/releases/tag/v0.2.3)
+[![Technical preview](https://img.shields.io/badge/preview-v0.2.4-orange)](https://github.com/MB3R-Lab/Sheaft/releases/tag/v0.2.4)
 [![Bering support](https://img.shields.io/badge/Bering-1.0%20%7C%201.1-blue)](https://github.com/MB3R-Lab/Sheaft/blob/main/docs/compatibility-matrix.md)
 
 Sheaft is a downstream resilience posture engine and CI/CD gate for model artifacts produced by Bering or another compatible upstream producer.
@@ -21,9 +21,9 @@ It stays downstream of topology discovery. The public surface in this repository
 
 ## Stability / Release Status
 
-The current public release is `v0.2.3`. The `v0.2.x` line is an experimental public release and should be treated as a technical preview, not a stable GA release.
+The current public release is `v0.2.4`. The `v0.2.x` line is an experimental public release and should be treated as a technical preview, not a stable GA release.
 
-Stable within the `v0.2.3` technical preview:
+Stable within the `v0.2.4` technical preview:
 
 - strict acceptance of the baseline Bering contract line: `io.mb3r.bering.model@1.0.0` and `io.mb3r.bering.snapshot@1.0.0`
 - strict acceptance of the advanced Bering contract line: `io.mb3r.bering.model@1.1.0` and `io.mb3r.bering.snapshot@1.1.0`
@@ -31,6 +31,8 @@ Stable within the `v0.2.3` technical preview:
 - deterministic batch execution for a fixed seed and config
 - cross-line baseline comparison through `analysis.baselines`
 - additive advanced analysis when `1.1.0` metadata exists
+- gate decision reasons in `report.json`, `summary.md`, and `sheaft gate/run --why`
+- fixed benchmark slice and release-quality `quality-report.json` generation
 - release archives for Linux and macOS on `amd64` and `arm64`
 
 Experimental in `v0.2.x`:
@@ -181,6 +183,7 @@ Sheaft is intentionally downstream of Bering artifacts and schemas.
 - `serve` and its watch loop are suitable for technical-preview evaluation, not yet for a stable long-term operational contract.
 - The richer analysis surface is available, but its configuration ergonomics and operational conventions may still change in later `0.x` releases.
 - Release automation is designed around GitHub Releases, release manifests, OCI image publication, and an OCI Helm chart; Windows release archives can be built, but they are not the primary tested surface in this preview.
+- Before using a Sheaft report as blocking release evidence, review the do-not-trust signal catalogue in [Assumptions and Limitations](docs/assumptions-and-limitations.md).
 
 ## Development
 
@@ -191,6 +194,7 @@ make build
 make test
 make lint
 make smoke-examples
+make benchmark-slice
 ```
 
 Direct command equivalents:
@@ -211,6 +215,7 @@ go vet ./...
 - [Methodology](docs/methodology.md)
 - [Configuration and Schemas](docs/configuration.md)
 - [CI Gate](docs/ci-gate.md)
+- [Fixed Benchmark Slice](docs/benchmark-slice.md)
 - [Consumer Semantics v1](docs/consumer-semantics-v1.md)
 - [Consumer Semantics v2](docs/consumer-semantics-v2.md)
 - [Versioning](VERSIONING.md)

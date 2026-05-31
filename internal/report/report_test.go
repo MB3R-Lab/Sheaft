@@ -94,10 +94,10 @@ func TestComposeAnalysis_IncludesParameterSources(t *testing.T) {
 	t.Parallel()
 
 	cfg := config.AnalysisConfig{
-		SchemaVersion:      config.AnalysisSchemaVersion,
-		Seed:               42,
-		EndpointWeights:    map[string]float64{"frontend:GET /health": 1},
-		PredicateContract:  "configs/predicate-contract.example.yaml",
+		SchemaVersion:     config.AnalysisSchemaVersion,
+		Seed:              42,
+		EndpointWeights:   map[string]float64{"frontend:GET /health": 1},
+		PredicateContract: "configs/predicate-contract.example.yaml",
 		Profiles: []config.Profile{
 			{
 				Name:               "steady",
@@ -162,12 +162,28 @@ func TestComposeAnalysis_IncludesParameterSources(t *testing.T) {
 		},
 		gate.Evaluation{
 			Mode: config.ModeWarn,
+			Reasons: []gate.DecisionReason{
+				{
+					ID:      "gate_pass",
+					Scope:   "gate",
+					Status:  "pass",
+					Message: "all evaluated endpoints, assertions, and aggregates satisfy the configured gate",
+				},
+			},
 			ProfileEvaluations: []gate.ProfileEvaluation{
 				{
-					Profile: "steady",
+					Profile:  "steady",
 					Decision: "pass",
 					EndpointResults: []gate.EndpointResult{
 						{Profile: "steady", EndpointID: "frontend:GET /health", Availability: 0.99, Threshold: 0.98, Status: "pass"},
+					},
+					Reasons: []gate.DecisionReason{
+						{
+							ID:      "gate_pass",
+							Scope:   "gate",
+							Status:  "pass",
+							Message: "all evaluated endpoints, assertions, and aggregates satisfy the configured gate",
+						},
 					},
 				},
 			},
@@ -202,5 +218,8 @@ func TestComposeAnalysis_IncludesParameterSources(t *testing.T) {
 	}
 	if rep.ContractPolicy == nil || rep.ContractPolicy.Status != config.ContractPolicyStatusDeprecated || rep.ContractPolicy.Action != string(config.ContractPolicyActionWarn) {
 		t.Fatalf("expected contract policy status in report, got %+v", rep.ContractPolicy)
+	}
+	if len(rep.PolicyEvaluation.Reasons) != 1 || rep.PolicyEvaluation.Reasons[0].ID != "gate_pass" {
+		t.Fatalf("expected policy evaluation why reasons in report, got %+v", rep.PolicyEvaluation.Reasons)
 	}
 }

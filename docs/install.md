@@ -1,6 +1,6 @@
 # Install
 
-The current public technical preview is `v0.2.3`. Prefer release assets for evaluation and automation; use `go install` or `go build` as fallback paths.
+The current public technical preview is `v0.2.4`. Prefer release assets for evaluation and automation; use `go install` or `go build` as fallback paths.
 
 The machine-readable entrypoint for release consumers is the `release-manifest.json` asset attached to each GitHub Release. It records exact archive names, checksums, image references, chart version, and the default config pack asset for that release.
 
@@ -79,6 +79,7 @@ Each release includes a versioned default config pack archive with checked-in ex
 - example predicate contract
 - example serve config
 - example reports and sample Bering-compatible artifacts
+- fixed benchmark slice manifest
 
 Typical flow:
 

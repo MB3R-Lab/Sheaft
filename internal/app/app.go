@@ -151,6 +151,7 @@ func (r Runner) runGate(args []string) int {
 	policyPath := fs.String("policy", "", "Path to policy YAML/JSON")
 	analysisPath := fs.String("analysis", "", "Path to advanced analysis YAML/JSON")
 	mode := fs.String("mode", "", "Override mode: warn|fail|report")
+	why := fs.Bool("why", false, "Print gate decision reasons")
 	if err := fs.Parse(args); err != nil {
 		r.printfErr("gate flag parse error: %v\n", err)
 		return ExitError
@@ -202,6 +203,9 @@ func (r Runner) runGate(args []string) int {
 	if len(eval.FailedEndpoints) > 0 {
 		r.printf("failed endpoints: %s\n", strings.Join(eval.FailedEndpoints, ", "))
 	}
+	if *why {
+		r.printReasons(eval.Reasons)
+	}
 	return decisionExitCode(eval.Decision)
 }
 
@@ -230,6 +234,7 @@ func (r Runner) runPipeline(args []string) int {
 	journeysPath := fs.String("journeys", "", "Path to journey override JSON")
 	outDir := fs.String("out-dir", "", "Output directory")
 	seed := fs.Int64("seed", 42, "Random seed for deterministic simulation")
+	why := fs.Bool("why", false, "Print gate decision reasons")
 	if err := fs.Parse(args); err != nil {
 		r.printfErr("run flag parse error: %v\n", err)
 		return ExitError
@@ -279,6 +284,9 @@ func (r Runner) runPipeline(args []string) int {
 	r.printf("policy mode: %s\n", result.Config.Gate.Mode)
 	if strings.TrimSpace(result.Config.Journeys) != "" {
 		r.printf("journeys override: %s\n", result.Config.Journeys)
+	}
+	if *why {
+		r.printReasons(result.GateEval.Reasons)
 	}
 	return decisionExitCode(result.GateEval.Decision)
 }
@@ -458,10 +466,10 @@ func (r Runner) printUsage() {
 	fmt.Fprintln(r.stdout, "  sheaft discover --input <trace-file|dir> --out <model.json>    # experimental local discovery")
 	fmt.Fprintln(r.stdout, "  sheaft simulate --model <artifact.json> --policy <policy.yaml> [--contract-policy <contract-policy.yaml>] --out <report.json> [--journeys <journeys.json>] --seed <int>")
 	fmt.Fprintln(r.stdout, "  sheaft simulate --model <artifact.json> --analysis <analysis.yaml> [--contract-policy <contract-policy.yaml>] --out <report.json>")
-	fmt.Fprintln(r.stdout, "  sheaft gate --report <report.json> --policy <policy.yaml> --mode warn|fail|report")
-	fmt.Fprintln(r.stdout, "  sheaft gate --report <report.json> --analysis <analysis.yaml>")
-	fmt.Fprintln(r.stdout, "  sheaft run --model <artifact.json> --policy <policy.yaml> [--contract-policy <contract-policy.yaml>] --out-dir <dir> [--journeys <journeys.json>] --seed <int>")
-	fmt.Fprintln(r.stdout, "  sheaft run --model <artifact.json> --analysis <analysis.yaml> [--contract-policy <contract-policy.yaml>] --out-dir <dir>")
+	fmt.Fprintln(r.stdout, "  sheaft gate --report <report.json> --policy <policy.yaml> --mode warn|fail|report [--why]")
+	fmt.Fprintln(r.stdout, "  sheaft gate --report <report.json> --analysis <analysis.yaml> [--why]")
+	fmt.Fprintln(r.stdout, "  sheaft run --model <artifact.json> --policy <policy.yaml> [--contract-policy <contract-policy.yaml>] --out-dir <dir> [--journeys <journeys.json>] --seed <int> [--why]")
+	fmt.Fprintln(r.stdout, "  sheaft run --model <artifact.json> --analysis <analysis.yaml> [--contract-policy <contract-policy.yaml>] --out-dir <dir> [--why]")
 	fmt.Fprintln(r.stdout, "  sheaft serve --config <serve.yaml> [--contract-policy <contract-policy.yaml>]")
 	fmt.Fprintln(r.stdout, "  sheaft serve --artifact <artifact.json|dir> --policy <policy.yaml> [--contract-policy <contract-policy.yaml>] [--listen :8080]")
 }
@@ -472,6 +480,26 @@ func (r Runner) printf(format string, args ...any) {
 
 func (r Runner) printfErr(format string, args ...any) {
 	fmt.Fprintf(r.stderr, format, args...)
+}
+
+func (r Runner) printReasons(reasons []gate.DecisionReason) {
+	if len(reasons) == 0 {
+		return
+	}
+	r.printf("why:\n")
+	for _, reason := range reasons {
+		parts := []string{reason.ID}
+		if reason.Profile != "" {
+			parts = append(parts, "profile="+reason.Profile)
+		}
+		if reason.EndpointID != "" {
+			parts = append(parts, "endpoint="+reason.EndpointID)
+		}
+		if reason.Delta != nil {
+			parts = append(parts, fmt.Sprintf("delta=%.4f", *reason.Delta))
+		}
+		r.printf("  - %s: %s\n", strings.Join(parts, " "), reason.Message)
+	}
 }
 
 var ErrUnsupportedCommand = errors.New("unsupported command")

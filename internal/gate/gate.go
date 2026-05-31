@@ -15,17 +15,32 @@ const (
 )
 
 type EndpointResult struct {
-	Profile      string  `json:"profile,omitempty"`
-	EndpointID   string  `json:"endpoint_id"`
-	Availability float64 `json:"availability"`
-	Threshold    float64 `json:"threshold"`
-	Status       string  `json:"status"`
+	Profile        string  `json:"profile,omitempty"`
+	EndpointID     string  `json:"endpoint_id"`
+	Availability   float64 `json:"availability"`
+	Threshold      float64 `json:"threshold"`
+	ThresholdDelta float64 `json:"threshold_delta"`
+	Status         string  `json:"status"`
 }
 
 type AggregateResult struct {
-	Availability float64 `json:"availability"`
-	Threshold    float64 `json:"threshold"`
-	Status       string  `json:"status"`
+	Availability   float64 `json:"availability"`
+	Threshold      float64 `json:"threshold"`
+	ThresholdDelta float64 `json:"threshold_delta"`
+	Status         string  `json:"status"`
+}
+
+type DecisionReason struct {
+	ID           string   `json:"id"`
+	Scope        string   `json:"scope"`
+	Profile      string   `json:"profile,omitempty"`
+	EndpointID   string   `json:"endpoint_id,omitempty"`
+	Metric       string   `json:"metric,omitempty"`
+	Status       string   `json:"status"`
+	Availability *float64 `json:"availability,omitempty"`
+	Threshold    *float64 `json:"threshold,omitempty"`
+	Delta        *float64 `json:"delta,omitempty"`
+	Message      string   `json:"message"`
 }
 
 type ProfileEvaluation struct {
@@ -36,6 +51,7 @@ type ProfileEvaluation struct {
 	EndpointsBelowThreshold int              `json:"endpoints_below_threshold"`
 	EndpointResults         []EndpointResult `json:"endpoint_results"`
 	Aggregate               *AggregateResult `json:"aggregate,omitempty"`
+	Reasons                 []DecisionReason `json:"reasons,omitempty"`
 }
 
 type Evaluation struct {
@@ -48,6 +64,7 @@ type Evaluation struct {
 	EndpointResults       []EndpointResult          `json:"endpoint_results"`
 	ProfileEvaluations    []ProfileEvaluation       `json:"profile_evaluations,omitempty"`
 	CrossProfileAggregate *AggregateResult          `json:"cross_profile_aggregate,omitempty"`
+	Reasons               []DecisionReason          `json:"reasons,omitempty"`
 }
 
 func Evaluate(availability map[string]float64, policy config.Policy, modeOverride string) (Evaluation, error) {
@@ -67,27 +84,37 @@ func Evaluate(availability map[string]float64, policy config.Policy, modeOverrid
 
 	failed := make([]string, 0)
 	results := make([]EndpointResult, 0, len(endpointIDs))
+	reasons := make([]DecisionReason, 0)
 	for _, endpointID := range endpointIDs {
 		threshold := policy.GlobalThreshold
 		if specific, ok := policy.EndpointThresholds[endpointID]; ok {
 			threshold = specific
 		}
-		status := classify(mode, availability[endpointID] < threshold)
+		value := availability[endpointID]
+		delta := value - threshold
+		status := classify(mode, value < threshold)
 		if status != StatusPass {
 			failed = append(failed, endpointID)
+			reasons = append(reasons, endpointBelowThresholdReason("", endpointID, value, threshold, delta, status))
 		}
 		results = append(results, EndpointResult{
-			EndpointID:   endpointID,
-			Availability: availability[endpointID],
-			Threshold:    threshold,
-			Status:       status,
+			EndpointID:     endpointID,
+			Availability:   value,
+			Threshold:      threshold,
+			ThresholdDelta: delta,
+			Status:         status,
 		})
+	}
+	decision := aggregateDecision(mode, len(failed) > 0)
+	if len(reasons) == 0 {
+		reasons = append(reasons, passReason(decision))
 	}
 	return Evaluation{
 		Mode:            mode,
-		Decision:        aggregateDecision(mode, len(failed) > 0),
+		Decision:        decision,
 		FailedEndpoints: failed,
 		EndpointResults: results,
+		Reasons:         reasons,
 	}, nil
 }
 
@@ -124,6 +151,7 @@ func EvaluateProfiles(outputs []simulation.ProfileOutput, gateCfg config.GateCon
 		for _, assertion := range profileEval.FailedAssertions {
 			unionFailedAssertions[assertion] = struct{}{}
 		}
+		eval.Reasons = append(eval.Reasons, profileEval.Reasons...)
 		if len(eval.EndpointResults) == 0 {
 			eval.EndpointResults = slices.Clone(profileEval.EndpointResults)
 			eval.FailedEndpoints = slices.Clone(profileEval.FailedEndpoints)
@@ -139,13 +167,15 @@ func EvaluateProfiles(outputs []simulation.ProfileOutput, gateCfg config.GateCon
 		crossProfile /= float64(len(outputs))
 		aggregateFailed := crossProfile < *gateCfg.CrossProfileAggregateThreshold
 		eval.CrossProfileAggregate = &AggregateResult{
-			Availability: crossProfile,
-			Threshold:    *gateCfg.CrossProfileAggregateThreshold,
-			Status:       classify(gateCfg.Mode, aggregateFailed),
+			Availability:   crossProfile,
+			Threshold:      *gateCfg.CrossProfileAggregateThreshold,
+			ThresholdDelta: crossProfile - *gateCfg.CrossProfileAggregateThreshold,
+			Status:         classify(gateCfg.Mode, aggregateFailed),
 		}
 		if aggregateFailed {
 			aggregateFailedProfiles = len(outputs)
 			passingProfiles = 0
+			eval.Reasons = append(eval.Reasons, aggregateBelowThresholdReason("", "cross_profile_aggregate", crossProfile, *gateCfg.CrossProfileAggregateThreshold, eval.CrossProfileAggregate.ThresholdDelta, eval.CrossProfileAggregate.Status))
 		}
 	}
 
@@ -200,6 +230,9 @@ func EvaluateProfiles(outputs []simulation.ProfileOutput, gateCfg config.GateCon
 			}
 		}
 	}
+	if len(eval.Reasons) == 0 {
+		eval.Reasons = append(eval.Reasons, passReason(eval.Decision))
+	}
 	return eval, nil
 }
 
@@ -213,6 +246,7 @@ func evaluateProfile(output simulation.ProfileOutput, gateCfg config.GateConfig)
 	results := make([]EndpointResult, 0, len(endpointIDs))
 	failed := make([]string, 0)
 	failedAssertions := make([]string, 0)
+	reasons := make([]DecisionReason, 0)
 	for _, endpointID := range endpointIDs {
 		threshold := gateCfg.GlobalThreshold
 		if specific, ok := gateCfg.EndpointThresholds[endpointID]; ok {
@@ -224,16 +258,19 @@ func evaluateProfile(output simulation.ProfileOutput, gateCfg config.GateConfig)
 			}
 		}
 		availability := output.EndpointAvailability[endpointID]
+		delta := availability - threshold
 		status := classify(gateCfg.Mode, availability < threshold)
 		if status != StatusPass {
 			failed = append(failed, endpointID)
+			reasons = append(reasons, endpointBelowThresholdReason(output.Name, endpointID, availability, threshold, delta, status))
 		}
 		results = append(results, EndpointResult{
-			Profile:      output.Name,
-			EndpointID:   endpointID,
-			Availability: availability,
-			Threshold:    threshold,
-			Status:       status,
+			Profile:        output.Name,
+			EndpointID:     endpointID,
+			Availability:   availability,
+			Threshold:      threshold,
+			ThresholdDelta: delta,
+			Status:         status,
 		})
 	}
 
@@ -242,23 +279,30 @@ func evaluateProfile(output simulation.ProfileOutput, gateCfg config.GateConfig)
 	if threshold, ok := gateCfg.ProfileAggregateThresholds[output.Name]; ok {
 		aggregateFailed = output.WeightedAggregate < threshold
 		aggregate = &AggregateResult{
-			Availability: output.WeightedAggregate,
-			Threshold:    threshold,
-			Status:       classify(gateCfg.Mode, aggregateFailed),
+			Availability:   output.WeightedAggregate,
+			Threshold:      threshold,
+			ThresholdDelta: output.WeightedAggregate - threshold,
+			Status:         classify(gateCfg.Mode, aggregateFailed),
 		}
 	} else if gateCfg.AggregateThreshold != nil {
 		aggregateFailed = output.WeightedAggregate < *gateCfg.AggregateThreshold
 		aggregate = &AggregateResult{
-			Availability: output.WeightedAggregate,
-			Threshold:    *gateCfg.AggregateThreshold,
-			Status:       classify(gateCfg.Mode, aggregateFailed),
+			Availability:   output.WeightedAggregate,
+			Threshold:      *gateCfg.AggregateThreshold,
+			ThresholdDelta: output.WeightedAggregate - *gateCfg.AggregateThreshold,
+			Status:         classify(gateCfg.Mode, aggregateFailed),
 		}
+	}
+	if aggregateFailed && aggregate != nil {
+		reasons = append(reasons, aggregateBelowThresholdReason(output.Name, "profile_weighted_aggregate", aggregate.Availability, aggregate.Threshold, aggregate.ThresholdDelta, aggregate.Status))
 	}
 	for _, assertion := range output.Assertions {
 		if assertion.Status == StatusPass {
 			continue
 		}
-		failedAssertions = append(failedAssertions, formatAssertionFailure(assertion))
+		formatted := formatAssertionFailure(assertion)
+		failedAssertions = append(failedAssertions, formatted)
+		reasons = append(reasons, assertionReason(output.Name, assertion, classify(gateCfg.Mode, true), formatted))
 	}
 
 	return ProfileEvaluation{
@@ -269,6 +313,7 @@ func evaluateProfile(output simulation.ProfileOutput, gateCfg config.GateConfig)
 		EndpointsBelowThreshold: len(failed),
 		EndpointResults:         results,
 		Aggregate:               aggregate,
+		Reasons:                 reasons,
 	}
 }
 
@@ -314,4 +359,60 @@ func formatAssertionFailure(result simulation.AssertionResult) string {
 		return fmt.Sprintf("%s %s %s %.4f (actual=%.4f)", result.Metric, result.Target.Type, result.Op, result.Expected, result.ActualValue)
 	}
 	return fmt.Sprintf("%s %s unavailable: %s", result.Metric, result.Target.Type, result.Reason)
+}
+
+func endpointBelowThresholdReason(profile, endpointID string, availability, threshold, delta float64, status string) DecisionReason {
+	return DecisionReason{
+		ID:           "endpoint_below_threshold",
+		Scope:        "endpoint",
+		Profile:      profile,
+		EndpointID:   endpointID,
+		Status:       status,
+		Availability: ptrFloat64(availability),
+		Threshold:    ptrFloat64(threshold),
+		Delta:        ptrFloat64(delta),
+		Message:      fmt.Sprintf("endpoint %q availability %.4f is below threshold %.4f", endpointID, availability, threshold),
+	}
+}
+
+func aggregateBelowThresholdReason(profile, scope string, availability, threshold, delta float64, status string) DecisionReason {
+	return DecisionReason{
+		ID:           "aggregate_below_threshold",
+		Scope:        scope,
+		Profile:      profile,
+		Status:       status,
+		Availability: ptrFloat64(availability),
+		Threshold:    ptrFloat64(threshold),
+		Delta:        ptrFloat64(delta),
+		Message:      fmt.Sprintf("%s availability %.4f is below threshold %.4f", scope, availability, threshold),
+	}
+}
+
+func assertionReason(profile string, result simulation.AssertionResult, status string, formatted string) DecisionReason {
+	id := "assertion_failed"
+	if !result.Available {
+		id = "assertion_unavailable"
+	}
+	return DecisionReason{
+		ID:      id,
+		Scope:   "assertion",
+		Profile: profile,
+		Metric:  result.Metric,
+		Status:  status,
+		Message: formatted,
+	}
+}
+
+func passReason(decision string) DecisionReason {
+	return DecisionReason{
+		ID:      "gate_pass",
+		Scope:   "gate",
+		Status:  decision,
+		Message: "all evaluated endpoints, assertions, and aggregates satisfy the configured gate",
+	}
+}
+
+func ptrFloat64(value float64) *float64 {
+	out := value
+	return &out
 }

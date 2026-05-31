@@ -63,6 +63,18 @@ No extra CI flag is needed for strict checking: it is already part of artifact l
 - `2`: gate failure in `mode=fail`
 - `1`: input, contract, config, or runtime error
 
+## Why Mode
+
+Every generated `report.json` includes `policy_evaluation.reasons`, a machine-readable explanation of the gate decision. Each reason includes an id, scope, status, message, and when relevant the profile, endpoint, threshold, availability, and delta.
+
+For a human-readable CLI view:
+
+```bash
+sheaft gate --report out/report.json --analysis configs/analysis.v1.1.example.yaml --why
+```
+
+`sheaft run` also accepts `--why` and prints the same reasons after writing `model.json`, `report.json`, and `summary.md`.
+
 ## Reference Templates
 
 - GitHub Actions: [examples/ci/github-actions.sheaft.yml](../examples/ci/github-actions.sheaft.yml)
