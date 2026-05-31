@@ -25,7 +25,9 @@ Runtime truth lives in `internal/modelcontract/contract.go`.
 - required schema digests
 - tested Bering app versions, if known
 
-An empty `tested_bering_app_versions` array means Sheaft has not published an app-level Bering compatibility statement beyond the schema pins that are already required.
+`tested_bering_app_versions` lists Bering product tags this Sheaft line has been app-level synced against. The current line records Bering `v0.3.4`; schema acceptance is still controlled only by `supported_contracts`.
+
+An empty `tested_bering_app_versions` array would mean Sheaft has not published an app-level Bering compatibility statement beyond the schema pins that are already required.
 
 ## How Downstream CI Should Use It
 
@@ -82,6 +84,7 @@ When a contract is still supported globally but deprecated for a given project, 
 - Sheaft declares compatibility with Bering `1.0.0` and `1.1.0` model/snapshot release lines.
 - `1.0.0` remains the baseline fail-stop semantics line and the cross-version comparison reference.
 - `1.1.0` enables additive path-aware timeout, retry, placement, shared-resource, and edge-scoped analysis when the artifact carries that metadata.
+- The current app-level Bering release/package sync target is `v0.3.4`; no Bering schema contract pins changed for that package release.
 - Missing advanced metadata is surfaced as unavailable rather than guessed.
 - Changing the Sheaft app version does not automatically widen or narrow compatibility.
 

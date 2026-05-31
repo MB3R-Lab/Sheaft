@@ -31,6 +31,7 @@ The GitHub Release also publishes the fixed benchmark slice quality report as re
 `compatibility-manifest.json` answers:
 
 - which upstream Bering contracts does this Sheaft line accept?
+- which Bering app release packages has this Sheaft line been synced against, if known?
 
 `release-manifest.json` answers:
 
@@ -39,6 +40,7 @@ The GitHub Release also publishes the fixed benchmark slice quality report as re
 Keep them separate:
 
 - compatibility changes track Bering schema support
+- tested app-version entries track app-level Bering release/package syncs that keep the same schema pins
 - release-manifest changes track build outputs for a specific Sheaft release
 
 ## CI Consumption Pattern

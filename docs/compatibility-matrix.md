@@ -4,6 +4,12 @@ Sheaft is a strict downstream consumer of Bering-produced artifacts. It does not
 
 The machine-readable equivalent of this page is the repo-root `compatibility-manifest.json`.
 
+## Current App-Level Sync
+
+The current `main` line has been synced against the published Bering `v0.3.4` release/package. This is recorded in `compatibility-manifest.json` as `tested_bering_app_versions: ["v0.3.4"]`.
+
+That package sync does not widen or narrow the accepted upstream schema contracts. The strict contract pins remain the `1.0.0` and `1.1.0` Bering model/snapshot lines below.
+
 ## Current Matrix
 
 | Sheaft line | Status | Bering model contract | Model URI | Model digest | Bering snapshot contract | Snapshot URI | Snapshot digest | Notes |
@@ -32,4 +38,4 @@ Overlapping metrics produce diffs. Metrics that are unavailable on one side rema
 
 ## Release Note
 
-This repository currently has no Git tags or published Sheaft release lines. The `main` row therefore represents the active unreleased consumer pin. When versioned Sheaft releases start, add one row per released line and keep `main` as the forward-looking row.
+Published Sheaft releases through `v0.2.4` use the same accepted Bering `1.0.0` and `1.1.0` contract pins. The `main` row represents the active post-`v0.2.4` consumer pin; when a future Sheaft release changes accepted upstream contracts, add one row per released line and keep `main` as the forward-looking row.

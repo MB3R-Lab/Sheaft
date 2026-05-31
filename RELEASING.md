@@ -1,6 +1,6 @@
 # Releasing Sheaft
 
-Sheaft release automation is tag-driven and platform-neutral. The `v0.1.x` line is intentionally published as a technical preview, so release notes and README language should stay explicit about what is stable versus experimental.
+Sheaft release automation is tag-driven and platform-neutral. The `0.x` line is intentionally published as a technical preview, so release notes and README language should stay explicit about what is stable versus experimental.
 
 The canonical release contract is the generated payload:
 
@@ -10,7 +10,7 @@ The canonical release contract is the generated payload:
 
 GitHub Releases publish that payload, but GitHub metadata is not the source of truth.
 
-`compatibility-manifest.json` is intentionally checked in because it mirrors the current strict upstream contract pins and is drift-checked in CI. `release-manifest.json` is release-specific and must not be committed from `main`; it is generated during `make release-dry-run`, `make release-local`, and tag-driven release publishing, then uploaded as a release asset.
+`compatibility-manifest.json` is intentionally checked in because it mirrors the current strict upstream contract pins plus tested upstream app release metadata, and is drift-checked in CI. `release-manifest.json` is release-specific and must not be committed from `main`; it is generated during `make release-dry-run`, `make release-local`, and tag-driven release publishing, then uploaded as a release asset.
 
 ## Ownership Boundary
 
@@ -18,6 +18,7 @@ GitHub Releases publish that payload, but GitHub metadata is not the source of t
 - Sheaft stays downstream and only declares compatibility with Bering-produced artifacts.
 - Sheaft must not redefine or silently mutate Bering schema versions.
 - Strict contract validation remains in `internal/modelcontract/contract.go` and is mirrored into `compatibility-manifest.json`.
+- Tested upstream Bering app release/package syncs are recorded in `compatibility-manifest.json`; they do not expand schema acceptance.
 
 ## Version Surfaces
 

@@ -12,12 +12,19 @@ Keep Sheaft as a strict downstream consumer:
 
 ## Current Upstream Metadata Source
 
-The canonical published Bering release manifest currently consumed by Sheaft is:
+The canonical published Bering schema metadata currently consumed by Sheaft is:
 
 - `https://mb3r-lab.github.io/Bering/schema/index.json`
 
 Sheaft CI verifies that this published metadata matches the currently published `1.1.0` model and snapshot contracts in `internal/modelcontract/contract.go`.
 Published remote schema sync is verified separately for every supported versioned model and snapshot schema mirror.
+
+The current app-level Bering release/package sync target is:
+
+- Release: `https://github.com/MB3R-Lab/Bering/releases/tag/v0.3.4`
+- Release manifest asset: `release-manifest.json` (`sha256:d7f4b3d61ff8e36bd370dadd351e51a2b2803677ae12a5e0fbb81faacfd01e20`)
+- Contracts pack asset: `bering-contracts_0.3.4.tar.gz` (`sha256:3865a8e7152c8a383f34d99334bc392cfd0ec793325b530d392723f67839ddbf`)
+- Schema contract pins consumed by Sheaft remain `1.0.0` and `1.1.0`.
 
 ## Release Policy
 
@@ -38,6 +45,16 @@ When Bering publishes a new contract line that Sheaft wants to support:
    - Bering release metadata check
    - compatibility matrix check
    - `go test ./...`
+
+### Upstream app/package release with unchanged schemas
+
+When Bering publishes a product release that keeps the same schema contract lines:
+
+1. confirm the Bering release and package assets are published;
+2. update `tested_bering_app_versions` through the compatibility manifest generator;
+3. update `README.md`, [compatibility matrix](compatibility-matrix.md), and this workflow note with the Bering release/package checkpoint;
+4. regenerate `compatibility-manifest.json`;
+5. run the compatibility-manifest check and `go test ./...`.
 
 ### Breaking upstream schema release
 

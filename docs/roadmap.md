@@ -23,6 +23,7 @@ This file captures the repository-side audit refreshed on 2026-05-31: current Gi
 - Active backlog milestone: `Post-v0.2.4 technical preview`
 - Previous release-tracking issue: [#82](https://github.com/MB3R-Lab/Sheaft/issues/82)
 - Current release-tracking issue: [#83](https://github.com/MB3R-Lab/Sheaft/issues/83)
+- Current upstream Bering app/package sync target: [Bering v0.3.4](https://github.com/MB3R-Lab/Bering/releases/tag/v0.3.4), with unchanged `1.0.0` / `1.1.0` schema contract pins.
 - GitHub issue and milestone sync was refreshed on 2026-05-31 after shipping the `v0.2.4` technical-preview release.
 
 ## Latest Release/Package Checkpoint
@@ -197,4 +198,5 @@ Goal: make the Bering -> Sheaft workflow repeatable beyond a technical preview.
 - R4.3 landed on 2026-05-30 as the first trustable-gate documentation step: `docs/assumptions-and-limitations.md` now contains the do-not-trust signal catalogue and detector field shape.
 - R4.1/R4.2 landed on 2026-05-31: `make benchmark-slice` now runs the fixed Sheaft-on-Bering benchmark and emits `quality-report.json`.
 - R9.1 landed on 2026-05-31: gate decisions now include machine-readable why reasons and CLI `--why` output.
+- Bering app/package sync refreshed on 2026-05-31 after Bering `v0.3.4`: `compatibility-manifest.json` now records `tested_bering_app_versions: ["v0.3.4"]`; schema contract pins are unchanged.
 - The next highest-priority repo task is **R9.2: add a debugging toolkit for common contract, path, and policy failures**.

@@ -18,6 +18,9 @@ func TestCompatibilityManifestMatchesTrackedFile(t *testing.T) {
 	if manifest.ProductName != ProductName {
 		t.Fatalf("unexpected product name: %s", manifest.ProductName)
 	}
+	if len(manifest.TestedBeringAppVersions) != 1 || manifest.TestedBeringAppVersions[0] != CurrentTestedBeringAppVersion {
+		t.Fatalf("unexpected tested Bering app versions: %v", manifest.TestedBeringAppVersions)
+	}
 }
 
 func TestValidateChart(t *testing.T) {

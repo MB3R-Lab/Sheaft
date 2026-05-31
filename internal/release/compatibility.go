@@ -22,6 +22,7 @@ const (
 	DefaultReleaseSchemaPath            = "api/schema/release-manifest.schema.json"
 	DefaultConfigPackSourceListPath     = "release/packs/default-config-pack.files.txt"
 	DefaultConfigPackMetadataOutputPath = "dist/default-config-pack.json"
+	CurrentTestedBeringAppVersion       = "v0.3.4"
 )
 
 type CompatibilityContract struct {
@@ -98,8 +99,12 @@ func GenerateCompatibilityManifest() CompatibilityManifest {
 		SupportedUpstreamSchemaNames:    schemaNames,
 		SupportedUpstreamSchemaVersions: schemaVersions,
 		SupportedContracts:              supportedContracts,
-		TestedBeringAppVersions:         []string{},
+		TestedBeringAppVersions:         TestedBeringAppVersions(),
 	}
+}
+
+func TestedBeringAppVersions() []string {
+	return []string{CurrentTestedBeringAppVersion}
 }
 
 func (m CompatibilityManifest) Validate() error {

@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- recorded app-level sync with the published Bering `v0.3.4` release/package in `compatibility-manifest.json`
+- refreshed compatibility docs and README badges to distinguish Bering app-package sync from unchanged `1.0.0` / `1.1.0` schema contract pins
+
 ## v0.2.4 - 2026-05-31
 
 Technical-preview feature release focused on trustable gate evidence, benchmark packaging, and explainable gate decisions for the `v0.2.x` line.

@@ -46,5 +46,7 @@
       "schema_digest": "sha256:53b127608b2aaa4fabb352b998cd6b2c5ed558764729a09abea56f4f9b40fa01"
     }
   ],
-  "tested_bering_app_versions": []
+  "tested_bering_app_versions": [
+    "v0.3.4"
+  ]
 }

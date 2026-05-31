@@ -7,6 +7,7 @@
 [![Go version](https://img.shields.io/github/go-mod/go-version/MB3R-Lab/Sheaft)](https://github.com/MB3R-Lab/Sheaft/blob/main/go.mod)
 [![Technical preview](https://img.shields.io/badge/preview-v0.2.4-orange)](https://github.com/MB3R-Lab/Sheaft/releases/tag/v0.2.4)
 [![Bering support](https://img.shields.io/badge/Bering-1.0%20%7C%201.1-blue)](https://github.com/MB3R-Lab/Sheaft/blob/main/docs/compatibility-matrix.md)
+[![Bering app](https://img.shields.io/badge/Bering%20app-v0.3.4-informational)](https://github.com/MB3R-Lab/Bering/releases/tag/v0.3.4)
 
 Sheaft is a downstream resilience posture engine and CI/CD gate for model artifacts produced by Bering or another compatible upstream producer.
 
@@ -58,6 +59,8 @@ Pinned URIs, digests, and release-line support are tracked in [docs/compatibilit
 Unknown or mismatched contracts are rejected. There is no silent fallback for unsupported upstream schemas.
 
 `1.0.0` remains the baseline semantics line and the reference artifact line for cross-version comparisons. `1.1.0` adds richer typed metadata for timeout, retry, placement, shared-resource, and edge-scoped analysis when the artifact provides it.
+
+The current `main` line has also been app-level synced against the published Bering `v0.3.4` release/package. That sync does not change the accepted Bering schema contract pins.
 
 ## Installation
 
@@ -139,7 +142,7 @@ sheaft run --model <artifact.json> --analysis <analysis.yaml> --contract-policy 
 
 ## Service mode
 
-The long-running service remains experimental in `v0.1.x`, but it is included in the public technical preview.
+The long-running service remains experimental in `v0.2.x`, but it is included in the public technical preview.
 
 The checked-in example is runnable without editing paths:
 
@@ -172,6 +175,7 @@ Sheaft is intentionally downstream of Bering artifacts and schemas.
 - `1.0.0` is kept as the stable fail-stop baseline semantics line.
 - `1.1.0` enables additive path-aware diagnostics and fault-profile analysis when metadata exists.
 - Compatibility metadata is published in [compatibility-manifest.json](compatibility-manifest.json).
+- The current app-level Bering release/package sync target is `v0.3.4`; schema acceptance still comes only from the pinned contracts above.
 - Schema ownership stays with Bering; Sheaft does not redefine those schema versions.
 - `--contract-policy` can narrow or deprecate accepted contracts for a specific project, but it cannot expand support beyond the built-in whitelist.
 
