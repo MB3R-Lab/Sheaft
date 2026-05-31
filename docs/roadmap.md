@@ -14,26 +14,29 @@ GitHub issues remain the source of truth for roadmap tracking:
 - R9: https://github.com/MB3R-Lab/Sheaft/issues/39
 - R10: https://github.com/MB3R-Lab/Sheaft/issues/40
 
-This file captures the repository-side audit refreshed on 2026-05-01: current GitHub issue state versus what is actually implemented in this repository.
+This file captures the repository-side audit refreshed on 2026-05-31: current GitHub issue state versus what is actually implemented in this repository.
 
 ## Release Tracking State
 
 - Latest public release shipped: [Sheaft v0.2.4 technical preview](https://github.com/MB3R-Lab/Sheaft/releases/tag/v0.2.4)
 - Historical shipped milestones: `v0.1.0 technical preview`, `v0.1.1 technical preview`, `v0.2.0 technical preview`, `v0.2.1 technical preview`, `v0.2.2 technical preview`, `v0.2.3 technical preview`, `v0.2.4 technical preview`
 - Active backlog milestone: `Post-v0.2.4 technical preview`
-- Previous release-tracking issue: [#81](https://github.com/MB3R-Lab/Sheaft/issues/81)
-- Current release-tracking issue: [#82](https://github.com/MB3R-Lab/Sheaft/issues/82)
-- GitHub issue and milestone sync was refreshed on 2026-05-31 while preparing the `v0.2.4` technical-preview release.
+- Previous release-tracking issue: [#82](https://github.com/MB3R-Lab/Sheaft/issues/82)
+- Current release-tracking issue: [#83](https://github.com/MB3R-Lab/Sheaft/issues/83)
+- GitHub issue and milestone sync was refreshed on 2026-05-31 after shipping the `v0.2.4` technical-preview release.
 
-## Previous Release/Package Checkpoint
+## Latest Release/Package Checkpoint
 
-The published `v0.2.3` release payload was the baseline for the `v0.2.4` technical-preview cycle:
+The published `v0.2.4` release payload is the baseline for the next technical-preview cycle:
 
-- Release URL: https://github.com/MB3R-Lab/Sheaft/releases/tag/v0.2.3
-- Release manifest asset: `release-manifest.json` (`sha256:645a22a8f92d2320e69c47605bc58eb555c329c008b86e746b24bf5c63a256a2`)
+- Release URL: https://github.com/MB3R-Lab/Sheaft/releases/tag/v0.2.4
+- Release manifest asset: `release-manifest.json` (`sha256:e358eb1a06f22e6880f9bb7fc51031fec6d42c2f950abb2fb66249dc6f35bfea`)
 - Compatibility manifest asset: `compatibility-manifest.json` (`sha256:d6a7b7413081eaa5771e67647908ac383316f661662ddd80e0a9c2269b7c050e`)
-- Default config pack asset: `sheaft-default-config-pack_0.2.3.tar.gz` (`sha256:0a0f7dd8f533e144f883ce2822a98e83d23201066ed55085e142a61b3953920b`)
-- Helm chart package asset: `sheaft-0.2.3.tgz` (`sha256:9d052869c4d6c2c28dd6267a7cbb7eca41cd056e7cc4d4b7b43bc89ca09f0edc`)
+- Default config pack asset: `sheaft-default-config-pack_0.2.4.tar.gz` (`sha256:2c2b7854c1f7310fcc3488b72c82514aebf8bbbe66b217d5a29e394b4757f4d0`)
+- Helm chart package asset: `sheaft-0.2.4.tgz` (`sha256:983a47c68df3ce4c7914dc98426c0d43f8af27ffee40d4b420dbb1162ce990f4`)
+- Benchmark quality report asset: `quality-report.json` (`sha256:f27c866c38dfae3b28a121944ace47ee6abfdaca965569fcb6bf227dcb0ea14b`)
+- OCI image: `ghcr.io/mb3r-lab/sheaft:v0.2.4` (`sha256:a434b5fb3f034a58455b20fa27a6976aa79d66340814f4cd81549b20bd8a5db8`)
+- OCI chart: `oci://ghcr.io/mb3r-lab/charts/sheaft:0.2.4` (`sha256:f12887b3a34eede2b3426c0aeea3313b8978c324620475be74ad670f4f24b0a1`)
 
 ## Audit Summary
 
@@ -188,9 +191,9 @@ Goal: make the Bering -> Sheaft workflow repeatable beyond a technical preview.
 
 ## Current Execution Note
 
-- Repository-side audit refreshed on 2026-05-01 for the `v0.2.3` technical-preview patch release and the product-capability backlog review.
+- Repository-side audit refreshed on 2026-05-31 for the `v0.2.4` technical-preview release and the product-capability backlog review.
 - GitHub issue [#71](https://github.com/MB3R-Lab/Sheaft/issues/71) should stay aligned with this file: latest release `v0.2.4`, active milestone `Post-v0.2.4 technical preview`, and the same trust-first priority order.
-- Release/package tracking was synchronized on 2026-05-30: release-tracking issue [#81](https://github.com/MB3R-Lab/Sheaft/issues/81) now records the shipped `v0.2.3` payload, and [#82](https://github.com/MB3R-Lab/Sheaft/issues/82) tracks the next cycle.
+- Release/package tracking was synchronized on 2026-05-31: release-tracking issue [#82](https://github.com/MB3R-Lab/Sheaft/issues/82) records the shipped `v0.2.4` payload, and [#83](https://github.com/MB3R-Lab/Sheaft/issues/83) tracks the next cycle.
 - R4.3 landed on 2026-05-30 as the first trustable-gate documentation step: `docs/assumptions-and-limitations.md` now contains the do-not-trust signal catalogue and detector field shape.
 - R4.1/R4.2 landed on 2026-05-31: `make benchmark-slice` now runs the fixed Sheaft-on-Bering benchmark and emits `quality-report.json`.
 - R9.1 landed on 2026-05-31: gate decisions now include machine-readable why reasons and CLI `--why` output.
