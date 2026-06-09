@@ -9,6 +9,10 @@
 [![Bering support](https://img.shields.io/badge/Bering-1.0%20%7C%201.1-blue)](https://github.com/MB3R-Lab/Sheaft/blob/main/docs/compatibility-matrix.md)
 [![Bering app](https://img.shields.io/badge/Bering%20app-v0.3.4-informational)](https://github.com/MB3R-Lab/Bering/releases/tag/v0.3.4)
 
+## Related MB3R repositories
+
+Sheaft is downstream of [Bering](https://github.com/MB3R-Lab/Bering), which owns discovery and publishes the model and snapshot artifacts Sheaft consumes. [mb3r-stack](https://github.com/MB3R-Lab/mb3r-stack) bundles compatible Bering and Sheaft releases for integration and deployment.
+
 Sheaft is a downstream resilience posture engine and CI/CD gate for model artifacts produced by Bering or another compatible upstream producer.
 
 ## What is Sheaft
