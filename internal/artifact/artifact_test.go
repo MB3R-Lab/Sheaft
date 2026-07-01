@@ -72,6 +72,12 @@ func TestLoad_SnapshotContract(t *testing.T) {
 					ID: "frontend:GET /health",
 					Metadata: SnapshotEndpointMetadata{
 						Weight: floatPtr(2),
+						Semantics: &model.EndpointSemantics{
+							PredicateMode:    model.EndpointPredicateModeImmediate,
+							MandatoryTargets: []string{"frontend"},
+							DependencyModes:  []string{string(model.EdgeKindSync)},
+							Source:           "fixture",
+						},
 					},
 				},
 			},
@@ -113,6 +119,9 @@ func TestLoad_SnapshotContract(t *testing.T) {
 	}
 	if loaded.Metadata.TopologyVersion != "topology-1" {
 		t.Fatalf("unexpected topology version: %s", loaded.Metadata.TopologyVersion)
+	}
+	if got, want := loaded.Snapshot.Discovery.Endpoints[0].Metadata.Semantics.PredicateMode, model.EndpointPredicateModeImmediate; got != want {
+		t.Fatalf("unexpected endpoint semantics mode: got=%s want=%s", got, want)
 	}
 }
 

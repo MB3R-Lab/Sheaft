@@ -2,6 +2,8 @@
 
 This document defines the richer dual-line analysis behavior used when Sheaft consumes Bering `1.1.0` artifacts or when a `1.0.0` artifact is analyzed with an opt-in Sheaft fault contract.
 
+The v1 major release claim and its formal mapping to `G`, `R`, `P`, `Phi`, `theta`, and `rho` are documented in [v1-major-semantics.md](v1-major-semantics.md).
+
 ## Version Scope
 
 - `io.mb3r.bering.model@1.1.0`
@@ -20,19 +22,21 @@ This document defines the richer dual-line analysis behavior used when Sheaft co
 For each profile and trial, Sheaft applies:
 
 1. deterministic profile seed resolution
-2. baseline service availability sampling from the selected sampling mode
-3. correlated service or placement outages plus shared-resource outages
-4. edge fail-stop faults
-5. edge and service partial degradations
-6. endpoint/path evaluation plus assertions and gate logic
-7. baseline diffs
+2. baseline service availability sampling from `theta` node live probabilities
+3. baseline path edge availability sampling from `rho` edge live probabilities
+4. correlated service or placement outages plus shared-resource outages
+5. edge fail-stop faults
+6. edge and service partial degradations
+7. endpoint/path evaluation plus assertions and gate logic
+8. baseline diffs
 
 ## Endpoint Forms
 
 ### Predicate-based endpoint
 
-- explicit predicates stay service-based
-- edge fail-stop and edge brownout faults do not mutate the success meaning of old explicit predicates
+- legacy explicit predicates (`all_of`, `any_of`, `k_of_n`) stay service-based
+- `edge_aware` predicates evaluate reachability from `entry_service` to every `mandatory_target` over the selected `edge_modes`
+- edge fail-stop and edge brownout faults do not mutate the success meaning of old explicit service predicates
 - advanced graph diagnostics can still be emitted alongside the predicate result
 
 ### Journey-based endpoint
@@ -45,6 +49,20 @@ For each profile and trial, Sheaft applies:
   - retry policy
   - timeout viability
   - injected or observed error/latency behavior
+
+### Producer semantic hints
+
+Bering `1.1.0` endpoints may carry `metadata.semantics` with `predicate_mode`, `mandatory_targets`, and `dependency_modes`. Sheaft maps `immediate_response` hints to an edge-aware predicate over blocking synchronous edges only. It maps `eventual_completion` hints to an edge-aware predicate over the declared dependency modes; async edges participate only when `dependency_modes` includes `async`. `external_predicate` keeps using the explicit predicate contract. When hints are absent, Sheaft keeps the documented fallback behavior instead of guessing business completion semantics from traces.
+
+## Baseline Reliability Parameters
+
+`analysis.reliability` and `profiles[].reliability` define the stochastic connectivity baseline:
+
+- `node_live_probability` sets homogeneous node live probability `theta`
+- `edge_live_probability` sets homogeneous edge live probability `rho`
+- `services` and `edges` provide per-ID overrides
+
+The older `failure_probability` field is still accepted as `1 - theta` when no explicit node reliability is configured. Edge reliability affects journey/path analysis and `edge_aware` predicates. Legacy explicit service predicates remain service-based by design.
 
 ## Legacy Discovery Rule
 

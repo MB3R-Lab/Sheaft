@@ -49,6 +49,73 @@ gate:
 	}
 }
 
+func TestLoadAnalysis_ReliabilityInheritsAndOverrides(t *testing.T) {
+	t.Parallel()
+
+	path := filepath.Join(t.TempDir(), "analysis.yaml")
+	writeConfigFile(t, path, `
+schema_version: "1.1"
+reliability:
+  node_live_probability: 0.97
+  edge_live_probability: 0.95
+  services:
+    checkout: 0.99
+  edges:
+    frontend|checkout|sync|true: 0.98
+profiles:
+  - name: steady
+  - name: stress
+    reliability:
+      edge_live_probability: 0.90
+      services:
+        payment: 0.80
+gate:
+  mode: warn
+  default_action: warn
+`)
+
+	cfg, err := LoadAnalysis(path)
+	if err != nil {
+		t.Fatalf("LoadAnalysis failed: %v", err)
+	}
+	if got := *cfg.Profiles[0].Reliability.NodeLiveProbability; got != 0.97 {
+		t.Fatalf("expected inherited node reliability, got %f", got)
+	}
+	if got := *cfg.Profiles[1].Reliability.EdgeLiveProbability; got != 0.90 {
+		t.Fatalf("expected profile edge reliability override, got %f", got)
+	}
+	if got := cfg.Profiles[1].Reliability.Services["checkout"]; got != 0.99 {
+		t.Fatalf("expected inherited service reliability, got %f", got)
+	}
+	if got := cfg.Profiles[1].Reliability.Services["payment"]; got != 0.80 {
+		t.Fatalf("expected profile service reliability override, got %f", got)
+	}
+	if cfg.Sources.Profiles["stress"].Reliability != ParameterSourceOverride {
+		t.Fatalf("expected stress reliability source override, got %s", cfg.Sources.Profiles["stress"].Reliability)
+	}
+}
+
+func TestLoadAnalysis_ReliabilityRejectsInvalidProbability(t *testing.T) {
+	t.Parallel()
+
+	path := filepath.Join(t.TempDir(), "analysis.yaml")
+	writeConfigFile(t, path, `
+schema_version: "1.1"
+profiles:
+  - name: bad
+    reliability:
+      edges:
+        frontend|checkout|sync|true: 1.1
+gate:
+  mode: warn
+  default_action: warn
+`)
+
+	if _, err := LoadAnalysis(path); err == nil {
+		t.Fatal("expected invalid reliability probability to fail")
+	}
+}
+
 func writeConfigFile(t *testing.T, path string, content string) {
 	t.Helper()
 	if err := os.WriteFile(path, []byte(content), 0o644); err != nil {

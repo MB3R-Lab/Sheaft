@@ -15,6 +15,7 @@ type ParameterSources struct {
 	Trials             ParameterSource                    `json:"-" yaml:"-"`
 	SamplingMode       ParameterSource                    `json:"-" yaml:"-"`
 	FailureProbability ParameterSource                    `json:"-" yaml:"-"`
+	Reliability        ParameterSource                    `json:"-" yaml:"-"`
 	FixedKFailures     ParameterSource                    `json:"-" yaml:"-"`
 	EndpointWeights    ParameterSource                    `json:"-" yaml:"-"`
 	Journeys           ParameterSource                    `json:"-" yaml:"-"`
@@ -28,6 +29,7 @@ type ProfileParameterSources struct {
 	Trials             ParameterSource `json:"-" yaml:"-"`
 	SamplingMode       ParameterSource `json:"-" yaml:"-"`
 	FailureProbability ParameterSource `json:"-" yaml:"-"`
+	Reliability        ParameterSource `json:"-" yaml:"-"`
 	FixedKFailures     ParameterSource `json:"-" yaml:"-"`
 	FaultProfile       ParameterSource `json:"-" yaml:"-"`
 	EndpointWeights    ParameterSource `json:"-" yaml:"-"`
@@ -40,6 +42,7 @@ func BuildAnalysisParameterSources(raw, normalized AnalysisConfig) ParameterSour
 		Trials:             pickSource(raw.Trials > 0, ParameterSourceOverride, ParameterSourceDefault),
 		SamplingMode:       pickSource(raw.SamplingMode != "", ParameterSourceOverride, ParameterSourceDefault),
 		FailureProbability: pickSource(raw.FailureProbability != 0, ParameterSourceOverride, ParameterSourceDefault),
+		Reliability:        pickSource(reliabilityConfigured(raw.Reliability), ParameterSourceOverride, ParameterSourceDefault),
 		FixedKFailures:     pickSource(raw.FixedKFailures != 0, ParameterSourceOverride, ParameterSourceDefault),
 		EndpointWeights:    pickSource(len(raw.EndpointWeights) > 0, ParameterSourceOverride, ParameterSourceDefault),
 		Journeys:           pickSource(raw.Journeys != "", ParameterSourceOverride, ParameterSourceDefault),
@@ -63,6 +66,7 @@ func BuildAnalysisParameterSources(raw, normalized AnalysisConfig) ParameterSour
 			Trials:             inheritedSource(rawProfile.Trials > 0, sources.Trials),
 			SamplingMode:       inheritedSource(rawProfile.SamplingMode != "", sources.SamplingMode),
 			FailureProbability: inheritedSource(rawProfile.FailureProbability != 0, sources.FailureProbability),
+			Reliability:        inheritedSource(reliabilityConfigured(rawProfile.Reliability), sources.Reliability),
 			FixedKFailures:     inheritedSource(rawProfile.FixedKFailures != 0, sources.FixedKFailures),
 			FaultProfile:       inheritedSource(rawProfile.FaultProfile != "", sources.FaultContract),
 			EndpointWeights:    inheritedSource(len(rawProfile.EndpointWeights) > 0, sources.EndpointWeights),
@@ -79,6 +83,7 @@ func BuildPolicyParameterSources(normalized AnalysisConfig) ParameterSources {
 		Trials:             ParameterSourcePolicy,
 		SamplingMode:       ParameterSourcePolicy,
 		FailureProbability: ParameterSourcePolicy,
+		Reliability:        ParameterSourceDefault,
 		FixedKFailures:     ParameterSourceDefault,
 		EndpointWeights:    ParameterSourceDefault,
 		Journeys:           ParameterSourceDefault,
@@ -93,6 +98,7 @@ func BuildPolicyParameterSources(normalized AnalysisConfig) ParameterSources {
 			Trials:             ParameterSourcePolicy,
 			SamplingMode:       ParameterSourcePolicy,
 			FailureProbability: ParameterSourcePolicy,
+			Reliability:        ParameterSourceDefault,
 			FixedKFailures:     ParameterSourceDefault,
 			FaultProfile:       ParameterSourceDefault,
 			EndpointWeights:    ParameterSourceDefault,
@@ -114,4 +120,11 @@ func inheritedSource(active bool, fallback ParameterSource) ParameterSource {
 		return ParameterSourceOverride
 	}
 	return fallback
+}
+
+func reliabilityConfigured(value ReliabilityConfig) bool {
+	return value.NodeLiveProbability != nil ||
+		value.EdgeLiveProbability != nil ||
+		len(value.Services) > 0 ||
+		len(value.Edges) > 0
 }

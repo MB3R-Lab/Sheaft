@@ -94,3 +94,51 @@ func TestValidate_V110RequiresEdgeIDs(t *testing.T) {
 		t.Fatalf("expected v1.1.0 model with edge ids to validate, got %v", err)
 	}
 }
+
+func TestValidate_EndpointSemantics(t *testing.T) {
+	t.Parallel()
+
+	confidence := 0.9
+	mdl := ResilienceModel{
+		Services: []Service{
+			{ID: "gateway", Name: "gateway", Replicas: 1},
+			{ID: "checkout", Name: "checkout", Replicas: 1},
+		},
+		Edges: []Edge{},
+		Endpoints: []Endpoint{{
+			ID:                  "gateway:GET /checkout",
+			EntryService:        "gateway",
+			SuccessPredicateRef: "catalog.checkout.immediate",
+			Metadata: &EndpointMetadata{
+				Semantics: &EndpointSemantics{
+					PredicateMode:    EndpointPredicateModeImmediate,
+					MandatoryTargets: []string{"checkout"},
+					DependencyModes:  []string{string(EdgeKindSync)},
+					Source:           "bering",
+					Confidence:       &confidence,
+				},
+			},
+		}},
+		Metadata: Metadata{
+			SourceType:   "bering",
+			SourceRef:    "artifact",
+			DiscoveredAt: "2026-03-22T00:00:00Z",
+			Confidence:   0.9,
+			Schema: Schema{
+				Name:    modelcontract.BeringModelV110Name,
+				Version: modelcontract.BeringModelV110Version,
+				URI:     modelcontract.BeringModelV110URI,
+				Digest:  modelcontract.BeringModelV110Digest,
+			},
+		},
+	}
+
+	if err := mdl.Validate(); err != nil {
+		t.Fatalf("expected endpoint semantics to validate, got %v", err)
+	}
+
+	mdl.Endpoints[0].Metadata.Semantics.MandatoryTargets = []string{"missing"}
+	if err := mdl.Validate(); err == nil {
+		t.Fatal("expected unknown mandatory target to fail validation")
+	}
+}

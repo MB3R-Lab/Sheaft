@@ -57,6 +57,10 @@ Dry-run validation:
 make release-dry-run APP_VERSION=0.0.0-dev
 ```
 
+For the v1 major line, dry-run validation also includes `validate-v1-release-docs`. That check keeps the v1 semantics documentation, schema pins, compatibility matrix, and checked-in examples aligned.
+
+V1 release notes must link to [docs/v1-major-semantics.md](docs/v1-major-semantics.md) and must avoid claims about automatic probability calibration, arbitrary non-product `P`, live chaos execution, or rich temporal workflow models unless those features have separate shipped evidence.
+
 `release-dry-run` includes the checked-in example smoke path. You can still run it separately when you only want to validate the first-run surface:
 
 ```bash

@@ -66,6 +66,8 @@ Unknown or mismatched contracts are rejected. There is no silent fallback for un
 
 The current `main` line has also been app-level synced against the published Bering `v0.3.4` release/package. That sync does not change the accepted Bering schema contract pins.
 
+The planned v1 major release claim is documented in [docs/v1-major-semantics.md](docs/v1-major-semantics.md): product-baseline `P_Node * P_Edge` stochastic connectivity over Bering topology `G`, replication map `R`, and endpoint predicates `Phi`, with explicit boundaries for what remains future work.
+
 ## Installation
 
 Preferred path for the current technical preview release:
@@ -186,7 +188,7 @@ Sheaft is intentionally downstream of Bering artifacts and schemas.
 ## Known limitations
 
 - `1.1.0` analysis is only as rich as the artifact metadata. Missing retry, timeout, latency, placement, or shared-resource metadata is reported as unavailable rather than guessed.
-- Legacy explicit predicates remain service-based even when `1.1.0` edge metadata is present. Edge faults and partial degradations affect journey-based analysis and diagnostics, not old explicit predicate semantics.
+- Legacy explicit predicates remain service-based even when `1.1.0` edge metadata is present. Edge faults and partial degradations affect journey-based analysis, diagnostics, and explicit `edge_aware` predicates, not old service predicate semantics.
 - This release does not introduce or stabilize an upstream discovery pipeline. Discovery remains upstream; the local `discover` helper is experimental only.
 - `serve` and its watch loop are suitable for technical-preview evaluation, not yet for a stable long-term operational contract.
 - The richer analysis surface is available, but its configuration ergonomics and operational conventions may still change in later `0.x` releases.
@@ -202,6 +204,7 @@ make build
 make test
 make lint
 make smoke-examples
+make oracle-suite
 make benchmark-slice
 ```
 
@@ -218,12 +221,14 @@ go vet ./...
 - [Install](docs/install.md)
 - [Compatibility](docs/compatibility.md)
 - [Compatibility Matrix](docs/compatibility-matrix.md)
+- [V1 Major Semantics](docs/v1-major-semantics.md)
 - [Release Assets](docs/release-assets.md)
 - [Architecture](docs/architecture.md)
 - [Methodology](docs/methodology.md)
 - [Configuration and Schemas](docs/configuration.md)
 - [CI Gate](docs/ci-gate.md)
 - [Fixed Benchmark Slice](docs/benchmark-slice.md)
+- [Synthetic Oracle Suite](docs/oracle-suite.md)
 - [Consumer Semantics v1](docs/consumer-semantics-v1.md)
 - [Consumer Semantics v2](docs/consumer-semantics-v2.md)
 - [Versioning](VERSIONING.md)

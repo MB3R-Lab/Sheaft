@@ -2,22 +2,25 @@
 
 Sheaft estimates resilience posture from externally produced topology artifacts.
 
+The major-release mapping from the paper notation (`G`, `R`, `P`, `Phi`, `theta`, `rho`) to the implementation is documented in [v1-major-semantics.md](v1-major-semantics.md).
+
 ## Simulation Model
 
 For each configured profile Sheaft:
 
 1. resolves endpoint success logic from richer predicates when available
 2. falls back to legacy path discovery or explicit journeys when richer predicates are absent
-3. samples service availability states according to the selected sampling mode
-4. applies optional fault-profile overlays after baseline sampling:
+3. samples service availability states according to the selected sampling mode and configured node live probabilities
+4. samples path edge availability from configured edge live probabilities when edge-aware artifacts are used
+5. applies optional fault-profile overlays after baseline sampling:
    - correlated service or placement outages
    - edge fail-stop faults
    - edge or service partial degradations
-5. evaluates endpoint success:
-   - explicit predicates remain service-availability based
-   - journey-based paths can depend on service liveness, edge liveness, retries, timeout viability, and brownout error rates
-6. estimates endpoint and path success over deterministic Monte Carlo trials
-7. computes unweighted and weighted aggregates plus advanced diagnostics
+6. evaluates endpoint success:
+   - legacy explicit predicates remain service-availability based
+   - `edge_aware` predicates and journey-based paths can depend on service liveness, edge liveness, retries, timeout viability, and brownout error rates
+7. estimates endpoint and path success over deterministic Monte Carlo trials
+8. computes unweighted and weighted aggregates plus advanced diagnostics
 
 ## Sampling Modes
 
@@ -27,6 +30,17 @@ For each configured profile Sheaft:
 
 When `1.1.0` placement buckets exist, `independent_replica` samples those buckets explicitly. A service remains effectively alive while at least one bucket still has a live replica.
 
+## Stochastic Connectivity Parameters
+
+The baseline stochastic connectivity model is controlled through `analysis.reliability` and `profiles[].reliability`:
+
+- `node_live_probability` is the default service live probability `theta`
+- `edge_live_probability` is the default edge live probability `rho`
+- `services` overrides `theta` for individual service IDs
+- `edges` overrides `rho` for individual stable edge IDs
+
+If `reliability.node_live_probability` is omitted, Sheaft preserves legacy behavior by using `1 - failure_probability` as the homogeneous node live probability. If `reliability.edge_live_probability` is omitted, edges are treated as perfectly live unless a fault contract kills or degrades them.
+
 ## Predicate Semantics
 
 Supported predicate types:
@@ -34,8 +48,9 @@ Supported predicate types:
 - `all_of`: every operand must succeed
 - `any_of`: at least one operand must succeed
 - `k_of_n`: at least `k` operands must succeed
+- `edge_aware`: every `mandatory_target` must be reachable from `entry_service` through live edges selected by `edge_modes`
 
-Operands can be service IDs or nested predicates.
+Operands for `all_of`, `any_of`, and `k_of_n` can be service IDs or nested predicates. These legacy predicates remain service-based. `edge_aware` uses path execution semantics: `sync` means blocking synchronous edges, and `async` is included only when listed explicitly.
 
 ## Legacy Fallback
 

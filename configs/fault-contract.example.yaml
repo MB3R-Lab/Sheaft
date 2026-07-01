@@ -19,7 +19,7 @@ profiles:
       - type: edge_partial_degradation
         selector:
           edge_ids:
-            - checkout|payment|sync|true
+            - checkout|payment|sync|true|protocol=http|operation=POST|route=%2Fcharge
         error_rate: 0.35
         latency_ms:
           p90: 5000
@@ -57,7 +57,7 @@ profiles:
       - type: edge_fail_stop
         selector:
           edge_ids:
-            - checkout|payment|sync|true
+            - checkout|payment|sync|true|protocol=http|operation=POST|route=%2Fcharge
 
   shared-db-outage:
     faults:

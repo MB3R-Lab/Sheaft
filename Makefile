@@ -31,8 +31,9 @@ endif
 DIST_DIR ?= dist
 PLATFORMS ?= linux/amd64,linux/arm64
 BENCHMARK_OUT_DIR ?= .tmp/benchmark-slice
+ORACLE_OUT_DIR ?= .tmp/oracle-suite
 
-.PHONY: help build test lint smoke-examples benchmark-slice docker-build docker-run-sample sample compatibility-manifest validate-compatibility-manifest validate-chart default-config-pack release-tools release-build image-dry-run image-local chart-package chart-publish-local release-manifest validate-release-manifest validate-release-assets release-dry-run release-local clean clean-dist
+.PHONY: help build test lint smoke-examples benchmark-slice oracle-suite docker-build docker-run-sample sample compatibility-manifest validate-compatibility-manifest validate-v1-release-docs validate-chart default-config-pack release-tools release-build image-dry-run image-local chart-package chart-publish-local release-manifest validate-release-manifest validate-release-assets release-dry-run release-local clean clean-dist
 
 ifeq ($(OS),Windows_NT)
 define MKDIR_P
@@ -59,9 +60,11 @@ help:
 	@echo "  lint                       Run go vet"
 	@echo "  smoke-examples             Build the CLI and smoke checked-in examples"
 	@echo "  benchmark-slice            Run the fixed Sheaft-on-Bering benchmark slice"
+	@echo "  oracle-suite               Run synthetic stochastic-connectivity oracle suite"
 	@echo "  docker-build               Build the local container image"
 	@echo "  docker-run-sample          Run sample pipeline in the container image"
 	@echo "  compatibility-manifest     Generate compatibility-manifest.json from strict contract pins"
+	@echo "  validate-v1-release-docs   Validate v1 docs/schema/example consistency"
 	@echo "  chart-package              Lint and package charts/sheaft into dist/charts"
 	@echo "  release-build              Produce binaries, archives, checksums, SBOM, and source archive with GoReleaser"
 	@echo "  release-manifest           Generate release-manifest.json from dist metadata"
@@ -90,6 +93,9 @@ endif
 benchmark-slice:
 	go run ./cmd/releasectl benchmark-slice --manifest benchmarks/fixed-slice/manifest.json --out-dir $(BENCHMARK_OUT_DIR)
 
+oracle-suite:
+	go run ./cmd/releasectl oracle-suite --out-dir $(ORACLE_OUT_DIR)
+
 docker-build:
 	docker build -f build/Dockerfile -t $(IMAGE) .
 
@@ -104,6 +110,9 @@ compatibility-manifest:
 
 validate-compatibility-manifest:
 	go run ./cmd/releasectl validate-compatibility-manifest --manifest compatibility-manifest.json
+
+validate-v1-release-docs:
+	go run ./cmd/releasectl validate-v1-release-docs --root .
 
 validate-chart:
 	go run ./cmd/releasectl validate-chart --chart-dir charts/sheaft
@@ -159,9 +168,9 @@ release-manifest:
 validate-release-manifest:
 	go run ./cmd/releasectl validate-release-manifest --manifest release-manifest.json
 
-validate-release-assets: validate-compatibility-manifest validate-chart validate-release-manifest
+validate-release-assets: validate-compatibility-manifest validate-v1-release-docs validate-chart validate-release-manifest
 
-release-dry-run: compatibility-manifest test smoke-examples benchmark-slice release-build default-config-pack image-dry-run chart-package release-manifest validate-release-assets
+release-dry-run: compatibility-manifest validate-v1-release-docs test smoke-examples oracle-suite benchmark-slice release-build default-config-pack image-dry-run chart-package release-manifest validate-release-assets
 
 release-local: compatibility-manifest test smoke-examples release-build
 ifeq ($(OS),Windows_NT)

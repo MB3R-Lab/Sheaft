@@ -33,6 +33,9 @@
       "minimum": 0,
       "maximum": 1
     },
+    "reliability": {
+      "$ref": "#/$defs/reliability"
+    },
     "fixed_k_failures": {
       "type": "integer",
       "minimum": 0
@@ -95,6 +98,9 @@
             "type": "number",
             "minimum": 0,
             "maximum": 1
+          },
+          "reliability": {
+            "$ref": "#/$defs/reliability"
           },
           "fixed_k_failures": {
             "type": "integer",
@@ -172,6 +178,39 @@
               "minimum": 0,
               "maximum": 1
             }
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "reliability": {
+      "type": "object",
+      "properties": {
+        "node_live_probability": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "edge_live_probability": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "services": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          }
+        },
+        "edges": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
           }
         }
       }

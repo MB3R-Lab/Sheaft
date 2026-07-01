@@ -94,6 +94,7 @@ type ProfileParameters struct {
 	Seed               IntParameter    `json:"seed"`
 	SamplingMode       StringParameter `json:"sampling_mode"`
 	FailureProbability FloatParameter  `json:"failure_probability"`
+	Reliability        ParameterStatus `json:"reliability"`
 	FixedKFailures     IntParameter    `json:"fixed_k_failures"`
 	FaultProfile       StringParameter `json:"fault_profile"`
 	EndpointWeights    ParameterStatus `json:"endpoint_weights"`
@@ -314,6 +315,13 @@ func buildParameters(cfg config.AnalysisConfig, meta artifact.Loaded) *Parameter
 				Value:  profile.FailureProbability,
 				Source: string(profileSources.FailureProbability),
 			},
+			Reliability: parameterStatus(
+				reliabilityConfigured(profile.Reliability),
+				profileSources.Reliability,
+				"",
+				reliabilityNames(profile.Reliability),
+				"using legacy failure_probability shorthand for node reliability and perfect-edge baseline",
+			),
 			FixedKFailures: IntParameter{
 				Value:  int64(profile.FixedKFailures),
 				Source: string(profileSources.FixedKFailures),
@@ -401,6 +409,30 @@ func parameterStatusForWeights(source config.ParameterSource, artifactSource str
 		Source:   string(config.ParameterSourceDefault),
 		Fallback: "no endpoint weights configured; weighted aggregate falls back to arithmetic mean",
 	}
+}
+
+func reliabilityConfigured(value config.ReliabilityConfig) bool {
+	return value.NodeLiveProbability != nil ||
+		value.EdgeLiveProbability != nil ||
+		len(value.Services) > 0 ||
+		len(value.Edges) > 0
+}
+
+func reliabilityNames(value config.ReliabilityConfig) []string {
+	names := []string{}
+	if value.NodeLiveProbability != nil {
+		names = append(names, "node_live_probability")
+	}
+	if value.EdgeLiveProbability != nil {
+		names = append(names, "edge_live_probability")
+	}
+	if len(value.Services) > 0 {
+		names = append(names, fmt.Sprintf("services:%d", len(value.Services)))
+	}
+	if len(value.Edges) > 0 {
+		names = append(names, fmt.Sprintf("edges:%d", len(value.Edges)))
+	}
+	return names
 }
 
 func baselineNames(baselines []config.BaselineRef) []string {

@@ -415,6 +415,43 @@ func TestRunProfiles_PredicateEvaluation(t *testing.T) {
 	}
 }
 
+func TestRunProfiles_RejectsEdgeAwarePredicate(t *testing.T) {
+	t.Parallel()
+
+	mdl := testModel(
+		[]model.Service{
+			{ID: "frontend", Name: "frontend", Replicas: 1},
+			{ID: "checkout", Name: "checkout", Replicas: 1},
+		},
+		[]model.Edge{
+			{From: "frontend", To: "checkout", Kind: model.EdgeKindSync, Blocking: true},
+		},
+		[]model.Endpoint{
+			{ID: "frontend:GET /checkout", EntryService: "frontend", SuccessPredicateRef: "catalog.checkout.edge"},
+		},
+	)
+	_, err := RunProfiles(mdl, AnalysisParams{
+		Seed: 3,
+		PredicateSet: map[string]predicates.Definition{
+			"catalog.checkout.edge": {
+				Type:             predicates.TypeEdgeAware,
+				EntryService:     "frontend",
+				MandatoryTargets: []string{"checkout"},
+				EdgeModes:        []string{predicates.EdgeModeSync},
+			},
+		},
+		Profiles: []ProfileParams{
+			{Name: "legacy", Trials: 10, SamplingMode: "independent_replica", FailureProbability: 0},
+		},
+	})
+	if err == nil {
+		t.Fatal("expected edge-aware predicate to require artifact path-aware analysis")
+	}
+	if !strings.Contains(err.Error(), "edge-aware predicate") {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
 func testModel(services []model.Service, edges []model.Edge, endpoints []model.Endpoint) model.ResilienceModel {
 	return model.ResilienceModel{
 		Services:  services,

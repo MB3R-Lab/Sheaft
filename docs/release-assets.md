@@ -24,7 +24,23 @@ The release asset `release-manifest.json` describes:
 - compatibility manifest reference
 - default config pack references
 
-The GitHub Release also publishes the fixed benchmark slice quality report as release evidence. It is generated during the release job from the same benchmark manifest shipped in the default config pack.
+The GitHub Release also publishes release evidence generated during the release job:
+
+- fixed benchmark slice `quality-report.json` from the benchmark manifest shipped in the default config pack
+- synthetic oracle suite `oracle-report.json` for closed-form stochastic-connectivity semantics
+
+## V1 Major Release Checklist
+
+Before publishing the v1 major line, `make release-dry-run` must pass with:
+
+- schema sync against the pinned Bering `1.0.0` and `1.1.0` contracts
+- `validate-v1-release-docs`, which checks the v1 semantics documentation, compatibility matrix, schema files, and checked-in examples
+- checked-in smoke examples
+- fixed benchmark slice
+- synthetic oracle suite
+- report/gate compatibility through the existing sample policy and analysis configs
+
+Release notes for v1 must point at [v1-major-semantics.md](v1-major-semantics.md) and must not claim automatic probability calibration, arbitrary non-product `P`, live chaos execution, or rich temporal workflow models.
 
 ## Why Two Manifests Exist
 
@@ -65,3 +81,4 @@ Use it when:
 - building a first Kubernetes values override
 - creating a baseline report bundle for tests
 - running the fixed benchmark slice manifest that ships with the default examples
+- running the synthetic oracle suite for release semantic evidence

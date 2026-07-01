@@ -4,6 +4,12 @@ trials: 12000
 sampling_mode: independent_replica
 failure_probability: 0.03
 
+reliability:
+  node_live_probability: 0.97
+  edge_live_probability: 0.995
+  services:
+    payment: 0.985
+
 fault_contract: configs/fault-contract.example.yaml
 
 baselines:

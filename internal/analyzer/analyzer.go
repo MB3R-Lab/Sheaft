@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/MB3R-Lab/Sheaft/internal/artifact"
@@ -11,6 +12,7 @@ import (
 	"github.com/MB3R-Lab/Sheaft/internal/faults"
 	"github.com/MB3R-Lab/Sheaft/internal/gate"
 	"github.com/MB3R-Lab/Sheaft/internal/journeys"
+	"github.com/MB3R-Lab/Sheaft/internal/model"
 	"github.com/MB3R-Lab/Sheaft/internal/predicates"
 	"github.com/MB3R-Lab/Sheaft/internal/report"
 	"github.com/MB3R-Lab/Sheaft/internal/simulation"
@@ -81,13 +83,23 @@ func AnalyzeLoaded(loaded artifact.Loaded, cfg config.AnalysisConfig, previous *
 		}
 	}
 
+	artifactReliability := reliabilityFromArtifact(loaded.Model)
 	profiles := make([]simulation.ProfileParams, 0, len(cfg.Profiles))
 	for _, profile := range cfg.Profiles {
+		reliability, usedArtifactReliability := mergeArtifactReliability(artifactReliability, profile.Reliability)
+		if usedArtifactReliability && cfg.Sources.Profiles != nil {
+			profileSources := cfg.Sources.Profiles[profile.Name]
+			if profileSources.Reliability == config.ParameterSourceDefault {
+				profileSources.Reliability = config.ParameterSourceExternal
+				cfg.Sources.Profiles[profile.Name] = profileSources
+			}
+		}
 		profiles = append(profiles, simulation.ProfileParams{
 			Name:               profile.Name,
 			Trials:             profile.Trials,
 			SamplingMode:       profile.SamplingMode,
 			FailureProbability: profile.FailureProbability,
+			Reliability:        reliability,
 			FixedKFailures:     profile.FixedKFailures,
 			FaultProfile:       profile.FaultProfile,
 			EndpointWeights:    profile.EndpointWeights,
@@ -166,6 +178,69 @@ func loadBaselines(refs []config.BaselineRef, cfg config.AnalysisConfig) (map[st
 	return out, nil
 }
 
+func reliabilityFromArtifact(mdl model.ResilienceModel) config.ReliabilityConfig {
+	out := config.ReliabilityConfig{
+		Services: map[string]float64{},
+		Edges:    map[string]float64{},
+	}
+	for _, service := range mdl.Services {
+		if service.Metadata == nil || service.Metadata.Reliability == nil || service.Metadata.Reliability.LiveProbability == nil {
+			continue
+		}
+		serviceID := strings.TrimSpace(service.ID)
+		if serviceID == "" {
+			continue
+		}
+		out.Services[serviceID] = *service.Metadata.Reliability.LiveProbability
+	}
+	for _, edge := range mdl.Edges {
+		if edge.Metadata == nil || edge.Metadata.Reliability == nil || edge.Metadata.Reliability.LiveProbability == nil {
+			continue
+		}
+		edgeID := strings.TrimSpace(edge.ID)
+		if edgeID == "" {
+			continue
+		}
+		out.Edges[edgeID] = *edge.Metadata.Reliability.LiveProbability
+	}
+	return out
+}
+
+func mergeArtifactReliability(artifactDefaults, profile config.ReliabilityConfig) (config.ReliabilityConfig, bool) {
+	out := config.ReliabilityConfig{
+		NodeLiveProbability: profile.NodeLiveProbability,
+		EdgeLiveProbability: profile.EdgeLiveProbability,
+		Services:            cloneFloatMap(profile.Services),
+		Edges:               cloneFloatMap(profile.Edges),
+	}
+	if out.Services == nil {
+		out.Services = map[string]float64{}
+	}
+	if out.Edges == nil {
+		out.Edges = map[string]float64{}
+	}
+	usedArtifact := false
+	if out.NodeLiveProbability == nil {
+		for serviceID, probability := range artifactDefaults.Services {
+			if _, ok := out.Services[serviceID]; ok {
+				continue
+			}
+			out.Services[serviceID] = probability
+			usedArtifact = true
+		}
+	}
+	if out.EdgeLiveProbability == nil {
+		for edgeID, probability := range artifactDefaults.Edges {
+			if _, ok := out.Edges[edgeID]; ok {
+				continue
+			}
+			out.Edges[edgeID] = probability
+			usedArtifact = true
+		}
+	}
+	return out, usedArtifact
+}
+
 func baselineKind(path string) (string, error) {
 	raw, err := os.ReadFile(path)
 	if err != nil {
@@ -187,6 +262,17 @@ func baselineKind(path string) (string, error) {
 		return "artifact", nil
 	}
 	return "", fmt.Errorf("baseline file is neither a Sheaft report nor a supported artifact")
+}
+
+func cloneFloatMap(values map[string]float64) map[string]float64 {
+	if len(values) == 0 {
+		return map[string]float64{}
+	}
+	out := make(map[string]float64, len(values))
+	for key, value := range values {
+		out[key] = value
+	}
+	return out
 }
 
 func mergePredicates(base map[string]predicates.Definition, overrides map[string]predicates.Definition) map[string]predicates.Definition {

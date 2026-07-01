@@ -34,6 +34,7 @@ type AnalysisConfig struct {
 	Trials             int                `json:"trials,omitempty" yaml:"trials,omitempty"`
 	SamplingMode       string             `json:"sampling_mode,omitempty" yaml:"sampling_mode,omitempty"`
 	FailureProbability float64            `json:"failure_probability,omitempty" yaml:"failure_probability,omitempty"`
+	Reliability        ReliabilityConfig  `json:"reliability,omitempty" yaml:"reliability,omitempty"`
 	FixedKFailures     int                `json:"fixed_k_failures,omitempty" yaml:"fixed_k_failures,omitempty"`
 	Journeys           string             `json:"journeys,omitempty" yaml:"journeys,omitempty"`
 	PredicateContract  string             `json:"predicate_contract,omitempty" yaml:"predicate_contract,omitempty"`
@@ -51,9 +52,17 @@ type Profile struct {
 	Trials             int                `json:"trials,omitempty" yaml:"trials,omitempty"`
 	SamplingMode       string             `json:"sampling_mode,omitempty" yaml:"sampling_mode,omitempty"`
 	FailureProbability float64            `json:"failure_probability,omitempty" yaml:"failure_probability,omitempty"`
+	Reliability        ReliabilityConfig  `json:"reliability,omitempty" yaml:"reliability,omitempty"`
 	FixedKFailures     int                `json:"fixed_k_failures,omitempty" yaml:"fixed_k_failures,omitempty"`
 	FaultProfile       string             `json:"fault_profile,omitempty" yaml:"fault_profile,omitempty"`
 	EndpointWeights    map[string]float64 `json:"endpoint_weights,omitempty" yaml:"endpoint_weights,omitempty"`
+}
+
+type ReliabilityConfig struct {
+	NodeLiveProbability *float64           `json:"node_live_probability,omitempty" yaml:"node_live_probability,omitempty"`
+	EdgeLiveProbability *float64           `json:"edge_live_probability,omitempty" yaml:"edge_live_probability,omitempty"`
+	Services            map[string]float64 `json:"services,omitempty" yaml:"services,omitempty"`
+	Edges               map[string]float64 `json:"edges,omitempty" yaml:"edges,omitempty"`
 }
 
 type BaselineRef struct {
@@ -186,6 +195,7 @@ func (c AnalysisConfig) Normalized() AnalysisConfig {
 				Trials:             out.Trials,
 				SamplingMode:       out.SamplingMode,
 				FailureProbability: out.FailureProbability,
+				Reliability:        normalizeProfileReliability(ReliabilityConfig{}, out.Reliability),
 				FixedKFailures:     out.FixedKFailures,
 				EndpointWeights:    cloneFloatMap(out.EndpointWeights),
 			},
@@ -201,6 +211,7 @@ func (c AnalysisConfig) Normalized() AnalysisConfig {
 		if out.Profiles[i].FailureProbability == 0 {
 			out.Profiles[i].FailureProbability = out.FailureProbability
 		}
+		out.Profiles[i].Reliability = normalizeProfileReliability(out.Reliability, out.Profiles[i].Reliability)
 		if out.Profiles[i].FixedKFailures == 0 {
 			out.Profiles[i].FixedKFailures = out.FixedKFailures
 		}
@@ -237,6 +248,9 @@ func (c AnalysisConfig) Validate() error {
 		if weight < 0 {
 			return fmt.Errorf("endpoint_weights[%s] must be >= 0", name)
 		}
+	}
+	if err := validateReliability("analysis.reliability", c.Reliability); err != nil {
+		return err
 	}
 	if err := c.ContractPolicy.Validate(); err != nil {
 		return err
@@ -275,6 +289,9 @@ func (c AnalysisConfig) Validate() error {
 			if weight < 0 {
 				return fmt.Errorf("profile %q endpoint_weights[%s] must be >= 0", profile.Name, endpoint)
 			}
+		}
+		if err := validateReliability(fmt.Sprintf("profile %q reliability", profile.Name), profile.Reliability); err != nil {
+			return err
 		}
 	}
 	if !isValidPolicyMode(c.Gate.Mode) {
@@ -481,6 +498,70 @@ func cloneFloatMap(in map[string]float64) map[string]float64 {
 	out := make(map[string]float64, len(in))
 	for _, key := range keys {
 		out[key] = in[key]
+	}
+	return out
+}
+
+func normalizeProfileReliability(parent, profile ReliabilityConfig) ReliabilityConfig {
+	out := ReliabilityConfig{
+		NodeLiveProbability: profile.NodeLiveProbability,
+		EdgeLiveProbability: profile.EdgeLiveProbability,
+		Services:            mergeFloatMaps(parent.Services, profile.Services),
+		Edges:               mergeFloatMaps(parent.Edges, profile.Edges),
+	}
+	if out.NodeLiveProbability == nil {
+		out.NodeLiveProbability = parent.NodeLiveProbability
+	}
+	if out.EdgeLiveProbability == nil {
+		out.EdgeLiveProbability = parent.EdgeLiveProbability
+	}
+	if out.Services == nil {
+		out.Services = map[string]float64{}
+	}
+	if out.Edges == nil {
+		out.Edges = map[string]float64{}
+	}
+	return out
+}
+
+func validateReliability(label string, value ReliabilityConfig) error {
+	for _, item := range []struct {
+		name  string
+		value *float64
+	}{
+		{"node_live_probability", value.NodeLiveProbability},
+		{"edge_live_probability", value.EdgeLiveProbability},
+	} {
+		if item.value != nil && (*item.value < 0 || *item.value > 1) {
+			return fmt.Errorf("%s.%s must be in range [0,1]", label, item.name)
+		}
+	}
+	for service, probability := range value.Services {
+		if strings.TrimSpace(service) == "" {
+			return fmt.Errorf("%s.services key cannot be empty", label)
+		}
+		if probability < 0 || probability > 1 {
+			return fmt.Errorf("%s.services[%s] must be in range [0,1]", label, service)
+		}
+	}
+	for edge, probability := range value.Edges {
+		if strings.TrimSpace(edge) == "" {
+			return fmt.Errorf("%s.edges key cannot be empty", label)
+		}
+		if probability < 0 || probability > 1 {
+			return fmt.Errorf("%s.edges[%s] must be in range [0,1]", label, edge)
+		}
+	}
+	return nil
+}
+
+func mergeFloatMaps(parent, override map[string]float64) map[string]float64 {
+	if len(parent) == 0 && len(override) == 0 {
+		return map[string]float64{}
+	}
+	out := cloneFloatMap(parent)
+	for key, value := range override {
+		out[key] = value
 	}
 	return out
 }

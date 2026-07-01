@@ -1,11 +1,15 @@
 package analyzer
 
 import (
+	"math"
 	"path/filepath"
 	"runtime"
 	"testing"
 
+	"github.com/MB3R-Lab/Sheaft/internal/artifact"
 	"github.com/MB3R-Lab/Sheaft/internal/config"
+	"github.com/MB3R-Lab/Sheaft/internal/model"
+	"github.com/MB3R-Lab/Sheaft/internal/modelcontract"
 )
 
 func TestAnalyzeFile_BaselineArtifactComparisonAcrossContractLines(t *testing.T) {
@@ -58,6 +62,95 @@ func TestAnalyzeFile_BaselineArtifactComparisonAcrossContractLines(t *testing.T)
 	}
 	if !foundNonComparable {
 		t.Fatalf("expected advanced metrics missing on the v1.0.0 baseline to be marked non-comparable, got %+v", diff.Profiles[0].AdvancedMetrics)
+	}
+}
+
+func TestAnalyzeLoaded_UsesArtifactReliabilityAsProfileDefaults(t *testing.T) {
+	t.Parallel()
+
+	gatewayLive := 1.0
+	checkoutLive := 0.5
+	edgeLive := 0.8
+	loaded := artifact.Loaded{
+		Metadata: artifact.Metadata{
+			Kind: modelcontract.KindModel,
+			Contract: modelcontract.SupportedContract{
+				Name:    modelcontract.BeringModelV110Name,
+				Version: modelcontract.BeringModelV110Version,
+				URI:     modelcontract.BeringModelV110URI,
+				Digest:  modelcontract.BeringModelV110Digest,
+				Kind:    modelcontract.KindModel,
+			},
+		},
+		Model: model.ResilienceModel{
+			Services: []model.Service{
+				{
+					ID:       "gateway",
+					Name:     "gateway",
+					Replicas: 1,
+					Metadata: &model.ServiceMetadata{
+						Reliability: &model.ReliabilityEvidence{LiveProbability: &gatewayLive},
+					},
+				},
+				{
+					ID:       "checkout",
+					Name:     "checkout",
+					Replicas: 1,
+					Metadata: &model.ServiceMetadata{
+						Reliability: &model.ReliabilityEvidence{LiveProbability: &checkoutLive},
+					},
+				},
+			},
+			Edges: []model.Edge{
+				{
+					ID:       "gateway|checkout|sync|true",
+					From:     "gateway",
+					To:       "checkout",
+					Kind:     model.EdgeKindSync,
+					Blocking: true,
+					Metadata: &model.EdgeMetadata{
+						Reliability: &model.ReliabilityEvidence{LiveProbability: &edgeLive},
+					},
+				},
+			},
+			Endpoints: []model.Endpoint{
+				{ID: "gateway:GET /checkout", EntryService: "gateway", SuccessPredicateRef: "gateway:GET /checkout"},
+			},
+			Metadata: model.Metadata{
+				SourceType:   "bering",
+				SourceRef:    "test",
+				DiscoveredAt: "2026-07-01T00:00:00Z",
+				Confidence:   1,
+				Schema: model.Schema{
+					Name:    modelcontract.BeringModelV110Name,
+					Version: modelcontract.BeringModelV110Version,
+					URI:     modelcontract.BeringModelV110URI,
+					Digest:  modelcontract.BeringModelV110Digest,
+				},
+			},
+		},
+	}
+
+	result, err := AnalyzeLoaded(loaded, config.AnalysisConfig{
+		SchemaVersion: config.AnalysisSchemaVersionV110,
+		Seed:          7,
+		Trials:        20000,
+		Profiles: []config.Profile{
+			{Name: "steady", Trials: 20000, SamplingMode: config.SamplingModeIndependentReplica},
+		},
+		Gate: config.GateConfig{
+			Mode:          config.ModeWarn,
+			DefaultAction: config.ModeWarn,
+		},
+	}, nil)
+	if err != nil {
+		t.Fatalf("AnalyzeLoaded failed: %v", err)
+	}
+
+	got := result.Simulation.Profiles[0].EndpointAvailability["gateway:GET /checkout"]
+	want := gatewayLive * checkoutLive * edgeLive
+	if math.Abs(got-want) > 0.02 {
+		t.Fatalf("artifact reliability availability mismatch: got=%f want=%f", got, want)
 	}
 }
 

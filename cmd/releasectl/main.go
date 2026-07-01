@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 
 	"github.com/MB3R-Lab/Sheaft/internal/benchmark"
+	"github.com/MB3R-Lab/Sheaft/internal/oracle"
 	"github.com/MB3R-Lab/Sheaft/internal/release"
 )
 
@@ -34,8 +35,12 @@ func main() {
 		runValidateReleaseManifest(os.Args[2:])
 	case "validate-chart":
 		runValidateChart(os.Args[2:])
+	case "validate-v1-release-docs":
+		runValidateV1ReleaseDocs(os.Args[2:])
 	case "benchmark-slice":
 		runBenchmarkSlice(os.Args[2:])
+	case "oracle-suite":
+		runOracleSuite(os.Args[2:])
 	default:
 		usage()
 		os.Exit(1)
@@ -52,7 +57,9 @@ func usage() {
 	fmt.Fprintln(os.Stderr, "  releasectl release-manifest [--dist dist] [--out release-manifest.json]")
 	fmt.Fprintln(os.Stderr, "  releasectl validate-release-manifest [--manifest release-manifest.json]")
 	fmt.Fprintln(os.Stderr, "  releasectl validate-chart [--chart-dir charts/sheaft]")
+	fmt.Fprintln(os.Stderr, "  releasectl validate-v1-release-docs [--root .]")
 	fmt.Fprintln(os.Stderr, "  releasectl benchmark-slice [--manifest benchmarks/fixed-slice/manifest.json] [--out-dir .tmp/benchmark-slice]")
+	fmt.Fprintln(os.Stderr, "  releasectl oracle-suite [--out-dir .tmp/oracle-suite]")
 }
 
 func runCompatibilityManifest(args []string) {
@@ -201,6 +208,16 @@ func runValidateChart(args []string) {
 	}
 }
 
+func runValidateV1ReleaseDocs(args []string) {
+	fs := flag.NewFlagSet("validate-v1-release-docs", flag.ExitOnError)
+	root := fs.String("root", ".", "Repository root")
+	_ = fs.Parse(args)
+
+	if err := release.ValidateV1ReleaseDocs(*root); err != nil {
+		fail(err)
+	}
+}
+
 func runBenchmarkSlice(args []string) {
 	fs := flag.NewFlagSet("benchmark-slice", flag.ExitOnError)
 	manifestPath := fs.String("manifest", benchmark.DefaultManifestPath, "Path to benchmark manifest")
@@ -220,6 +237,27 @@ func runBenchmarkSlice(args []string) {
 	fmt.Printf("report: %s\n", quality.Outputs.Report)
 	fmt.Printf("quality report: %s\n", quality.Outputs.QualityReport)
 	if quality.Status != "pass" {
+		os.Exit(1)
+	}
+}
+
+func runOracleSuite(args []string) {
+	fs := flag.NewFlagSet("oracle-suite", flag.ExitOnError)
+	outDir := fs.String("out-dir", oracle.DefaultOutputDir, "Path to oracle output directory")
+	_ = fs.Parse(args)
+
+	rep, err := oracle.Run(oracle.RunOptions{
+		RepositoryRoot: ".",
+		OutputDir:      *outDir,
+	})
+	if err != nil {
+		fail(err)
+	}
+	fmt.Printf("oracle suite: %s\n", rep.SuiteName)
+	fmt.Printf("status: %s\n", rep.Status)
+	fmt.Printf("report: %s\n", rep.Outputs.Report)
+	fmt.Printf("summary: %s\n", rep.Outputs.Summary)
+	if rep.Status != "pass" {
 		os.Exit(1)
 	}
 }

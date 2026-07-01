@@ -13,14 +13,23 @@ const (
 	TypeAllOf     = "all_of"
 	TypeAnyOf     = "any_of"
 	TypeKOfN      = "k_of_n"
+	TypeEdgeAware = "edge_aware"
+)
+
+const (
+	EdgeModeSync  = "sync"
+	EdgeModeAsync = "async"
 )
 
 type Definition struct {
-	Type        string       `json:"type" yaml:"type"`
-	Description string       `json:"description,omitempty" yaml:"description,omitempty"`
-	Services    []string     `json:"services,omitempty" yaml:"services,omitempty"`
-	Children    []Definition `json:"children,omitempty" yaml:"children,omitempty"`
-	K           int          `json:"k,omitempty" yaml:"k,omitempty"`
+	Type             string       `json:"type" yaml:"type"`
+	Description      string       `json:"description,omitempty" yaml:"description,omitempty"`
+	Services         []string     `json:"services,omitempty" yaml:"services,omitempty"`
+	Children         []Definition `json:"children,omitempty" yaml:"children,omitempty"`
+	K                int          `json:"k,omitempty" yaml:"k,omitempty"`
+	EntryService     string       `json:"entry_service,omitempty" yaml:"entry_service,omitempty"`
+	MandatoryTargets []string     `json:"mandatory_targets,omitempty" yaml:"mandatory_targets,omitempty"`
+	EdgeModes        []string     `json:"edge_modes,omitempty" yaml:"edge_modes,omitempty"`
 }
 
 type Set map[string]Definition
@@ -94,6 +103,19 @@ func (d Definition) Validate() error {
 		if d.K > operandCount {
 			return fmt.Errorf("k_of_n k=%d exceeds operand count %d", d.K, operandCount)
 		}
+	case TypeEdgeAware:
+		if strings.TrimSpace(d.EntryService) == "" {
+			return errors.New("edge_aware requires entry_service")
+		}
+		if len(d.MandatoryTargets) == 0 {
+			return errors.New("edge_aware requires at least one mandatory_target")
+		}
+		if len(d.EdgeModes) == 0 {
+			return errors.New("edge_aware requires at least one edge_mode")
+		}
+		if operandCount > 0 || d.K != 0 {
+			return errors.New("edge_aware cannot define services, children, or k")
+		}
 	default:
 		return fmt.Errorf("unsupported predicate type %q", d.Type)
 	}
@@ -106,6 +128,18 @@ func (d Definition) Validate() error {
 	for idx, child := range d.Children {
 		if err := child.Validate(); err != nil {
 			return fmt.Errorf("children[%d]: %w", idx, err)
+		}
+	}
+	for idx, target := range d.MandatoryTargets {
+		if strings.TrimSpace(target) == "" {
+			return fmt.Errorf("mandatory_targets[%d] cannot be empty", idx)
+		}
+	}
+	for idx, mode := range d.EdgeModes {
+		switch strings.TrimSpace(mode) {
+		case EdgeModeSync, EdgeModeAsync:
+		default:
+			return fmt.Errorf("edge_modes[%d] must be %q or %q", idx, EdgeModeSync, EdgeModeAsync)
 		}
 	}
 	return nil

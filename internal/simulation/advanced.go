@@ -17,6 +17,7 @@ import (
 const (
 	endpointModePredicate = "predicate"
 	endpointModeJourney   = "journey"
+	endpointModeEdgeAware = "edge_aware"
 
 	advancedProvenanceArtifact            = "artifact"
 	advancedProvenanceExternalContract    = "external_contract"
@@ -69,6 +70,7 @@ type endpointPlan struct {
 	Mode            string
 	Predicate       predicates.Definition
 	Paths           []journeyPath
+	TargetPaths     map[string][]journeyPath
 	DiagnosticPaths []journeyPath
 }
 
@@ -104,8 +106,13 @@ type pathStatic struct {
 	edgeTimeoutMismatch  map[string]MetricInt
 }
 
+type edgeStep struct {
+	To     string
+	EdgeID string
+}
+
 func RunArtifactProfiles(loaded artifact.Loaded, params AnalysisParams) (AnalysisOutput, error) {
-	if loaded.Metadata.Contract.Version == "1.0.0" && params.FaultContract == nil {
+	if loaded.Metadata.Contract.Version == "1.0.0" && params.FaultContract == nil && !requiresAdvancedArtifactRunner(loaded, params) {
 		return RunProfiles(loaded.Model, params)
 	}
 
@@ -142,6 +149,9 @@ func RunArtifactProfiles(loaded artifact.Loaded, params AnalysisParams) (Analysi
 }
 
 func runAdvancedProfile(ctx advancedContext, profile ProfileParams, defaultWeights map[string]float64, faultSpec *faults.Profile) (ProfileOutput, error) {
+	if err := validateAdvancedReliability(ctx, profile); err != nil {
+		return ProfileOutput{}, err
+	}
 	rng := rand.New(rand.NewSource(profile.Seed))
 	faultState := buildProfileFaultState(ctx, faultSpec)
 	staticByPath := make(map[string]pathStatic)
@@ -168,13 +178,13 @@ func runAdvancedProfile(ctx advancedContext, profile ProfileParams, defaultWeigh
 			return ProfileOutput{}, err
 		}
 		for _, endpoint := range ctx.endpoints {
-			diagnosticResults := make([]bool, 0, len(endpoint.DiagnosticPaths))
+			diagnosticResults := make(map[string]bool, len(endpoint.DiagnosticPaths))
 			for _, path := range endpoint.DiagnosticPaths {
 				ok := executePath(ctx, state, faultState, path, rng)
 				if ok {
 					pathSuccess[path.ID]++
 				}
-				diagnosticResults = append(diagnosticResults, ok)
+				diagnosticResults[path.ID] = ok
 			}
 
 			switch endpoint.Mode {
@@ -191,6 +201,10 @@ func runAdvancedProfile(ctx advancedContext, profile ProfileParams, defaultWeigh
 					}
 				}
 				if success {
+					endpointSuccess[endpoint.ID]++
+				}
+			case endpointModeEdgeAware:
+				if edgeAwareEndpointSuccess(endpoint, diagnosticResults) {
 					endpointSuccess[endpoint.ID]++
 				}
 			default:
@@ -476,6 +490,7 @@ func sampleAdvancedState(ctx advancedContext, profile ProfileParams, rng *rand.R
 	case config.SamplingModeIndependentReplica:
 		for _, serviceID := range ctx.serviceIDs {
 			svc := ctx.services[serviceID]
+			liveProbability := serviceLiveProbability(profile, serviceID)
 			for _, bucket := range svc.Buckets {
 				live := false
 				effective := bucket.Replicas
@@ -483,7 +498,7 @@ func sampleAdvancedState(ctx advancedContext, profile ProfileParams, rng *rand.R
 					effective = 1
 				}
 				for replica := 0; replica < effective; replica++ {
-					if rng.Float64() > profile.FailureProbability {
+					if rng.Float64() < liveProbability {
 						live = true
 						break
 					}
@@ -493,7 +508,7 @@ func sampleAdvancedState(ctx advancedContext, profile ProfileParams, rng *rand.R
 		}
 	case config.SamplingModeIndependentService:
 		for _, serviceID := range ctx.serviceIDs {
-			alive := rng.Float64() > profile.FailureProbability
+			alive := rng.Float64() < serviceLiveProbability(profile, serviceID)
 			for _, bucket := range ctx.services[serviceID].Buckets {
 				state.bucketAlive[bucket.ID] = alive && bucket.Replicas != 0
 			}
@@ -534,7 +549,7 @@ func sampleAdvancedState(ctx advancedContext, profile ProfileParams, rng *rand.R
 	}
 	for _, edgeID := range ctx.edgeIDs {
 		_, dead := faultState.hardEdgeKill[edgeID]
-		state.edgeAlive[edgeID] = !dead
+		state.edgeAlive[edgeID] = !dead && rng.Float64() < edgeLiveProbability(profile, edgeID)
 	}
 	return state, nil
 }
@@ -930,7 +945,7 @@ func buildProfileFaultState(ctx advancedContext, profile *faults.Profile) profil
 }
 
 func endpointImpacted(endpoint endpointPlan, impactedServices map[string]struct{}, hardEdges map[string]struct{}) bool {
-	if endpoint.Mode == endpointModePredicate {
+	if endpoint.Mode == endpointModePredicate || endpoint.Mode == endpointModeEdgeAware {
 		for _, serviceID := range predicateServices(endpoint.Predicate) {
 			if _, ok := impactedServices[serviceID]; ok {
 				return true
@@ -954,6 +969,12 @@ func endpointImpacted(endpoint endpointPlan, impactedServices map[string]struct{
 
 func predicateServices(def predicates.Definition) []string {
 	out := make([]string, 0, len(def.Services))
+	if def.Type == predicates.TypeEdgeAware {
+		out = append(out, def.EntryService)
+		out = append(out, def.MandatoryTargets...)
+		slices.Sort(out)
+		return slices.Compact(out)
+	}
 	out = append(out, def.Services...)
 	for _, child := range def.Children {
 		out = append(out, predicateServices(child)...)
@@ -1062,7 +1083,6 @@ func buildAdvancedContext(loaded artifact.Loaded, predicateSet map[string]predic
 	}
 	slices.Sort(ctx.serviceIDs)
 
-	edgeLookup := map[string]map[string]string{}
 	for _, edge := range loaded.Model.Edges {
 		edgeID := edge.ID
 		if strings.TrimSpace(edgeID) == "" {
@@ -1092,12 +1112,6 @@ func buildAdvancedContext(loaded artifact.Loaded, predicateSet map[string]predic
 			Resilience: resilience,
 			Observed:   observed,
 		}
-		if _, ok := edgeLookup[edge.From]; !ok {
-			edgeLookup[edge.From] = map[string]string{}
-		}
-		if existing, ok := edgeLookup[edge.From][edge.To]; !ok || strings.Compare(edgeID, existing) < 0 {
-			edgeLookup[edge.From][edge.To] = edgeID
-		}
 		ctx.edgeIDs = append(ctx.edgeIDs, edgeID)
 	}
 	slices.Sort(ctx.edgeIDs)
@@ -1114,25 +1128,17 @@ func buildAdvancedContext(loaded artifact.Loaded, predicateSet map[string]predic
 		mergedPredicates[key] = value
 	}
 
-	adj := map[string][]string{}
-	for _, edgeID := range ctx.edgeIDs {
-		edge := ctx.edges[edgeID]
-		if !edge.Blocking || edge.Kind == model.EdgeKindAsync {
-			continue
-		}
-		adj[edge.From] = append(adj[edge.From], edge.To)
-	}
-	for serviceID := range adj {
-		slices.Sort(adj[serviceID])
-	}
+	syncAdj := buildEdgeAdjacency(ctx, []string{predicates.EdgeModeSync})
+	syncServiceAdj := serviceAdjacency(syncAdj)
+	syncEdgeLookup := edgeLookupFromAdjacency(syncAdj)
 
 	for _, ep := range loaded.Model.Endpoints {
 		record := endpointRecords[ep.ID]
 		paths := journeyOverrides[ep.ID]
 		if len(paths) == 0 {
-			paths = discoverJourneys(ep.EntryService, adj)
+			paths = discoverJourneys(ep.EntryService, syncServiceAdj)
 		}
-		journeyPaths, err := mapJourneyPaths(paths, edgeLookup)
+		journeyPaths, err := mapJourneyPaths(paths, syncEdgeLookup)
 		if err != nil {
 			return advancedContext{}, fmt.Errorf("endpoint %s: %w", ep.ID, err)
 		}
@@ -1145,19 +1151,51 @@ func buildAdvancedContext(loaded artifact.Loaded, predicateSet map[string]predic
 			DiagnosticPaths: journeyPaths,
 		}
 		switch {
+		case hasSemanticPredicate(ep):
+			def, _ := endpointSemanticPredicate(ep)
+			targetPaths, diagnosticPaths, err := buildEdgeAwarePaths(ctx, def, serviceSet)
+			if err != nil {
+				return advancedContext{}, fmt.Errorf("endpoint %s: %w", ep.ID, err)
+			}
+			plan.Mode = endpointModeEdgeAware
+			plan.Predicate = def
+			plan.TargetPaths = targetPaths
+			plan.DiagnosticPaths = diagnosticPaths
 		case ep.SuccessPredicate != nil:
 			if err := validatePredicateServices(*ep.SuccessPredicate, serviceSet); err != nil {
 				return advancedContext{}, fmt.Errorf("endpoint %s: %w", ep.ID, err)
 			}
-			plan.Mode = endpointModePredicate
-			plan.Predicate = *ep.SuccessPredicate
+			if ep.SuccessPredicate.Type == predicates.TypeEdgeAware {
+				targetPaths, diagnosticPaths, err := buildEdgeAwarePaths(ctx, *ep.SuccessPredicate, serviceSet)
+				if err != nil {
+					return advancedContext{}, fmt.Errorf("endpoint %s: %w", ep.ID, err)
+				}
+				plan.Mode = endpointModeEdgeAware
+				plan.Predicate = *ep.SuccessPredicate
+				plan.TargetPaths = targetPaths
+				plan.DiagnosticPaths = diagnosticPaths
+			} else {
+				plan.Mode = endpointModePredicate
+				plan.Predicate = *ep.SuccessPredicate
+			}
 		case hasPredicate(mergedPredicates, ep.SuccessPredicateRef):
 			def := mergedPredicates[ep.SuccessPredicateRef]
 			if err := validatePredicateServices(def, serviceSet); err != nil {
 				return advancedContext{}, fmt.Errorf("endpoint %s: %w", ep.ID, err)
 			}
-			plan.Mode = endpointModePredicate
-			plan.Predicate = def
+			if def.Type == predicates.TypeEdgeAware {
+				targetPaths, diagnosticPaths, err := buildEdgeAwarePaths(ctx, def, serviceSet)
+				if err != nil {
+					return advancedContext{}, fmt.Errorf("endpoint %s: %w", ep.ID, err)
+				}
+				plan.Mode = endpointModeEdgeAware
+				plan.Predicate = def
+				plan.TargetPaths = targetPaths
+				plan.DiagnosticPaths = diagnosticPaths
+			} else {
+				plan.Mode = endpointModePredicate
+				plan.Predicate = def
+			}
 		default:
 			plan.Mode = endpointModeJourney
 			plan.Paths = journeyPaths
@@ -1198,6 +1236,257 @@ func mapJourneyPaths(paths [][]string, edgeLookup map[string]map[string]string) 
 		})
 	}
 	return out, nil
+}
+
+func hasSemanticPredicate(ep model.Endpoint) bool {
+	_, ok := endpointSemanticPredicate(ep)
+	return ok
+}
+
+func endpointSemanticPredicate(ep model.Endpoint) (predicates.Definition, bool) {
+	if ep.Metadata == nil || ep.Metadata.Semantics == nil {
+		return predicates.Definition{}, false
+	}
+	semantics := ep.Metadata.Semantics
+	switch strings.TrimSpace(semantics.PredicateMode) {
+	case model.EndpointPredicateModeImmediate, model.EndpointPredicateModeEventual:
+		if len(semantics.MandatoryTargets) == 0 {
+			return predicates.Definition{}, false
+		}
+		return predicates.Definition{
+			Type:             predicates.TypeEdgeAware,
+			EntryService:     ep.EntryService,
+			MandatoryTargets: slices.Clone(semantics.MandatoryTargets),
+			EdgeModes:        edgeModesFromSemantics(*semantics),
+		}, true
+	default:
+		return predicates.Definition{}, false
+	}
+}
+
+func edgeModesFromSemantics(semantics model.EndpointSemantics) []string {
+	if strings.TrimSpace(semantics.PredicateMode) == model.EndpointPredicateModeImmediate {
+		return []string{predicates.EdgeModeSync}
+	}
+	if len(semantics.DependencyModes) == 0 {
+		return []string{predicates.EdgeModeSync}
+	}
+	return normalizeEdgeModes(semantics.DependencyModes)
+}
+
+func buildEdgeAwarePaths(ctx advancedContext, def predicates.Definition, serviceSet map[string]struct{}) (map[string][]journeyPath, []journeyPath, error) {
+	if err := def.Validate(); err != nil {
+		return nil, nil, err
+	}
+	if err := validatePredicateServices(def, serviceSet); err != nil {
+		return nil, nil, err
+	}
+	adj := buildEdgeAdjacency(ctx, def.EdgeModes)
+	targetPaths := make(map[string][]journeyPath, len(def.MandatoryTargets))
+	diagnostic := make([]journeyPath, 0)
+	seen := map[string]struct{}{}
+	for _, target := range sortedUnique(def.MandatoryTargets) {
+		paths := discoverJourneyPathsToTarget(def.EntryService, target, adj)
+		targetPaths[target] = paths
+		for _, path := range paths {
+			if _, ok := seen[path.ID]; ok {
+				continue
+			}
+			seen[path.ID] = struct{}{}
+			diagnostic = append(diagnostic, path)
+		}
+	}
+	slices.SortFunc(diagnostic, func(a, b journeyPath) int {
+		return strings.Compare(a.ID, b.ID)
+	})
+	return targetPaths, diagnostic, nil
+}
+
+func buildEdgeAdjacency(ctx advancedContext, modes []string) map[string][]edgeStep {
+	modeSet := make(map[string]struct{}, len(modes))
+	for _, mode := range normalizeEdgeModes(modes) {
+		modeSet[mode] = struct{}{}
+	}
+	adj := map[string][]edgeStep{}
+	for _, edgeID := range ctx.edgeIDs {
+		edge := ctx.edges[edgeID]
+		if !edgeAllowedByModes(edge, modeSet) {
+			continue
+		}
+		adj[edge.From] = append(adj[edge.From], edgeStep{To: edge.To, EdgeID: edgeID})
+	}
+	for serviceID := range adj {
+		slices.SortFunc(adj[serviceID], func(a, b edgeStep) int {
+			if cmp := strings.Compare(a.To, b.To); cmp != 0 {
+				return cmp
+			}
+			return strings.Compare(a.EdgeID, b.EdgeID)
+		})
+	}
+	return adj
+}
+
+func normalizeEdgeModes(modes []string) []string {
+	seen := map[string]struct{}{}
+	for _, mode := range modes {
+		switch strings.TrimSpace(mode) {
+		case predicates.EdgeModeSync:
+			seen[predicates.EdgeModeSync] = struct{}{}
+		case predicates.EdgeModeAsync:
+			seen[predicates.EdgeModeAsync] = struct{}{}
+		}
+	}
+	out := make([]string, 0, len(seen))
+	if _, ok := seen[predicates.EdgeModeSync]; ok {
+		out = append(out, predicates.EdgeModeSync)
+	}
+	if _, ok := seen[predicates.EdgeModeAsync]; ok {
+		out = append(out, predicates.EdgeModeAsync)
+	}
+	return out
+}
+
+func edgeAllowedByModes(edge normalizedEdge, modes map[string]struct{}) bool {
+	if _, ok := modes[predicates.EdgeModeSync]; ok && edge.Kind == model.EdgeKindSync && edge.Blocking {
+		return true
+	}
+	if _, ok := modes[predicates.EdgeModeAsync]; ok && edge.Kind == model.EdgeKindAsync {
+		return true
+	}
+	return false
+}
+
+func serviceAdjacency(adj map[string][]edgeStep) map[string][]string {
+	out := map[string][]string{}
+	for serviceID, steps := range adj {
+		seen := map[string]struct{}{}
+		for _, step := range steps {
+			if _, ok := seen[step.To]; ok {
+				continue
+			}
+			seen[step.To] = struct{}{}
+			out[serviceID] = append(out[serviceID], step.To)
+		}
+		slices.Sort(out[serviceID])
+	}
+	return out
+}
+
+func edgeLookupFromAdjacency(adj map[string][]edgeStep) map[string]map[string]string {
+	out := map[string]map[string]string{}
+	for from, steps := range adj {
+		if _, ok := out[from]; !ok {
+			out[from] = map[string]string{}
+		}
+		for _, step := range steps {
+			if existing, ok := out[from][step.To]; !ok || strings.Compare(step.EdgeID, existing) < 0 {
+				out[from][step.To] = step.EdgeID
+			}
+		}
+	}
+	return out
+}
+
+func discoverJourneyPathsToTarget(entry, target string, adjacency map[string][]edgeStep) []journeyPath {
+	visited := make(map[string]bool)
+	services := make([]string, 0, 8)
+	edgeIDs := make([]string, 0, 8)
+	paths := make([]journeyPath, 0)
+	seen := map[string]struct{}{}
+
+	var dfs func(string)
+	dfs = func(current string) {
+		visited[current] = true
+		services = append(services, current)
+		if current == target {
+			id := strings.Join(services, "->")
+			if _, ok := seen[id]; !ok {
+				seen[id] = struct{}{}
+				paths = append(paths, journeyPath{
+					ID:       id,
+					Services: slices.Clone(services),
+					EdgeIDs:  slices.Clone(edgeIDs),
+				})
+			}
+			services = services[:len(services)-1]
+			visited[current] = false
+			return
+		}
+		for _, step := range adjacency[current] {
+			if visited[step.To] {
+				continue
+			}
+			edgeIDs = append(edgeIDs, step.EdgeID)
+			dfs(step.To)
+			edgeIDs = edgeIDs[:len(edgeIDs)-1]
+		}
+		services = services[:len(services)-1]
+		visited[current] = false
+	}
+
+	dfs(entry)
+	slices.SortFunc(paths, func(a, b journeyPath) int {
+		return strings.Compare(a.ID, b.ID)
+	})
+	return paths
+}
+
+func requiresAdvancedArtifactRunner(loaded artifact.Loaded, params AnalysisParams) bool {
+	for _, profile := range params.Profiles {
+		if profile.Reliability.EdgeLiveProbability != nil || len(profile.Reliability.Edges) > 0 {
+			return true
+		}
+	}
+	for _, def := range params.PredicateSet {
+		if predicateRequiresAdvanced(def) {
+			return true
+		}
+	}
+	for _, def := range loaded.Model.Predicates {
+		if predicateRequiresAdvanced(def) {
+			return true
+		}
+	}
+	for _, endpoint := range loaded.Model.Endpoints {
+		if endpoint.SuccessPredicate != nil && predicateRequiresAdvanced(*endpoint.SuccessPredicate) {
+			return true
+		}
+		if _, ok := endpointSemanticPredicate(endpoint); ok {
+			return true
+		}
+	}
+	return false
+}
+
+func predicateRequiresAdvanced(def predicates.Definition) bool {
+	if def.Type == predicates.TypeEdgeAware {
+		return true
+	}
+	for _, child := range def.Children {
+		if predicateRequiresAdvanced(child) {
+			return true
+		}
+	}
+	return false
+}
+
+func edgeAwareEndpointSuccess(endpoint endpointPlan, pathResults map[string]bool) bool {
+	if len(endpoint.TargetPaths) == 0 {
+		return false
+	}
+	for _, paths := range endpoint.TargetPaths {
+		targetReached := false
+		for _, path := range paths {
+			if pathResults[path.ID] {
+				targetReached = true
+				break
+			}
+		}
+		if !targetReached {
+			return false
+		}
+	}
+	return true
 }
 
 func normalizeBuckets(svc model.Service, record artifact.SnapshotDiscoveryService) []replicaBucket {
@@ -1342,6 +1631,20 @@ func sortedKeys(values map[string]struct{}) []string {
 	}
 	slices.Sort(out)
 	return out
+}
+
+func validateAdvancedReliability(ctx advancedContext, profile ProfileParams) error {
+	for serviceID := range profile.Reliability.Services {
+		if _, ok := ctx.services[serviceID]; !ok {
+			return fmt.Errorf("reliability references unknown service %q", serviceID)
+		}
+	}
+	for edgeID := range profile.Reliability.Edges {
+		if _, ok := ctx.edges[edgeID]; !ok {
+			return fmt.Errorf("reliability references unknown edge %q", edgeID)
+		}
+	}
+	return nil
 }
 
 func mergeStringMap(dst map[string]string, src map[string]string) map[string]string {

@@ -10,12 +10,14 @@ The current `main` line has been synced against the published Bering `v0.3.4` re
 
 That package sync does not widen or narrow the accepted upstream schema contracts. The strict contract pins remain the `1.0.0` and `1.1.0` Bering model/snapshot lines below.
 
+For the v1 major release claim, the `1.1.0` line is the Bering v1 contract line used for typed topology `G=(V,E,tau)`, reliability evidence, operation-aware edge identity, and producer endpoint semantic hints. The `1.0.0` line remains accepted as the baseline comparison reference. See [v1-major-semantics.md](v1-major-semantics.md).
+
 ## Current Matrix
 
 | Sheaft line | Status | Bering model contract | Model URI | Model digest | Bering snapshot contract | Snapshot URI | Snapshot digest | Notes |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | `main` (unreleased) | active baseline line | `io.mb3r.bering.model@1.0.0` | `https://mb3r-lab.github.io/Bering/schema/model/v1.0.0/model.schema.json` | `sha256:272277c093f37580adcd2dded225bd37c86539d642d7910baad7e4228227d1a7` | `io.mb3r.bering.snapshot@1.0.0` | `https://mb3r-lab.github.io/Bering/schema/snapshot/v1.0.0/snapshot.schema.json` | `sha256:87e4e887ed4a37b72f6136e268b73552eccb92941c4de2c6f3a514dd066ea972` | Stable fail-stop baseline semantics. Advanced metrics that need richer metadata remain unavailable unless supplied by a Sheaft-owned external contract. |
-| `main` (unreleased) | active advanced line | `io.mb3r.bering.model@1.1.0` | `https://mb3r-lab.github.io/Bering/schema/model/v1.1.0/model.schema.json` | `sha256:bc9a60736c9e6bda9599243fd68f293b88f42ade65321d8267369a5c3214779a` | `io.mb3r.bering.snapshot@1.1.0` | `https://mb3r-lab.github.io/Bering/schema/snapshot/v1.1.0/snapshot.schema.json` | `sha256:53b127608b2aaa4fabb352b998cd6b2c5ed558764729a09abea56f4f9b40fa01` | Enables typed edge IDs, retry/timeout metadata, placement buckets, shared resources, and path-aware advanced diagnostics. |
+| `main` (unreleased) | active advanced line | `io.mb3r.bering.model@1.1.0` | `https://mb3r-lab.github.io/Bering/schema/model/v1.1.0/model.schema.json` | `sha256:76b2b22422b6e64f437fb144a02b6bd4629bf510cec5479a8496c41eb25fc406` | `io.mb3r.bering.snapshot@1.1.0` | `https://mb3r-lab.github.io/Bering/schema/snapshot/v1.1.0/snapshot.schema.json` | `sha256:c669dbc483ca8cfe1f58f994b6041a6767fdaa3df4fb5ae27d8253607b3f5cb5` | Enables operation-aware typed edge IDs, service/edge reliability evidence, retry/timeout metadata, placement buckets, shared resources, endpoint semantic hints, and path-aware advanced diagnostics. |
 
 ## Comparison Rule
 

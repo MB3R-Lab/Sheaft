@@ -12,9 +12,12 @@
 
 - No live chaos execution or traffic generation.
 - No automatic discovery ownership in production flow.
+- No automatic probability calibration from telemetry.
+- No arbitrary non-product `P`; the v1 stochastic baseline is `P_Node * P_Edge` plus explicit reviewed fault overlays.
+- No rich temporal workflow models for sagas, compensations, ordering constraints, or time-window completion.
 - Baseline comparison accepts prior reports and raw supported artifacts, but only overlapping metrics are directly comparable.
 - Missing advanced metadata is reported as unavailable instead of being synthesized.
-- Explicit predicates remain service-based; edge-aware behavior requires journey data or path diagnostics.
+- Legacy explicit predicates remain service-based. Baseline edge reliability requires journey data, path diagnostics, or `edge_aware` predicates.
 - Directory watch mode selects the newest matching file; it does not merge multiple artifacts.
 
 ## Guidance

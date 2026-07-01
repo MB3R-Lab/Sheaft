@@ -16,6 +16,14 @@ predicates:
     type: all_of
     services:
       - frontend
+  checkout:eventual_completion:
+    type: edge_aware
+    entry_service: frontend
+    mandatory_targets:
+      - payment
+    edge_modes:
+      - sync
+      - async
 
 endpoint_weights:
   checkout:POST /process: 0.6

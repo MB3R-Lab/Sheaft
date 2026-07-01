@@ -23,6 +23,14 @@ func TestCompatibilityManifestMatchesTrackedFile(t *testing.T) {
 	}
 }
 
+func TestValidateV1ReleaseDocs(t *testing.T) {
+	t.Parallel()
+
+	if err := ValidateV1ReleaseDocs(filepath.Join("..", "..")); err != nil {
+		t.Fatalf("validate v1 release docs: %v", err)
+	}
+}
+
 func TestValidateChart(t *testing.T) {
 	t.Parallel()
 

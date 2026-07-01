@@ -27,6 +27,7 @@ type ProfileParams struct {
 	Seed               int64
 	SamplingMode       string
 	FailureProbability float64
+	Reliability        config.ReliabilityConfig
 	FixedKFailures     int
 	FaultProfile       string
 	EndpointWeights    map[string]float64
@@ -207,6 +208,9 @@ func RunProfiles(mdl model.ResilienceModel, params AnalysisParams) (AnalysisOutp
 }
 
 func runProfile(profile ProfileParams, endpointIDs []string, serviceIDs []string, serviceReplicas map[string]int, resolved map[string]predicates.Definition, defaultWeights map[string]float64) (ProfileOutput, error) {
+	if err := validateLegacyReliability(profile, serviceIDs); err != nil {
+		return ProfileOutput{}, err
+	}
 	rng := rand.New(rand.NewSource(profile.Seed))
 	successCount := make(map[string]int, len(endpointIDs))
 	for trial := 0; trial < profile.Trials; trial++ {
@@ -256,8 +260,9 @@ func sampleAlive(profile ProfileParams, rng *rand.Rand, serviceIDs []string, ser
 	case config.SamplingModeIndependentReplica:
 		for _, serviceID := range serviceIDs {
 			live := false
+			liveProbability := serviceLiveProbability(profile, serviceID)
 			for i := 0; i < serviceReplicas[serviceID]; i++ {
-				if rng.Float64() > profile.FailureProbability {
+				if rng.Float64() < liveProbability {
 					live = true
 					break
 				}
@@ -266,7 +271,7 @@ func sampleAlive(profile ProfileParams, rng *rand.Rand, serviceIDs []string, ser
 		}
 	case config.SamplingModeIndependentService:
 		for _, serviceID := range serviceIDs {
-			alive[serviceID] = rng.Float64() > profile.FailureProbability
+			alive[serviceID] = rng.Float64() < serviceLiveProbability(profile, serviceID)
 		}
 	case config.SamplingModeFixedKServiceSet:
 		if profile.FixedKFailures > len(serviceIDs) {
@@ -343,6 +348,9 @@ func resolveEndpointPredicates(mdl model.ResilienceModel, predicateSet map[strin
 				return nil, nil, nil, fmt.Errorf("invalid journey override for endpoint %s: %w", ep.ID, err)
 			}
 			def = journeysToPredicate(paths)
+		}
+		if predicateRequiresAdvanced(def) {
+			return nil, nil, nil, fmt.Errorf("endpoint %s uses edge-aware predicate; use artifact path-aware analysis", ep.ID)
 		}
 		if err := validatePredicateServices(def, serviceSet); err != nil {
 			return nil, nil, nil, fmt.Errorf("endpoint %s: %w", ep.ID, err)
@@ -467,10 +475,30 @@ func normalizeProfile(profile ProfileParams, seed int64, index int) (ProfilePara
 	if out.EndpointWeights == nil {
 		out.EndpointWeights = map[string]float64{}
 	}
+	if out.Reliability.Services == nil {
+		out.Reliability.Services = map[string]float64{}
+	}
+	if out.Reliability.Edges == nil {
+		out.Reliability.Edges = map[string]float64{}
+	}
+	if err := validateReliability(out.Reliability); err != nil {
+		return ProfileParams{}, err
+	}
 	return out, nil
 }
 
 func validatePredicateServices(def predicates.Definition, serviceSet map[string]struct{}) error {
+	if def.Type == predicates.TypeEdgeAware {
+		if _, ok := serviceSet[def.EntryService]; !ok {
+			return fmt.Errorf("edge_aware entry_service references unknown service %q", def.EntryService)
+		}
+		for idx, target := range def.MandatoryTargets {
+			if _, ok := serviceSet[target]; !ok {
+				return fmt.Errorf("edge_aware mandatory_targets[%d] references unknown service %q", idx, target)
+			}
+		}
+		return nil
+	}
 	for _, service := range def.Services {
 		if _, ok := serviceSet[service]; !ok {
 			return fmt.Errorf("predicate references unknown service %q", service)
@@ -528,4 +556,71 @@ func derivedSeed(base int64, profileName string, index int) int64 {
 	h := fnv.New64a()
 	_, _ = h.Write([]byte(fmt.Sprintf("%d:%s:%d", base, profileName, index)))
 	return int64(h.Sum64())
+}
+
+func serviceLiveProbability(profile ProfileParams, serviceID string) float64 {
+	if value, ok := profile.Reliability.Services[serviceID]; ok {
+		return value
+	}
+	if profile.Reliability.NodeLiveProbability != nil {
+		return *profile.Reliability.NodeLiveProbability
+	}
+	return 1 - profile.FailureProbability
+}
+
+func edgeLiveProbability(profile ProfileParams, edgeID string) float64 {
+	if value, ok := profile.Reliability.Edges[edgeID]; ok {
+		return value
+	}
+	if profile.Reliability.EdgeLiveProbability != nil {
+		return *profile.Reliability.EdgeLiveProbability
+	}
+	return 1
+}
+
+func validateReliability(value config.ReliabilityConfig) error {
+	for _, item := range []struct {
+		name  string
+		value *float64
+	}{
+		{"node_live_probability", value.NodeLiveProbability},
+		{"edge_live_probability", value.EdgeLiveProbability},
+	} {
+		if item.value != nil && (*item.value < 0 || *item.value > 1) {
+			return fmt.Errorf("reliability.%s must be in range [0,1]", item.name)
+		}
+	}
+	for service, probability := range value.Services {
+		if strings.TrimSpace(service) == "" {
+			return errors.New("reliability.services key cannot be empty")
+		}
+		if probability < 0 || probability > 1 {
+			return fmt.Errorf("reliability.services[%s] must be in range [0,1]", service)
+		}
+	}
+	for edge, probability := range value.Edges {
+		if strings.TrimSpace(edge) == "" {
+			return errors.New("reliability.edges key cannot be empty")
+		}
+		if probability < 0 || probability > 1 {
+			return fmt.Errorf("reliability.edges[%s] must be in range [0,1]", edge)
+		}
+	}
+	return nil
+}
+
+func validateLegacyReliability(profile ProfileParams, serviceIDs []string) error {
+	serviceSet := make(map[string]struct{}, len(serviceIDs))
+	for _, serviceID := range serviceIDs {
+		serviceSet[serviceID] = struct{}{}
+	}
+	for serviceID := range profile.Reliability.Services {
+		if _, ok := serviceSet[serviceID]; !ok {
+			return fmt.Errorf("reliability references unknown service %q", serviceID)
+		}
+	}
+	if profile.Reliability.EdgeLiveProbability != nil || len(profile.Reliability.Edges) > 0 {
+		return errors.New("edge reliability requires path-aware artifact analysis")
+	}
+	return nil
 }

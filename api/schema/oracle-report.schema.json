@@ -1,0 +1,72 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/MB3R-Lab/Sheaft/api/schema/oracle-report.schema.json",
+  "title": "SheaftOracleSuiteReport",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "suite_name",
+    "status",
+    "generated_at",
+    "outputs",
+    "cases"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string"
+    },
+    "suite_name": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": ["pass", "fail"]
+    },
+    "generated_at": {
+      "type": "string"
+    },
+    "outputs": {
+      "type": "object",
+      "required": ["report", "summary"],
+      "properties": {
+        "report": { "type": "string" },
+        "summary": { "type": "string" }
+      }
+    },
+    "cases": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "description", "status", "trials", "checks"],
+        "properties": {
+          "id": { "type": "string" },
+          "description": { "type": "string" },
+          "status": {
+            "type": "string",
+            "enum": ["pass", "fail"]
+          },
+          "trials": { "type": "integer" },
+          "error": { "type": "string" },
+          "checks": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["id", "status", "expected", "actual", "tolerance", "message"],
+              "properties": {
+                "id": { "type": "string" },
+                "status": {
+                  "type": "string",
+                  "enum": ["pass", "fail"]
+                },
+                "expected": { "type": "number" },
+                "actual": { "type": "number" },
+                "tolerance": { "type": "number" },
+                "message": { "type": "string" }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

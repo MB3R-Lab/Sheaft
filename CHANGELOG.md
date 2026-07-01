@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- added v1 major semantics documentation for the stochastic connectivity baseline, migration notes, and explicit out-of-scope release boundaries
+- added release dry-run validation for v1 docs/schema/example consistency
 - recorded app-level sync with the published Bering `v0.3.4` release/package in `compatibility-manifest.json`
 - refreshed compatibility docs and README badges to distinguish Bering app-package sync from unchanged `1.0.0` / `1.1.0` schema contract pins
 

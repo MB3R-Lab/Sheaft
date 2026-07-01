@@ -18,6 +18,12 @@ const (
 	EdgeKindAsync EdgeKind = "async"
 )
 
+const (
+	EndpointPredicateModeImmediate = "immediate_response"
+	EndpointPredicateModeEventual  = "eventual_completion"
+	EndpointPredicateModeExternal  = "external_predicate"
+)
+
 type CommonMetadata struct {
 	Labels     map[string]string `json:"labels,omitempty"`
 	Tags       []string          `json:"tags,omitempty"`
@@ -25,26 +31,44 @@ type CommonMetadata struct {
 	Attributes map[string]string `json:"attributes,omitempty"`
 }
 
+type ReliabilityEvidence struct {
+	LiveProbability *float64 `json:"live_probability,omitempty"`
+	Source          string   `json:"source,omitempty"`
+	Confidence      *float64 `json:"confidence,omitempty"`
+}
+
 type Placement struct {
-	Replicas int               `json:"replicas"`
-	Labels   map[string]string `json:"labels,omitempty"`
+	Replicas    int                  `json:"replicas"`
+	Labels      map[string]string    `json:"labels,omitempty"`
+	Reliability *ReliabilityEvidence `json:"reliability,omitempty"`
 }
 
 type ServiceMetadata struct {
 	CommonMetadata
-	FailureEligible    *bool       `json:"failure_eligible,omitempty"`
-	Placements         []Placement `json:"placements,omitempty"`
-	SharedResourceRefs []string    `json:"shared_resource_refs,omitempty"`
+	Reliability        *ReliabilityEvidence `json:"reliability,omitempty"`
+	FailureEligible    *bool                `json:"failure_eligible,omitempty"`
+	Placements         []Placement          `json:"placements,omitempty"`
+	SharedResourceRefs []string             `json:"shared_resource_refs,omitempty"`
 }
 
 type EdgeMetadata struct {
 	CommonMetadata
-	Weight *float64 `json:"weight,omitempty"`
+	Weight      *float64             `json:"weight,omitempty"`
+	Reliability *ReliabilityEvidence `json:"reliability,omitempty"`
 }
 
 type EndpointMetadata struct {
 	CommonMetadata
-	Weight *float64 `json:"weight,omitempty"`
+	Weight    *float64           `json:"weight,omitempty"`
+	Semantics *EndpointSemantics `json:"semantics,omitempty"`
+}
+
+type EndpointSemantics struct {
+	PredicateMode    string   `json:"predicate_mode,omitempty"`
+	MandatoryTargets []string `json:"mandatory_targets,omitempty"`
+	DependencyModes  []string `json:"dependency_modes,omitempty"`
+	Source           string   `json:"source,omitempty"`
+	Confidence       *float64 `json:"confidence,omitempty"`
 }
 
 type BackoffPolicy struct {
@@ -110,6 +134,7 @@ type Edge struct {
 	To          string            `json:"to"`
 	Kind        EdgeKind          `json:"kind"`
 	Blocking    bool              `json:"blocking"`
+	Identity    *EdgeIdentity     `json:"identity,omitempty"`
 	Metadata    *EdgeMetadata     `json:"metadata,omitempty"`
 	Resilience  *ResiliencePolicy `json:"resilience,omitempty"`
 	Observed    *ObservedEdge     `json:"observed,omitempty"`
@@ -140,6 +165,14 @@ type Schema struct {
 	Version string `json:"version"`
 	URI     string `json:"uri"`
 	Digest  string `json:"digest"`
+}
+
+type EdgeIdentity struct {
+	Protocol  string `json:"protocol,omitempty"`
+	Operation string `json:"operation,omitempty"`
+	Route     string `json:"route,omitempty"`
+	Topic     string `json:"topic,omitempty"`
+	SpanKind  string `json:"span_kind,omitempty"`
 }
 
 type ResilienceModel struct {
@@ -212,7 +245,7 @@ func (m ResilienceModel) Validate() error {
 				return fmt.Errorf("endpoint %q success_predicate: %w", ep.ID, err)
 			}
 		}
-		if err := validateEndpointMetadata(ep.ID, ep.Metadata); err != nil {
+		if err := validateEndpointMetadata(ep.ID, ep.Metadata, serviceSet); err != nil {
 			return err
 		}
 	}
@@ -265,11 +298,17 @@ func validateServiceMetadata(serviceID string, metadata *ServiceMetadata) error 
 	if err := validateCommonMetadata(fmt.Sprintf("service %q", serviceID), metadata.CommonMetadata); err != nil {
 		return err
 	}
+	if err := validateReliabilityEvidence(fmt.Sprintf("service %q metadata.reliability", serviceID), metadata.Reliability); err != nil {
+		return err
+	}
 	for idx, placement := range metadata.Placements {
 		if placement.Replicas < 0 {
 			return fmt.Errorf("service %q placement %d has negative replicas", serviceID, idx)
 		}
 		if err := validateLabelMap(fmt.Sprintf("service %q placement %d labels", serviceID, idx), placement.Labels); err != nil {
+			return err
+		}
+		if err := validateReliabilityEvidence(fmt.Sprintf("service %q placement %d reliability", serviceID, idx), placement.Reliability); err != nil {
 			return err
 		}
 	}
@@ -291,10 +330,10 @@ func validateEdgeMetadata(edgeID string, metadata *EdgeMetadata) error {
 	if metadata.Weight != nil && *metadata.Weight < 0 {
 		return fmt.Errorf("edge %q metadata.weight must be >= 0", edgeID)
 	}
-	return nil
+	return validateReliabilityEvidence(fmt.Sprintf("edge %q metadata.reliability", edgeID), metadata.Reliability)
 }
 
-func validateEndpointMetadata(endpointID string, metadata *EndpointMetadata) error {
+func validateEndpointMetadata(endpointID string, metadata *EndpointMetadata, serviceSet map[string]struct{}) error {
 	if metadata == nil {
 		return nil
 	}
@@ -303,6 +342,39 @@ func validateEndpointMetadata(endpointID string, metadata *EndpointMetadata) err
 	}
 	if metadata.Weight != nil && *metadata.Weight < 0 {
 		return fmt.Errorf("endpoint %q metadata.weight must be >= 0", endpointID)
+	}
+	return validateEndpointSemantics(endpointID, metadata.Semantics, serviceSet)
+}
+
+func validateEndpointSemantics(endpointID string, semantics *EndpointSemantics, serviceSet map[string]struct{}) error {
+	if semantics == nil {
+		return nil
+	}
+	if mode := strings.TrimSpace(semantics.PredicateMode); mode != "" {
+		switch mode {
+		case EndpointPredicateModeImmediate, EndpointPredicateModeEventual, EndpointPredicateModeExternal:
+		default:
+			return fmt.Errorf("endpoint %q metadata.semantics.predicate_mode must be one of %q, %q, %q", endpointID, EndpointPredicateModeImmediate, EndpointPredicateModeEventual, EndpointPredicateModeExternal)
+		}
+	}
+	for idx, target := range semantics.MandatoryTargets {
+		target = strings.TrimSpace(target)
+		if target == "" {
+			return fmt.Errorf("endpoint %q metadata.semantics.mandatory_targets[%d] cannot be empty", endpointID, idx)
+		}
+		if _, ok := serviceSet[target]; !ok {
+			return fmt.Errorf("endpoint %q metadata.semantics.mandatory_targets[%d] references unknown service %q", endpointID, idx, target)
+		}
+	}
+	for idx, mode := range semantics.DependencyModes {
+		switch strings.TrimSpace(mode) {
+		case string(EdgeKindSync), string(EdgeKindAsync):
+		default:
+			return fmt.Errorf("endpoint %q metadata.semantics.dependency_modes[%d] must be %q or %q", endpointID, idx, EdgeKindSync, EdgeKindAsync)
+		}
+	}
+	if semantics.Confidence != nil && (*semantics.Confidence < 0 || *semantics.Confidence > 1) {
+		return fmt.Errorf("endpoint %q metadata.semantics.confidence must be in range [0,1]", endpointID)
 	}
 	return nil
 }
@@ -323,6 +395,22 @@ func validateCommonMetadata(label string, metadata CommonMetadata) error {
 		if strings.TrimSpace(ref) == "" {
 			return fmt.Errorf("%s slo_refs[%d] cannot be empty", label, idx)
 		}
+	}
+	return nil
+}
+
+func validateReliabilityEvidence(label string, reliability *ReliabilityEvidence) error {
+	if reliability == nil {
+		return nil
+	}
+	if reliability.LiveProbability == nil {
+		return fmt.Errorf("%s.live_probability is required", label)
+	}
+	if *reliability.LiveProbability < 0 || *reliability.LiveProbability > 1 {
+		return fmt.Errorf("%s.live_probability must be in range [0,1]", label)
+	}
+	if reliability.Confidence != nil && (*reliability.Confidence < 0 || *reliability.Confidence > 1) {
+		return fmt.Errorf("%s.confidence must be in range [0,1]", label)
 	}
 	return nil
 }

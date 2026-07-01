@@ -115,10 +115,11 @@ type SnapshotDiscoveryService struct {
 
 type SnapshotServiceDiscoveryMetadata struct {
 	model.CommonMetadata
-	FailureEligible    *bool             `json:"failure_eligible,omitempty"`
-	ReplicasOverride   *int              `json:"replicas_override,omitempty"`
-	Placements         []model.Placement `json:"placements,omitempty"`
-	SharedResourceRefs []string          `json:"shared_resource_refs,omitempty"`
+	Reliability        *model.ReliabilityEvidence `json:"reliability,omitempty"`
+	FailureEligible    *bool                      `json:"failure_eligible,omitempty"`
+	ReplicasOverride   *int                       `json:"replicas_override,omitempty"`
+	Placements         []model.Placement          `json:"placements,omitempty"`
+	SharedResourceRefs []string                   `json:"shared_resource_refs,omitempty"`
 }
 
 type SnapshotDiscoveryEdge struct {
@@ -127,6 +128,7 @@ type SnapshotDiscoveryEdge struct {
 	To          string                  `json:"to"`
 	Kind        model.EdgeKind          `json:"kind"`
 	Blocking    bool                    `json:"blocking"`
+	Identity    *model.EdgeIdentity     `json:"identity,omitempty"`
 	Support     SnapshotSupport         `json:"support"`
 	FirstSeen   string                  `json:"first_seen,omitempty"`
 	LastSeen    string                  `json:"last_seen,omitempty"`
@@ -139,7 +141,8 @@ type SnapshotDiscoveryEdge struct {
 
 type SnapshotEdgeMetadata struct {
 	model.CommonMetadata
-	Weight *float64 `json:"weight,omitempty"`
+	Weight      *float64                   `json:"weight,omitempty"`
+	Reliability *model.ReliabilityEvidence `json:"reliability,omitempty"`
 }
 
 type SnapshotDiscoveryEndpoint struct {
@@ -156,8 +159,9 @@ type SnapshotDiscoveryEndpoint struct {
 
 type SnapshotEndpointMetadata struct {
 	model.CommonMetadata
-	Weight       *float64 `json:"weight,omitempty"`
-	PredicateRef string   `json:"predicate_ref,omitempty"`
+	Weight       *float64                 `json:"weight,omitempty"`
+	Semantics    *model.EndpointSemantics `json:"semantics,omitempty"`
+	PredicateRef string                   `json:"predicate_ref,omitempty"`
 }
 
 type SnapshotMetadata struct {
