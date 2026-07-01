@@ -207,8 +207,8 @@ func (m ResilienceModel) Validate() error {
 	}
 
 	for _, edge := range m.Edges {
-		if strings.TrimSpace(m.Metadata.Schema.Version) == "1.1.0" && strings.TrimSpace(edge.ID) == "" {
-			return fmt.Errorf("edge %s -> %s requires id for schema version 1.1.0", edge.From, edge.To)
+		if requiresEdgeID(m.Metadata.Schema.Version) && strings.TrimSpace(edge.ID) == "" {
+			return fmt.Errorf("edge %s -> %s requires id for schema version %s", edge.From, edge.To, strings.TrimSpace(m.Metadata.Schema.Version))
 		}
 		if _, ok := serviceSet[edge.From]; !ok {
 			return fmt.Errorf("edge.from service not found: %s", edge.From)
@@ -289,6 +289,15 @@ func (m ResilienceModel) Validate() error {
 	}
 
 	return nil
+}
+
+func requiresEdgeID(schemaVersion string) bool {
+	switch strings.TrimSpace(schemaVersion) {
+	case "1.1.0", "1.2.0":
+		return true
+	default:
+		return false
+	}
 }
 
 func validateServiceMetadata(serviceID string, metadata *ServiceMetadata) error {

@@ -57,41 +57,52 @@ func TestValidate_StructuralAndContractValidation(t *testing.T) {
 	}
 }
 
-func TestValidate_V110RequiresEdgeIDs(t *testing.T) {
+func TestValidate_VersionedContractsRequireEdgeIDs(t *testing.T) {
 	t.Parallel()
 
-	mdl := ResilienceModel{
-		Services: []Service{
-			{ID: "gateway", Name: "gateway", Replicas: 1},
-			{ID: "checkout", Name: "checkout", Replicas: 1},
-		},
-		Edges: []Edge{
-			{From: "gateway", To: "checkout", Kind: EdgeKindSync, Blocking: true},
-		},
-		Endpoints: []Endpoint{
-			{ID: "gateway:GET /checkout", EntryService: "gateway", SuccessPredicateRef: "gateway:GET /checkout"},
-		},
-		Metadata: Metadata{
-			SourceType:   "bering",
-			SourceRef:    "artifact",
-			DiscoveredAt: "2026-03-22T00:00:00Z",
-			Confidence:   0.9,
-			Schema: Schema{
-				Name:    modelcontract.BeringModelV110Name,
-				Version: modelcontract.BeringModelV110Version,
-				URI:     modelcontract.BeringModelV110URI,
-				Digest:  modelcontract.BeringModelV110Digest,
-			},
-		},
+	refs := []modelcontract.SchemaRef{
+		modelcontract.ExpectedModelV110Ref(),
+		modelcontract.ExpectedModelV120Ref(),
 	}
+	for _, ref := range refs {
+		ref := ref
+		t.Run(ref.Version, func(t *testing.T) {
+			t.Parallel()
 
-	if err := mdl.Validate(); err == nil {
-		t.Fatal("expected v1.1.0 model without edge ids to fail validation")
-	}
+			mdl := ResilienceModel{
+				Services: []Service{
+					{ID: "gateway", Name: "gateway", Replicas: 1},
+					{ID: "checkout", Name: "checkout", Replicas: 1},
+				},
+				Edges: []Edge{
+					{From: "gateway", To: "checkout", Kind: EdgeKindSync, Blocking: true},
+				},
+				Endpoints: []Endpoint{
+					{ID: "gateway:GET /checkout", EntryService: "gateway", SuccessPredicateRef: "gateway:GET /checkout"},
+				},
+				Metadata: Metadata{
+					SourceType:   "bering",
+					SourceRef:    "artifact",
+					DiscoveredAt: "2026-03-22T00:00:00Z",
+					Confidence:   0.9,
+					Schema: Schema{
+						Name:    ref.Name,
+						Version: ref.Version,
+						URI:     ref.URI,
+						Digest:  ref.Digest,
+					},
+				},
+			}
 
-	mdl.Edges[0].ID = "gateway|checkout|sync|true"
-	if err := mdl.Validate(); err != nil {
-		t.Fatalf("expected v1.1.0 model with edge ids to validate, got %v", err)
+			if err := mdl.Validate(); err == nil {
+				t.Fatalf("expected %s model without edge ids to fail validation", ref.Version)
+			}
+
+			mdl.Edges[0].ID = "gateway|checkout|sync|true"
+			if err := mdl.Validate(); err != nil {
+				t.Fatalf("expected %s model with edge ids to validate, got %v", ref.Version, err)
+			}
+		})
 	}
 }
 
@@ -125,10 +136,10 @@ func TestValidate_EndpointSemantics(t *testing.T) {
 			DiscoveredAt: "2026-03-22T00:00:00Z",
 			Confidence:   0.9,
 			Schema: Schema{
-				Name:    modelcontract.BeringModelV110Name,
-				Version: modelcontract.BeringModelV110Version,
-				URI:     modelcontract.BeringModelV110URI,
-				Digest:  modelcontract.BeringModelV110Digest,
+				Name:    modelcontract.BeringModelV120Name,
+				Version: modelcontract.BeringModelV120Version,
+				URI:     modelcontract.BeringModelV120URI,
+				Digest:  modelcontract.BeringModelV120Digest,
 			},
 		},
 	}

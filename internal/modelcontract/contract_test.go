@@ -26,6 +26,16 @@ func TestVendoredModelV110SchemaDigestMatchesPinned(t *testing.T) {
 	}
 }
 
+func TestVendoredModelV120SchemaDigestMatchesPinned(t *testing.T) {
+	t.Parallel()
+
+	sum := sha256.Sum256([]byte(VendoredModelV120Schema))
+	got := "sha256:" + hex.EncodeToString(sum[:])
+	if got != BeringModelV120Digest {
+		t.Fatalf("vendored model v1.2.0 schema digest mismatch: got=%s want=%s", got, BeringModelV120Digest)
+	}
+}
+
 func TestVendoredSnapshotSchemaDigestMatchesPinned(t *testing.T) {
 	t.Parallel()
 
@@ -43,6 +53,16 @@ func TestVendoredSnapshotV110SchemaDigestMatchesPinned(t *testing.T) {
 	got := "sha256:" + hex.EncodeToString(sum[:])
 	if got != BeringSnapshotV110Digest {
 		t.Fatalf("vendored snapshot v1.1.0 schema digest mismatch: got=%s want=%s", got, BeringSnapshotV110Digest)
+	}
+}
+
+func TestVendoredSnapshotV120SchemaDigestMatchesPinned(t *testing.T) {
+	t.Parallel()
+
+	sum := sha256.Sum256([]byte(VendoredSnapshotV120Schema))
+	got := "sha256:" + hex.EncodeToString(sum[:])
+	if got != BeringSnapshotV120Digest {
+		t.Fatalf("vendored snapshot v1.2.0 schema digest mismatch: got=%s want=%s", got, BeringSnapshotV120Digest)
 	}
 }
 
@@ -78,14 +98,30 @@ func TestValidateStrictSnapshotV110(t *testing.T) {
 	}
 }
 
+func TestValidateStrictModelV120(t *testing.T) {
+	t.Parallel()
+
+	if err := ValidateStrict(ExpectedModelV120Ref()); err != nil {
+		t.Fatalf("expected strict v1.2.0 model validation to pass, got error: %v", err)
+	}
+}
+
+func TestValidateStrictSnapshotV120(t *testing.T) {
+	t.Parallel()
+
+	if err := ValidateStrict(ExpectedSnapshotV120Ref()); err != nil {
+		t.Fatalf("expected strict v1.2.0 snapshot validation to pass, got error: %v", err)
+	}
+}
+
 func TestValidateStrictRejectsURIMismatch(t *testing.T) {
 	t.Parallel()
 
 	err := ValidateStrict(SchemaRef{
-		Name:    BeringModelV110Name,
-		Version: BeringModelV110Version,
+		Name:    BeringModelV120Name,
+		Version: BeringModelV120Version,
 		URI:     "https://example.invalid/model.schema.json",
-		Digest:  BeringModelV110Digest,
+		Digest:  BeringModelV120Digest,
 	})
 	if err == nil {
 		t.Fatal("expected uri mismatch to fail strict validation")
@@ -96,9 +132,9 @@ func TestValidateStrictRejectsDigestMismatch(t *testing.T) {
 	t.Parallel()
 
 	err := ValidateStrict(SchemaRef{
-		Name:    BeringSnapshotV110Name,
-		Version: BeringSnapshotV110Version,
-		URI:     BeringSnapshotV110URI,
+		Name:    BeringSnapshotV120Name,
+		Version: BeringSnapshotV120Version,
+		URI:     BeringSnapshotV120URI,
 		Digest:  "sha256:deadbeef",
 	})
 	if err == nil {

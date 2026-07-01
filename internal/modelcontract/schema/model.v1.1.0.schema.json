@@ -68,25 +68,6 @@
         }
       }
     },
-    "edgeIdentity": {
-      "type": "object",
-      "properties": {
-        "protocol": { "type": "string" },
-        "operation": { "type": "string" },
-        "route": { "type": "string" },
-        "topic": { "type": "string" },
-        "span_kind": { "type": "string" }
-      }
-    },
-    "reliabilityEvidence": {
-      "type": "object",
-      "required": ["live_probability"],
-      "properties": {
-        "live_probability": { "type": "number", "minimum": 0, "maximum": 1 },
-        "source": { "type": "string" },
-        "confidence": { "type": "number", "minimum": 0, "maximum": 1 }
-      }
-    },
     "placement": {
       "type": "object",
       "required": ["replicas"],
@@ -95,8 +76,7 @@
         "labels": {
           "type": "object",
           "additionalProperties": { "type": "string" }
-        },
-        "reliability": { "$ref": "#/$defs/reliabilityEvidence" }
+        }
       }
     },
     "serviceMetadata": {
@@ -105,7 +85,6 @@
         {
           "type": "object",
           "properties": {
-            "reliability": { "$ref": "#/$defs/reliabilityEvidence" },
             "failure_eligible": { "type": "boolean" },
             "placements": {
               "type": "array",
@@ -125,35 +104,10 @@
         {
           "type": "object",
           "properties": {
-            "weight": { "type": "number", "minimum": 0 },
-            "reliability": { "$ref": "#/$defs/reliabilityEvidence" }
+            "weight": { "type": "number", "minimum": 0 }
           }
         }
       ]
-    },
-    "endpointSemantics": {
-      "type": "object",
-      "properties": {
-        "predicate_mode": {
-          "type": "string",
-          "enum": ["immediate_response", "eventual_completion", "external_predicate"]
-        },
-        "mandatory_targets": {
-          "type": "array",
-          "items": { "type": "string" },
-          "uniqueItems": true
-        },
-        "dependency_modes": {
-          "type": "array",
-          "items": {
-            "type": "string",
-            "enum": ["sync", "async"]
-          },
-          "uniqueItems": true
-        },
-        "source": { "type": "string" },
-        "confidence": { "type": "number", "minimum": 0, "maximum": 1 }
-      }
     },
     "endpointMetadata": {
       "allOf": [
@@ -161,8 +115,7 @@
         {
           "type": "object",
           "properties": {
-            "weight": { "type": "number", "minimum": 0 },
-            "semantics": { "$ref": "#/$defs/endpointSemantics" }
+            "weight": { "type": "number", "minimum": 0 }
           }
         }
       ]
@@ -256,7 +209,6 @@
           "enum": ["sync", "async"]
         },
         "blocking": { "type": "boolean" },
-        "identity": { "$ref": "#/$defs/edgeIdentity" },
         "metadata": { "$ref": "#/$defs/edgeMetadata" },
         "resilience": { "$ref": "#/$defs/resiliencePolicy" },
         "observed": { "$ref": "#/$defs/observedEdge" },

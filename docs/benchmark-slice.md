@@ -7,7 +7,7 @@ The fixed benchmark slice is the in-repository release-quality check for Sheaft-
 The slice uses:
 
 - manifest: [benchmarks/fixed-slice/manifest.json](../benchmarks/fixed-slice/manifest.json)
-- artifact: [examples/outputs/snapshot-v1.1.0.sample.json](../examples/outputs/snapshot-v1.1.0.sample.json)
+- artifact: [examples/outputs/snapshot-v1.2.0.sample.json](../examples/outputs/snapshot-v1.2.0.sample.json)
 - analysis config: [configs/analysis.v1.1.example.yaml](../configs/analysis.v1.1.example.yaml)
 
 The manifest fixes the expected contract, profile count, decision, confidence floor, advanced-metric availability, baseline-diff requirement, and stable-report repeatability requirement.

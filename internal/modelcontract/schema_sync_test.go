@@ -24,6 +24,8 @@ func TestAPISchemaStaysInSyncWithVendoredSchema(t *testing.T) {
 		"snapshot.v1.0.0.schema.json",
 		"model.v1.1.0.schema.json",
 		"snapshot.v1.1.0.schema.json",
+		"model.v1.2.0.schema.json",
+		"snapshot.v1.2.0.schema.json",
 	} {
 		vendoredPath := filepath.Join(pkgDir, "schema", name)
 		apiPath := filepath.Join(pkgDir, "..", "..", "api", "schema", name)

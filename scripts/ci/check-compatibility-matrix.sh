@@ -87,6 +87,20 @@ require_contract_in_matrix \
   "BeringSnapshotV110Digest" \
   "snapshot v1.1.0"
 
+require_contract_in_matrix \
+  "BeringModelV120Name" \
+  "BeringModelV120Version" \
+  "BeringModelV120URI" \
+  "BeringModelV120Digest" \
+  "model v1.2.0"
+
+require_contract_in_matrix \
+  "BeringSnapshotV120Name" \
+  "BeringSnapshotV120Version" \
+  "BeringSnapshotV120URI" \
+  "BeringSnapshotV120Digest" \
+  "snapshot v1.2.0"
+
 require_in_file "docs/compatibility-matrix.md" "${README_FILE}" "README reference"
 
 if [ -n "${BASE_REF}" ]; then
@@ -100,15 +114,19 @@ if [ -n "${BASE_REF}" ]; then
     internal/modelcontract/schema/model.schema.json \
     internal/modelcontract/schema/model.v1.0.0.schema.json \
     internal/modelcontract/schema/model.v1.1.0.schema.json \
+    internal/modelcontract/schema/model.v1.2.0.schema.json \
     internal/modelcontract/schema/snapshot.schema.json \
     internal/modelcontract/schema/snapshot.v1.0.0.schema.json \
     internal/modelcontract/schema/snapshot.v1.1.0.schema.json \
+    internal/modelcontract/schema/snapshot.v1.2.0.schema.json \
     api/schema/model.schema.json \
     api/schema/model.v1.0.0.schema.json \
     api/schema/model.v1.1.0.schema.json \
+    api/schema/model.v1.2.0.schema.json \
     api/schema/snapshot.schema.json \
     api/schema/snapshot.v1.0.0.schema.json \
-    api/schema/snapshot.v1.1.0.schema.json)"
+    api/schema/snapshot.v1.1.0.schema.json \
+    api/schema/snapshot.v1.2.0.schema.json)"
   matrix_changes="$(git diff --name-only "${BASE_REF}"...HEAD -- docs/compatibility-matrix.md)"
 
   if [ -n "${contract_changes}" ] && [ -z "${matrix_changes}" ]; then
@@ -124,3 +142,5 @@ echo "Model:    $(extract_const BeringModelV100Name)@$(extract_const BeringModel
 echo "Snapshot: $(extract_const BeringSnapshotV100Name)@$(extract_const BeringSnapshotV100Version)"
 echo "Model:    $(extract_const BeringModelV110Name)@$(extract_const BeringModelV110Version)"
 echo "Snapshot: $(extract_const BeringSnapshotV110Name)@$(extract_const BeringSnapshotV110Version)"
+echo "Model:    $(extract_const BeringModelV120Name)@$(extract_const BeringModelV120Version)"
+echo "Snapshot: $(extract_const BeringSnapshotV120Name)@$(extract_const BeringSnapshotV120Version)"

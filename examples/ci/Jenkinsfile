@@ -2,7 +2,7 @@ pipeline {
   agent any
 
   environment {
-    BERING_ARTIFACT_SOURCE = 'examples/outputs/snapshot-v1.1.0.sample.json'
+    BERING_ARTIFACT_SOURCE = 'examples/outputs/snapshot-v1.2.0.sample.json'
   }
 
   options {

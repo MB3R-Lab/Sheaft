@@ -9,7 +9,7 @@ This semantics profile is bound to the currently supported contracts:
 - `io.mb3r.bering.model@1.0.0`
 - `io.mb3r.bering.snapshot@1.0.0`
 
-Contract pins, URIs, and digests are tracked in [compatibility-matrix.md](compatibility-matrix.md). The richer `1.1.0` analysis line is defined separately in [consumer-semantics-v2.md](consumer-semantics-v2.md).
+Contract pins, URIs, and digests are tracked in [compatibility-matrix.md](compatibility-matrix.md). The richer `1.2.0` analysis line is defined separately in [consumer-semantics-v2.md](consumer-semantics-v2.md).
 
 ## Consumer Pipeline
 

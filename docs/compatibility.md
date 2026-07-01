@@ -58,7 +58,7 @@ Usage examples:
 
 ```bash
 sheaft run \
-  --model examples/outputs/snapshot-v1.1.0.sample.json \
+  --model examples/outputs/snapshot-v1.2.0.sample.json \
   --analysis configs/analysis.v1.1.example.yaml \
   --contract-policy configs/contract-policy.example.yaml \
   --out-dir out
@@ -70,7 +70,7 @@ contract_policy:
   allowed_contracts:
     - kind: snapshot
       name: io.mb3r.bering.snapshot
-      versions: ["1.0.0", "1.1.0"]
+      versions: ["1.0.0", "1.1.0", "1.2.0"]
 ```
 
 When a contract is still supported globally but deprecated for a given project, Sheaft can either:
@@ -81,10 +81,10 @@ When a contract is still supported globally but deprecated for a given project, 
 ## Current Scope
 
 - Bering owns upstream schema publication and evolution.
-- Sheaft declares compatibility with Bering `1.0.0` and `1.1.0` model/snapshot release lines.
+- Sheaft declares compatibility with Bering `1.0.0`, `1.1.0`, and `1.2.0` model/snapshot release lines.
 - `1.0.0` remains the baseline fail-stop semantics line and the cross-version comparison reference.
-- `1.1.0` enables additive path-aware timeout, retry, placement, shared-resource, and edge-scoped analysis when the artifact carries that metadata.
-- The current app-level Bering release/package sync target is `v0.3.4`; no Bering schema contract pins changed for that package release.
+- `1.2.0` is the current v1-rich line for additive path-aware timeout, retry, placement, shared-resource, reliability evidence, endpoint semantics, and edge-scoped analysis when the artifact carries that metadata.
+- The current app-level Bering release/package sync target is `v0.3.4`; the accepted Bering schema contract pins are tracked separately in the compatibility matrix.
 - Missing advanced metadata is surfaced as unavailable rather than guessed.
 - Changing the Sheaft app version does not automatically widen or narrow compatibility.
 

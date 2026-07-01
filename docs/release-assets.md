@@ -33,7 +33,7 @@ The GitHub Release also publishes release evidence generated during the release 
 
 Before publishing the v1 major line, `make release-dry-run` must pass with:
 
-- schema sync against the pinned Bering `1.0.0` and `1.1.0` contracts
+- schema sync against the pinned Bering `1.0.0`, `1.1.0`, and `1.2.0` contracts
 - `validate-v1-release-docs`, which checks the v1 semantics documentation, compatibility matrix, schema files, and checked-in examples
 - checked-in smoke examples
 - fixed benchmark slice

@@ -1,20 +1,21 @@
 # Sheaft Consumer Semantics v2
 
-This document defines the richer dual-line analysis behavior used when Sheaft consumes Bering `1.1.0` artifacts or when a `1.0.0` artifact is analyzed with an opt-in Sheaft fault contract.
+This document defines the richer dual-line analysis behavior used when Sheaft consumes Bering `1.2.0` artifacts or when a `1.0.0` artifact is analyzed with an opt-in Sheaft fault contract.
 
 The v1 major release claim and its formal mapping to `G`, `R`, `P`, `Phi`, `theta`, and `rho` are documented in [v1-major-semantics.md](v1-major-semantics.md).
 
 ## Version Scope
 
-- `io.mb3r.bering.model@1.1.0`
-- `io.mb3r.bering.snapshot@1.1.0`
+- `io.mb3r.bering.model@1.2.0`
+- `io.mb3r.bering.snapshot@1.2.0`
 
-`1.0.0` remains supported, but it stays the baseline semantics line from [consumer-semantics-v1.md](consumer-semantics-v1.md). Sheaft does not silently reinterpret old `1.0.0` artifacts under richer `1.1.0` semantics.
+`1.0.0` remains supported, but it stays the baseline semantics line from [consumer-semantics-v1.md](consumer-semantics-v1.md). `1.1.0` remains accepted as a historical advanced-preview contract. Sheaft does not silently reinterpret old `1.0.0` or `1.1.0` artifacts under richer `1.2.0` semantics.
 
 ## Semantics Split
 
 - `1.0.0`: stable fail-stop baseline semantics
-- `1.1.0`: additive typed metadata for edge IDs, placements, shared resources, retries, timeouts, and observed latency/error summaries
+- `1.1.0`: historical advanced-preview contract line
+- `1.2.0`: additive typed metadata for reliability evidence, endpoint semantic hints, edge IDs, placements, shared resources, retries, timeouts, and observed latency/error summaries
 - `1.0.0` plus Sheaft fault contract: only the honest subset that can be expressed with the artifact plus the external contract is enabled
 
 ## Execution Order
@@ -52,7 +53,7 @@ For each profile and trial, Sheaft applies:
 
 ### Producer semantic hints
 
-Bering `1.1.0` endpoints may carry `metadata.semantics` with `predicate_mode`, `mandatory_targets`, and `dependency_modes`. Sheaft maps `immediate_response` hints to an edge-aware predicate over blocking synchronous edges only. It maps `eventual_completion` hints to an edge-aware predicate over the declared dependency modes; async edges participate only when `dependency_modes` includes `async`. `external_predicate` keeps using the explicit predicate contract. When hints are absent, Sheaft keeps the documented fallback behavior instead of guessing business completion semantics from traces.
+Bering `1.2.0` endpoints may carry `metadata.semantics` with `predicate_mode`, `mandatory_targets`, and `dependency_modes`. Sheaft maps `immediate_response` hints to an edge-aware predicate over blocking synchronous edges only. It maps `eventual_completion` hints to an edge-aware predicate over the declared dependency modes; async edges participate only when `dependency_modes` includes `async`. `external_predicate` keeps using the explicit predicate contract. When hints are absent, Sheaft keeps the documented fallback behavior instead of guessing business completion semantics from traces.
 
 ## Baseline Reliability Parameters
 
@@ -85,7 +86,7 @@ When required metadata does not exist, the metric is reported as unavailable wit
 
 ## Placement-Aware Availability
 
-If `1.1.0` placement buckets exist:
+If `1.2.0` placement buckets exist:
 
 - correlated placement faults can kill only the matching buckets
 - service liveness for legacy predicate evaluation remains "at least one bucket survives"
@@ -111,7 +112,7 @@ The existing `analysis.baselines` flow now accepts either:
 - a prior Sheaft report, or
 - a raw supported Bering artifact
 
-This allows primary `1.1.0` artifacts to be compared directly against `1.0.0` baseline artifacts in CI. Overlapping metrics produce diffs. Missing advanced metrics remain in the diff as non-comparable entries with explicit reasons.
+This allows primary `1.2.0` artifacts to be compared directly against `1.0.0` baseline artifacts in CI. Overlapping metrics produce diffs. Missing advanced metrics remain in the diff as non-comparable entries with explicit reasons.
 
 ## Out of Scope
 

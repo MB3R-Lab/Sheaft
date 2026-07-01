@@ -50,10 +50,10 @@ func TestRunArtifactProfiles_StochasticConnectivityChainMatchesClosedForm(t *tes
 	loaded := artifact.Loaded{
 		Metadata: artifact.Metadata{
 			Contract: modelcontract.SupportedContract{
-				Name:    modelcontract.BeringModelV110Name,
-				Version: modelcontract.BeringModelV110Version,
-				URI:     modelcontract.BeringModelV110URI,
-				Digest:  modelcontract.BeringModelV110Digest,
+				Name:    modelcontract.BeringModelV120Name,
+				Version: modelcontract.BeringModelV120Version,
+				URI:     modelcontract.BeringModelV120URI,
+				Digest:  modelcontract.BeringModelV120Digest,
 				Kind:    modelcontract.KindModel,
 			},
 		},
@@ -76,10 +76,10 @@ func TestRunArtifactProfiles_StochasticConnectivityChainMatchesClosedForm(t *tes
 				DiscoveredAt: "2026-07-01T00:00:00Z",
 				Confidence:   1,
 				Schema: model.Schema{
-					Name:    modelcontract.BeringModelV110Name,
-					Version: modelcontract.BeringModelV110Version,
-					URI:     modelcontract.BeringModelV110URI,
-					Digest:  modelcontract.BeringModelV110Digest,
+					Name:    modelcontract.BeringModelV120Name,
+					Version: modelcontract.BeringModelV120Version,
+					URI:     modelcontract.BeringModelV120URI,
+					Digest:  modelcontract.BeringModelV120Digest,
 				},
 			},
 		},
@@ -119,10 +119,10 @@ func TestRunArtifactProfiles_ReplicatedTargetSaturatesAtEdgeBottleneck(t *testin
 	loaded := artifact.Loaded{
 		Metadata: artifact.Metadata{
 			Contract: modelcontract.SupportedContract{
-				Name:    modelcontract.BeringModelV110Name,
-				Version: modelcontract.BeringModelV110Version,
-				URI:     modelcontract.BeringModelV110URI,
-				Digest:  modelcontract.BeringModelV110Digest,
+				Name:    modelcontract.BeringModelV120Name,
+				Version: modelcontract.BeringModelV120Version,
+				URI:     modelcontract.BeringModelV120URI,
+				Digest:  modelcontract.BeringModelV120Digest,
 				Kind:    modelcontract.KindModel,
 			},
 		},
@@ -143,10 +143,10 @@ func TestRunArtifactProfiles_ReplicatedTargetSaturatesAtEdgeBottleneck(t *testin
 				DiscoveredAt: "2026-07-01T00:00:00Z",
 				Confidence:   1,
 				Schema: model.Schema{
-					Name:    modelcontract.BeringModelV110Name,
-					Version: modelcontract.BeringModelV110Version,
-					URI:     modelcontract.BeringModelV110URI,
-					Digest:  modelcontract.BeringModelV110Digest,
+					Name:    modelcontract.BeringModelV120Name,
+					Version: modelcontract.BeringModelV120Version,
+					URI:     modelcontract.BeringModelV120URI,
+					Digest:  modelcontract.BeringModelV120Digest,
 				},
 			},
 		},
@@ -323,7 +323,7 @@ func TestRunArtifactProfiles_EdgeAwarePredicateContractUsesEdgesButLegacyPredica
 func TestRunArtifactProfiles_PlacementFaultReducesReplicasWithoutKillingService(t *testing.T) {
 	t.Parallel()
 
-	loaded := loadExampleArtifact(t, "snapshot-v1.1.0.sample.json")
+	loaded := loadExampleArtifact(t, "snapshot-v1.2.0.sample.json")
 	contract := faults.Contract{
 		SchemaVersion: faults.SchemaVersion,
 		Profiles: map[string]faults.Profile{
@@ -367,7 +367,7 @@ func TestRunArtifactProfiles_PlacementFaultReducesReplicasWithoutKillingService(
 func TestRunArtifactProfiles_SharedResourceFaultWorks(t *testing.T) {
 	t.Parallel()
 
-	loaded := loadExampleArtifact(t, "snapshot-v1.1.0.sample.json")
+	loaded := loadExampleArtifact(t, "snapshot-v1.2.0.sample.json")
 	contract := faults.Contract{
 		SchemaVersion: faults.SchemaVersion,
 		Profiles: map[string]faults.Profile{
@@ -407,7 +407,7 @@ func TestRunArtifactProfiles_SharedResourceFaultWorks(t *testing.T) {
 func TestRunArtifactProfiles_EdgeFailStopDistinguishesImmediateAndEventualSemantics(t *testing.T) {
 	t.Parallel()
 
-	loaded := loadExampleArtifact(t, "snapshot-v1.1.0.sample.json")
+	loaded := loadExampleArtifact(t, "snapshot-v1.2.0.sample.json")
 	one := 1.0
 	contract := faults.Contract{
 		SchemaVersion: faults.SchemaVersion,
@@ -457,7 +457,7 @@ func TestRunArtifactProfiles_EdgeFailStopDistinguishesImmediateAndEventualSemant
 func TestRunArtifactProfiles_EdgePartialDegradationChangesOutputsAndTimeoutMismatch(t *testing.T) {
 	t.Parallel()
 
-	loaded := loadExampleArtifact(t, "snapshot-v1.1.0.sample.json")
+	loaded := loadExampleArtifact(t, "snapshot-v1.2.0.sample.json")
 	errorRate := 0.35
 	one := 1.0
 	contract := faults.Contract{
@@ -517,7 +517,7 @@ func TestRunArtifactProfiles_EdgePartialDegradationChangesOutputsAndTimeoutMisma
 func TestRunArtifactProfiles_RetryAmplificationExposed(t *testing.T) {
 	t.Parallel()
 
-	loaded := loadExampleArtifact(t, "snapshot-v1.1.0.sample.json")
+	loaded := loadExampleArtifact(t, "snapshot-v1.2.0.sample.json")
 	out, err := RunArtifactProfiles(loaded, AnalysisParams{
 		Seed:           42,
 		DefaultWeights: loaded.EndpointWeights,
@@ -606,10 +606,10 @@ func edgeAwareFixtureLoaded(endpoints []model.Endpoint) artifact.Loaded {
 	return artifact.Loaded{
 		Metadata: artifact.Metadata{
 			Contract: modelcontract.SupportedContract{
-				Name:    modelcontract.BeringModelV110Name,
-				Version: modelcontract.BeringModelV110Version,
-				URI:     modelcontract.BeringModelV110URI,
-				Digest:  modelcontract.BeringModelV110Digest,
+				Name:    modelcontract.BeringModelV120Name,
+				Version: modelcontract.BeringModelV120Version,
+				URI:     modelcontract.BeringModelV120URI,
+				Digest:  modelcontract.BeringModelV120Digest,
 				Kind:    modelcontract.KindModel,
 			},
 		},
@@ -630,10 +630,10 @@ func edgeAwareFixtureLoaded(endpoints []model.Endpoint) artifact.Loaded {
 				DiscoveredAt: "2026-07-01T00:00:00Z",
 				Confidence:   1,
 				Schema: model.Schema{
-					Name:    modelcontract.BeringModelV110Name,
-					Version: modelcontract.BeringModelV110Version,
-					URI:     modelcontract.BeringModelV110URI,
-					Digest:  modelcontract.BeringModelV110Digest,
+					Name:    modelcontract.BeringModelV120Name,
+					Version: modelcontract.BeringModelV120Version,
+					URI:     modelcontract.BeringModelV120URI,
+					Digest:  modelcontract.BeringModelV120Digest,
 				},
 			},
 		},

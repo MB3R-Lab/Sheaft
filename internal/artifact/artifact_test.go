@@ -170,50 +170,50 @@ func TestLoad_CheckedInSnapshotSample(t *testing.T) {
 	}
 }
 
-func TestLoad_CheckedInSnapshotV110Sample(t *testing.T) {
+func TestLoad_CheckedInSnapshotV120Sample(t *testing.T) {
 	t.Parallel()
 
 	_, thisFile, _, ok := runtime.Caller(0)
 	if !ok {
 		t.Fatal("runtime.Caller failed")
 	}
-	path := filepath.Join(filepath.Dir(thisFile), "..", "..", "examples", "outputs", "snapshot-v1.1.0.sample.json")
+	path := filepath.Join(filepath.Dir(thisFile), "..", "..", "examples", "outputs", "snapshot-v1.2.0.sample.json")
 
 	loaded, err := Load(path)
 	if err != nil {
-		t.Fatalf("Load checked-in snapshot v1.1.0 sample failed: %v", err)
+		t.Fatalf("Load checked-in snapshot v1.2.0 sample failed: %v", err)
 	}
 	if loaded.Metadata.Kind != modelcontract.KindSnapshot {
 		t.Fatalf("expected snapshot kind, got %s", loaded.Metadata.Kind)
 	}
-	if loaded.Metadata.Contract.Version != modelcontract.BeringSnapshotV110Version {
+	if loaded.Metadata.Contract.Version != modelcontract.BeringSnapshotV120Version {
 		t.Fatalf("unexpected snapshot contract version: %+v", loaded.Metadata.Contract)
 	}
 	if loaded.Snapshot == nil {
-		t.Fatal("expected typed snapshot metadata for v1.1.0 artifact")
+		t.Fatal("expected typed snapshot metadata for v1.2.0 artifact")
 	}
 	if loaded.Model.Edges[0].ID == "" {
-		t.Fatal("expected edge ids to be preserved for v1.1.0 model")
+		t.Fatal("expected edge ids to be preserved for v1.2.0 model")
 	}
 }
 
-func TestLoad_CheckedInModelV110Sample(t *testing.T) {
+func TestLoad_CheckedInModelV120Sample(t *testing.T) {
 	t.Parallel()
 
 	_, thisFile, _, ok := runtime.Caller(0)
 	if !ok {
 		t.Fatal("runtime.Caller failed")
 	}
-	path := filepath.Join(filepath.Dir(thisFile), "..", "..", "examples", "outputs", "model-v1.1.0.sample.json")
+	path := filepath.Join(filepath.Dir(thisFile), "..", "..", "examples", "outputs", "model-v1.2.0.sample.json")
 
 	loaded, err := Load(path)
 	if err != nil {
-		t.Fatalf("Load checked-in model v1.1.0 sample failed: %v", err)
+		t.Fatalf("Load checked-in model v1.2.0 sample failed: %v", err)
 	}
 	if loaded.Metadata.Kind != modelcontract.KindModel {
 		t.Fatalf("expected model kind, got %s", loaded.Metadata.Kind)
 	}
-	if loaded.Metadata.Contract.Version != modelcontract.BeringModelV110Version {
+	if loaded.Metadata.Contract.Version != modelcontract.BeringModelV120Version {
 		t.Fatalf("unexpected model contract version: %+v", loaded.Metadata.Contract)
 	}
 }

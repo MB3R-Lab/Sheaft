@@ -52,6 +52,11 @@
         "metadata": {
           "labels": {
             "team": "edge"
+          },
+          "reliability": {
+            "live_probability": 0.99,
+            "source": "sre-calibration",
+            "confidence": 0.8
           }
         }
       },
@@ -81,9 +86,19 @@
               "labels": {
                 "az": "us-east-1b",
                 "replica_group": "green"
+              },
+              "reliability": {
+                "live_probability": 0.985,
+                "source": "az-history",
+                "confidence": 0.75
               }
             }
           ],
+          "reliability": {
+            "live_probability": 0.985,
+            "source": "sre-calibration",
+            "confidence": 0.8
+          },
           "shared_resource_refs": ["db:payments"]
         }
       },
@@ -100,20 +115,38 @@
           "labels": {
             "team": "payments"
           },
+          "reliability": {
+            "live_probability": 0.98,
+            "source": "sre-calibration",
+            "confidence": 0.8
+          },
           "shared_resource_refs": ["db:payments"]
         }
       }
-    ],
-    "edges": [
-      {
-        "id": "gateway|checkout|sync|true",
-        "from": "gateway",
-        "to": "checkout",
-        "kind": "sync",
-        "blocking": true,
-        "support": {
-          "observations": 9,
-          "trace_count": 9
+      ],
+      "edges": [
+        {
+          "id": "gateway|checkout|sync|true|protocol=http|operation=POST|route=%2Fcheckout",
+          "from": "gateway",
+          "to": "checkout",
+          "kind": "sync",
+          "blocking": true,
+          "identity": {
+            "protocol": "http",
+            "operation": "POST",
+            "route": "/checkout"
+          },
+          "metadata": {
+            "weight": 0.8,
+            "reliability": {
+              "live_probability": 0.995,
+              "source": "dependency-slo",
+              "confidence": 0.85
+            }
+          },
+          "support": {
+            "observations": 9,
+            "trace_count": 9
         },
         "resilience": {
           "request_timeout_ms": 4500,
@@ -131,16 +164,29 @@
           },
           "error_rate": 0.02
         }
-      },
-      {
-        "id": "checkout|payment|sync|true",
-        "from": "checkout",
-        "to": "payment",
-        "kind": "sync",
-        "blocking": true,
-        "support": {
-          "observations": 9,
-          "trace_count": 9
+        },
+        {
+          "id": "checkout|payment|sync|true|protocol=http|operation=POST|route=%2Fcharge",
+          "from": "checkout",
+          "to": "payment",
+          "kind": "sync",
+          "blocking": true,
+          "identity": {
+            "protocol": "http",
+            "operation": "POST",
+            "route": "/charge"
+          },
+          "metadata": {
+            "weight": 0.7,
+            "reliability": {
+              "live_probability": 0.99,
+              "source": "dependency-slo",
+              "confidence": 0.85
+            }
+          },
+          "support": {
+            "observations": 9,
+            "trace_count": 9
         },
         "resilience": {
           "request_timeout_ms": 4000,
@@ -171,6 +217,13 @@
           "trace_count": 9
         },
         "metadata": {
+          "semantics": {
+            "predicate_mode": "immediate_response",
+            "mandatory_targets": ["checkout"],
+            "dependency_modes": ["sync"],
+            "source": "service-catalog",
+            "confidence": 0.9
+          },
           "weight": 0.8
         }
       },
@@ -185,6 +238,13 @@
         },
         "metadata": {
           "predicate_ref": "explicit.flow",
+          "semantics": {
+            "predicate_mode": "eventual_completion",
+            "mandatory_targets": ["payment"],
+            "dependency_modes": ["sync"],
+            "source": "service-catalog",
+            "confidence": 0.85
+          },
           "weight": 0.2
         }
       }
@@ -199,6 +259,11 @@
         "metadata": {
           "labels": {
             "team": "edge"
+          },
+          "reliability": {
+            "live_probability": 0.99,
+            "source": "sre-calibration",
+            "confidence": 0.8
           }
         }
       },
@@ -224,9 +289,19 @@
               "labels": {
                 "az": "us-east-1b",
                 "replica_group": "green"
+              },
+              "reliability": {
+                "live_probability": 0.985,
+                "source": "az-history",
+                "confidence": 0.75
               }
             }
           ],
+          "reliability": {
+            "live_probability": 0.985,
+            "source": "sre-calibration",
+            "confidence": 0.8
+          },
           "shared_resource_refs": ["db:payments"]
         }
       },
@@ -239,17 +314,35 @@
           "labels": {
             "team": "payments"
           },
+          "reliability": {
+            "live_probability": 0.98,
+            "source": "sre-calibration",
+            "confidence": 0.8
+          },
           "shared_resource_refs": ["db:payments"]
         }
       }
     ],
     "edges": [
       {
-        "id": "gateway|checkout|sync|true",
+        "id": "gateway|checkout|sync|true|protocol=http|operation=POST|route=%2Fcheckout",
         "from": "gateway",
         "to": "checkout",
         "kind": "sync",
         "blocking": true,
+        "identity": {
+          "protocol": "http",
+          "operation": "POST",
+          "route": "/checkout"
+        },
+        "metadata": {
+          "weight": 0.8,
+          "reliability": {
+            "live_probability": 0.995,
+            "source": "dependency-slo",
+            "confidence": 0.85
+          }
+        },
         "resilience": {
           "request_timeout_ms": 4500,
           "retry": {
@@ -268,11 +361,24 @@
         }
       },
       {
-        "id": "checkout|payment|sync|true",
+        "id": "checkout|payment|sync|true|protocol=http|operation=POST|route=%2Fcharge",
         "from": "checkout",
         "to": "payment",
         "kind": "sync",
         "blocking": true,
+        "identity": {
+          "protocol": "http",
+          "operation": "POST",
+          "route": "/charge"
+        },
+        "metadata": {
+          "weight": 0.7,
+          "reliability": {
+            "live_probability": 0.99,
+            "source": "dependency-slo",
+            "confidence": 0.85
+          }
+        },
         "resilience": {
           "request_timeout_ms": 4000,
           "retry": {
@@ -299,6 +405,13 @@
         "method": "POST",
         "path": "/checkout",
         "metadata": {
+          "semantics": {
+            "predicate_mode": "immediate_response",
+            "mandatory_targets": ["checkout"],
+            "dependency_modes": ["sync"],
+            "source": "service-catalog",
+            "confidence": 0.9
+          },
           "weight": 0.8
         }
       },
@@ -309,6 +422,13 @@
         "method": "GET",
         "path": "/explicit",
         "metadata": {
+          "semantics": {
+            "predicate_mode": "eventual_completion",
+            "mandatory_targets": ["payment"],
+            "dependency_modes": ["sync"],
+            "source": "service-catalog",
+            "confidence": 0.85
+          },
           "weight": 0.2
         }
       }
@@ -330,9 +450,9 @@
       "confidence": 0.95,
       "schema": {
         "name": "io.mb3r.bering.model",
-        "version": "1.1.0",
-        "uri": "https://mb3r-lab.github.io/Bering/schema/model/v1.1.0/model.schema.json",
-        "digest": "sha256:bc9a60736c9e6bda9599243fd68f293b88f42ade65321d8267369a5c3214779a"
+        "version": "1.2.0",
+        "uri": "https://mb3r-lab.github.io/Bering/schema/model/v1.2.0/model.schema.json",
+        "digest": "sha256:4fa1a34e64703524cfe2289341fcea79986265db08c0220d6c89e38c0ff76bf8"
       }
     }
   },
@@ -343,9 +463,9 @@
     "confidence": 0.95,
     "schema": {
       "name": "io.mb3r.bering.snapshot",
-      "version": "1.1.0",
-      "uri": "https://mb3r-lab.github.io/Bering/schema/snapshot/v1.1.0/snapshot.schema.json",
-      "digest": "sha256:53b127608b2aaa4fabb352b998cd6b2c5ed558764729a09abea56f4f9b40fa01"
+      "version": "1.2.0",
+      "uri": "https://mb3r-lab.github.io/Bering/schema/snapshot/v1.2.0/snapshot.schema.json",
+      "digest": "sha256:cb737b0a4038e0bf30a397ca7ba7ff017d684fe3b25e7d8e3ae74ac59b45210b"
     }
   }
 }
