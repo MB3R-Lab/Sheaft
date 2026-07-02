@@ -1,13 +1,8 @@
 # Sheaft
 
-[![Release](https://img.shields.io/github/v/release/MB3R-Lab/Sheaft)](https://github.com/MB3R-Lab/Sheaft/releases)
-[![release-dry-run](https://img.shields.io/github/actions/workflow/status/MB3R-Lab/Sheaft/release-dry-run.yml?branch=main&label=release-dry-run)](https://github.com/MB3R-Lab/Sheaft/actions/workflows/release-dry-run.yml)
-[![ci-template-smoke](https://img.shields.io/github/actions/workflow/status/MB3R-Lab/Sheaft/ci-template-smoke.yml?branch=main&label=ci-template-smoke)](https://github.com/MB3R-Lab/Sheaft/actions/workflows/ci-template-smoke.yml)
-[![schema-contract](https://img.shields.io/github/actions/workflow/status/MB3R-Lab/Sheaft/schema-contract.yml?branch=main&label=schema-contract)](https://github.com/MB3R-Lab/Sheaft/actions/workflows/schema-contract.yml)
-[![Go version](https://img.shields.io/github/go-mod/go-version/MB3R-Lab/Sheaft)](https://github.com/MB3R-Lab/Sheaft/blob/main/go.mod)
-[![Current release](https://img.shields.io/badge/release-v1.0.0-blue)](https://github.com/MB3R-Lab/Sheaft/releases/tag/v1.0.0)
-[![Bering support](https://img.shields.io/badge/Bering-1.3-blue)](https://github.com/MB3R-Lab/Sheaft/blob/main/docs/compatibility-matrix.md)
-[![Bering app](https://img.shields.io/badge/Bering%20app-v1.0.0-informational)](https://github.com/MB3R-Lab/Bering/releases/tag/v1.0.0)
+[![release](https://img.shields.io/github/v/release/MB3R-Lab/Sheaft?label=release)](https://github.com/MB3R-Lab/Sheaft/releases)
+[![checks](https://img.shields.io/github/actions/workflow/status/MB3R-Lab/Sheaft/release-dry-run.yml?branch=main&label=checks)](https://github.com/MB3R-Lab/Sheaft/actions/workflows/release-dry-run.yml)
+[![bering schema](https://img.shields.io/badge/bering%20schema-1.3.0-blue)](https://github.com/MB3R-Lab/Sheaft/blob/main/docs/compatibility-matrix.md)
 
 ## Related MB3R repositories
 
@@ -63,7 +58,13 @@ Unknown or mismatched contracts are rejected. There is no silent fallback for un
 
 The current `main` line has also been app-level synced against the Bering `v1.0.0` release/package. That sync does not change the accepted Bering schema contract pins.
 
-The v1 major release claim is documented in [docs/v1-major-semantics.md](docs/v1-major-semantics.md): product-baseline `P_Node * P_Edge` stochastic connectivity over Bering topology `G`, replication map `R`, and endpoint predicates `Phi`, with explicit boundaries for what remains future work. The formal model is described in the preprint [When Is a Trace-Discovered Topological Model Enough?](https://www.alphaxiv.org/abs/2607.00740).
+The v1 major release claim is documented in [docs/v1-major-semantics.md](docs/v1-major-semantics.md): product-baseline `P_Node * P_Edge` stochastic connectivity over Bering topology `G`, replication map `R`, and endpoint predicates `Phi`, with explicit boundaries for what remains future work.
+
+## Research and Evidence
+
+- Formal model: [Stochastic Connectivity as the Foundation of a Runtime Model for Microservice Availability Analysis](https://www.alphaxiv.org/abs/2607.00740)
+- DeathStarBench empirical anchor: [Model Discovery and Graph Simulation: A Lightweight Gateway to Chaos Engineering](https://www.alphaxiv.org/abs/2506.11176)
+- OpenTelemetry Demo async-semantics case study: [Evaluating Asynchronous Semantics in Trace-Discovered Resilience Models: A Case Study on the OpenTelemetry Demo](https://www.alphaxiv.org/abs/2512.12314v1)
 
 ## Installation
 

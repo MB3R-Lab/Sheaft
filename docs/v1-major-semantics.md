@@ -4,7 +4,7 @@ This page is the release-claim boundary for the Sheaft v1 major line.
 
 Sheaft v1 implements the product-baseline stochastic connectivity model for Bering-produced service topologies. It does not claim to solve automatic telemetry calibration, arbitrary non-product probability measures, live chaos execution, or rich temporal workflow models.
 
-The formal model behind this release claim is described in the preprint [When Is a Trace-Discovered Topological Model Enough?](https://www.alphaxiv.org/abs/2607.00740).
+The formal model behind this release claim is described in the preprint [Stochastic Connectivity as the Foundation of a Runtime Model for Microservice Availability Analysis](https://www.alphaxiv.org/abs/2607.00740).
 
 ## Release Claim
 
