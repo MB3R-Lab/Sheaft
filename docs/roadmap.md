@@ -72,7 +72,7 @@ The published `v0.2.4` release payload is the previous preview baseline:
 | Issue | GitHub state | Repo reality | Notes |
 | --- | --- | --- | --- |
 | R1.1 | closed | done | "Consumer Semantics v1" is documented in-repo with version scope, precedence rules, and 15 expected behavior examples. |
-| R1.2 | closed | done | Fail-stop baseline semantics, three sampling modes, timeout/partial degradation handling, and the external Sheaft fault contract are implemented and tested. |
+| R1.2 | closed | done | Fail-stop baseline semantics, four sampling modes, timeout/partial degradation handling, and the external Sheaft fault contract are implemented and tested. |
 | R1.3 | open | partial | Retry/timeout/circuit-breaker inputs from Bering `1.3.0` and the Sheaft fault contract are now handled; fallback/rate-limit annotations still remain outside the implemented surface. |
 
 ### R2. Model discovery from artifacts

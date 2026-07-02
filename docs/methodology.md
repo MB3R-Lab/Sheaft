@@ -27,8 +27,9 @@ For each configured profile Sheaft:
 - `independent_replica`: replicas fail independently and a service stays available while any replica survives
 - `independent_service`: each service is sampled once per trial regardless of replica count
 - `fixed_k_service_set`: exactly `k` services fail per trial
+- `fixed_k_replica_slots`: exactly `k` replica slots fail per trial; when `fixed_k_failures` is omitted, `k = ceil(failure_probability * total_replica_slots)`
 
-When `1.3.0` placement buckets exist, `independent_replica` samples those buckets explicitly. A service remains effectively alive while at least one bucket still has a live replica.
+When `1.3.0` placement buckets exist, replica-based modes sample those buckets explicitly. A service remains effectively alive while at least one bucket still has a live replica.
 
 ## Stochastic Connectivity Parameters
 

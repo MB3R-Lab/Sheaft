@@ -41,6 +41,13 @@ Profile-level `reliability` values inherit the top-level block and can override 
 
 For artifact baseline comparisons, prefer homogeneous `reliability.edge_live_probability` unless every compared artifact exposes the same edge IDs. Per-edge `reliability.edges` entries are validated against each artifact under analysis.
 
+Sampling modes:
+
+- `independent_replica`: replicas fail independently; a service stays live while any replica survives
+- `independent_service`: each service is sampled once per trial regardless of replica count
+- `fixed_k_service_set`: exactly `fixed_k_failures` services fail per trial
+- `fixed_k_replica_slots`: exactly `k` replica slots fail per trial; when `fixed_k_failures` is omitted, `k = ceil(failure_probability * total_replica_slots)`
+
 ## Serve Config
 
 Use the versioned serve config for long-running posture mode:

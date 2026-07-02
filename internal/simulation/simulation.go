@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"hash/fnv"
+	"math"
 	"math/rand"
 	"slices"
 	"strings"
@@ -211,6 +212,10 @@ func runProfile(profile ProfileParams, endpointIDs []string, serviceIDs []string
 	if err := validateLegacyReliability(profile, serviceIDs); err != nil {
 		return ProfileOutput{}, err
 	}
+	profile, err := resolveDerivedFixedKProfile(profile, totalReplicaSlots(serviceIDs, serviceReplicas))
+	if err != nil {
+		return ProfileOutput{}, err
+	}
 	rng := rand.New(rand.NewSource(profile.Seed))
 	successCount := make(map[string]int, len(endpointIDs))
 	for trial := 0; trial < profile.Trials; trial++ {
@@ -286,6 +291,27 @@ func sampleAlive(profile ProfileParams, rng *rand.Rand, serviceIDs []string, ser
 		indices := rng.Perm(len(serviceIDs))
 		for _, idx := range indices[:profile.FixedKFailures] {
 			alive[serviceIDs[idx]] = false
+		}
+	case config.SamplingModeFixedKReplicaSlots:
+		slotServiceIDs := replicaSlotServiceIDs(serviceIDs, serviceReplicas)
+		if profile.FixedKFailures > len(slotServiceIDs) {
+			return nil, fmt.Errorf("fixed_k_failures %d exceeds replica slot count %d", profile.FixedKFailures, len(slotServiceIDs))
+		}
+		for _, serviceID := range serviceIDs {
+			alive[serviceID] = true
+		}
+		if profile.FixedKFailures == 0 {
+			return alive, nil
+		}
+		failedByService := make(map[string]int, len(serviceIDs))
+		indices := rng.Perm(len(slotServiceIDs))
+		for _, idx := range indices[:profile.FixedKFailures] {
+			failedByService[slotServiceIDs[idx]]++
+		}
+		for _, serviceID := range serviceIDs {
+			if failedByService[serviceID] >= serviceReplicas[serviceID] {
+				alive[serviceID] = false
+			}
 		}
 	default:
 		return nil, fmt.Errorf("unsupported sampling mode %q", profile.SamplingMode)
@@ -461,9 +487,12 @@ func normalizeProfile(profile ProfileParams, seed int64, index int) (ProfilePara
 		out.Seed = derivedSeed(seed, out.Name, index)
 	}
 	switch out.SamplingMode {
-	case config.SamplingModeIndependentReplica, config.SamplingModeIndependentService:
+	case config.SamplingModeIndependentReplica, config.SamplingModeIndependentService, config.SamplingModeFixedKReplicaSlots:
 		if out.FailureProbability < 0 || out.FailureProbability > 1 {
 			return ProfileParams{}, errors.New("failure_probability must be in range [0,1]")
+		}
+		if out.SamplingMode == config.SamplingModeFixedKReplicaSlots && out.FixedKFailures < 0 {
+			return ProfileParams{}, errors.New("fixed_k_failures must be >= 0")
 		}
 	case config.SamplingModeFixedKServiceSet:
 		if out.FixedKFailures < 0 {
@@ -556,6 +585,42 @@ func derivedSeed(base int64, profileName string, index int) int64 {
 	h := fnv.New64a()
 	_, _ = h.Write([]byte(fmt.Sprintf("%d:%s:%d", base, profileName, index)))
 	return int64(h.Sum64())
+}
+
+func resolveDerivedFixedKProfile(profile ProfileParams, totalSlots int) (ProfileParams, error) {
+	if profile.SamplingMode != config.SamplingModeFixedKReplicaSlots {
+		return profile, nil
+	}
+	if totalSlots < 0 {
+		return ProfileParams{}, errors.New("replica slot count must be >= 0")
+	}
+	fixedK := profile.FixedKFailures
+	if fixedK == 0 && profile.FailureProbability > 0 {
+		fixedK = int(math.Ceil(profile.FailureProbability * float64(totalSlots)))
+	}
+	if fixedK > totalSlots {
+		return ProfileParams{}, fmt.Errorf("fixed_k_failures %d exceeds replica slot count %d", fixedK, totalSlots)
+	}
+	profile.FixedKFailures = fixedK
+	return profile, nil
+}
+
+func totalReplicaSlots(serviceIDs []string, serviceReplicas map[string]int) int {
+	total := 0
+	for _, serviceID := range serviceIDs {
+		total += serviceReplicas[serviceID]
+	}
+	return total
+}
+
+func replicaSlotServiceIDs(serviceIDs []string, serviceReplicas map[string]int) []string {
+	out := make([]string, 0, totalReplicaSlots(serviceIDs, serviceReplicas))
+	for _, serviceID := range serviceIDs {
+		for replica := 0; replica < serviceReplicas[serviceID]; replica++ {
+			out = append(out, serviceID)
+		}
+	}
+	return out
 }
 
 func serviceLiveProbability(profile ProfileParams, serviceID string) float64 {

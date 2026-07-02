@@ -332,7 +332,22 @@ Expected outcome:
 - exactly one service fails each trial;
 - a single-path endpoint that depends on all three services has availability `0`.
 
-### 14. Gate threshold precedence is profile-specific first
+### 14. `fixed_k_replica_slots` fails a fixed number of replica slots
+
+Input:
+
+- one service with `replicas=2`;
+- `sampling_mode: fixed_k_replica_slots`;
+- `failure_probability: 0.5`;
+- `fixed_k_failures` omitted.
+
+Expected outcome:
+
+- Sheaft derives `fixed_k_failures = ceil(0.5 * 2) = 1`;
+- exactly one replica slot fails each trial;
+- the service remains available because one replica slot survives.
+
+### 15. Gate threshold precedence is profile-specific first
 
 Input:
 
@@ -343,7 +358,7 @@ Expected outcome:
 - the profile-specific endpoint threshold is applied for that profile;
 - otherwise endpoint-specific threshold wins over global threshold.
 
-### 15. `evaluation_rule=all_profiles` differs from `evaluation_rule=any_profile`
+### 16. `evaluation_rule=all_profiles` differs from `evaluation_rule=any_profile`
 
 Input:
 

@@ -24,6 +24,9 @@ profiles:
   - name: fixed-blast-radius
     sampling_mode: fixed_k_service_set
     fixed_k_failures: 1
+  - name: experiment-fixed-fraction
+    sampling_mode: fixed_k_replica_slots
+    failure_probability: 0.30
 
 gate:
   mode: warn

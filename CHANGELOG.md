@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+## v1.1.0 - 2026-07-02
+
+- added `fixed_k_replica_slots` sampling for fixed-fraction experiment reproduction; when `fixed_k_failures` is omitted, Sheaft derives `k = ceil(failure_probability * total_replica_slots)`
+- added schema, methodology, configuration example, and simulation coverage for fixed replica-slot sampling
+- kept Bering contract compatibility unchanged on the strict `io.mb3r.bering.model@1.3.0` and `io.mb3r.bering.snapshot@1.3.0` line
+
+## v1.0.0 - 2026-07-02
+
 - added v1 major semantics documentation for the stochastic connectivity baseline, migration notes, and explicit out-of-scope release boundaries
 - added release dry-run validation for v1 docs/schema/example consistency
 - recorded app-level sync with Bering `v1.0.0` in `compatibility-manifest.json`

@@ -300,6 +300,31 @@ func TestRunProfiles_SamplingModes(t *testing.T) {
 	if fixedKOut.Profiles[0].WeightedAggregate != 0 {
 		t.Fatalf("expected fixed-k path availability to be 0, got %f", fixedKOut.Profiles[0].WeightedAggregate)
 	}
+
+	replicaSlotModel := testModel(
+		[]model.Service{{ID: "frontend", Name: "frontend", Replicas: 2}},
+		nil,
+		[]model.Endpoint{{ID: "frontend:GET /health", EntryService: "frontend", SuccessPredicateRef: "frontend:GET /health"}},
+	)
+	replicaSlotOut, err := RunProfiles(replicaSlotModel, AnalysisParams{
+		Seed: 13,
+		Profiles: []ProfileParams{
+			{Name: "fixed-replica-slots", Trials: 1000, SamplingMode: "fixed_k_replica_slots", FailureProbability: 0.5},
+			{Name: "fixed-replica-slots-explicit", Trials: 1000, SamplingMode: "fixed_k_replica_slots", FixedKFailures: 2},
+		},
+	})
+	if err != nil {
+		t.Fatalf("fixed replica slots RunProfiles failed: %v", err)
+	}
+	if replicaSlotOut.Profiles[0].FixedKFailures != 1 {
+		t.Fatalf("expected derived fixed_k_failures=1, got %d", replicaSlotOut.Profiles[0].FixedKFailures)
+	}
+	if replicaSlotOut.Profiles[0].WeightedAggregate != 1 {
+		t.Fatalf("expected one failed replica slot to leave service alive, got %f", replicaSlotOut.Profiles[0].WeightedAggregate)
+	}
+	if replicaSlotOut.Profiles[1].WeightedAggregate != 0 {
+		t.Fatalf("expected two failed replica slots to kill service, got %f", replicaSlotOut.Profiles[1].WeightedAggregate)
+	}
 }
 
 func TestRunProfiles_WeightedAggregate(t *testing.T) {
