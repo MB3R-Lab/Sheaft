@@ -133,8 +133,8 @@ func TestComposeAnalysis_IncludesParameterSources(t *testing.T) {
 			Metadata: artifact.Metadata{
 				Kind: modelcontract.KindSnapshot,
 				Contract: modelcontract.SupportedContract{
-					Name:    modelcontract.BeringSnapshotV100Name,
-					Version: modelcontract.BeringSnapshotV100Version,
+					Name:    modelcontract.BeringSnapshotV130Name,
+					Version: modelcontract.BeringSnapshotV130Version,
 				},
 			},
 			Model: model.ResilienceModel{

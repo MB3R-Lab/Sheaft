@@ -12,12 +12,12 @@ import (
 	"github.com/MB3R-Lab/Sheaft/internal/modelcontract"
 )
 
-func TestAnalyzeFile_BaselineArtifactComparisonAcrossContractLines(t *testing.T) {
+func TestAnalyzeFile_BaselineArtifactComparisonWithinCurrentContractLine(t *testing.T) {
 	t.Parallel()
 
 	root := repoRoot(t)
 	primary := filepath.Join(root, "examples", "outputs", "snapshot-v1.3.0.sample.json")
-	baseline := filepath.Join(root, "examples", "outputs", "snapshot-v1.0.0.sample.json")
+	baseline := filepath.Join(root, "examples", "outputs", "snapshot.sample.json")
 
 	result, err := AnalyzeFile(primary, config.AnalysisConfig{
 		SchemaVersion:      config.AnalysisSchemaVersionV110,
@@ -26,7 +26,7 @@ func TestAnalyzeFile_BaselineArtifactComparisonAcrossContractLines(t *testing.T)
 		SamplingMode:       config.SamplingModeIndependentReplica,
 		FailureProbability: 0,
 		Baselines: []config.BaselineRef{
-			{Name: "bering-1.0.0", Path: baseline},
+			{Name: "bering-1.3.0", Path: baseline},
 		},
 		Profiles: []config.Profile{
 			{Name: "steady", Trials: 4000, SamplingMode: config.SamplingModeIndependentReplica, FailureProbability: 0},
@@ -44,7 +44,7 @@ func TestAnalyzeFile_BaselineArtifactComparisonAcrossContractLines(t *testing.T)
 		t.Fatalf("expected one baseline diff, got %+v", result.Report.Diffs.Baselines)
 	}
 	diff := result.Report.Diffs.Baselines[0]
-	if diff.Name != "bering-1.0.0" {
+	if diff.Name != "bering-1.3.0" {
 		t.Fatalf("unexpected baseline diff name: %+v", diff)
 	}
 	if len(diff.Profiles) != 1 {
@@ -53,15 +53,10 @@ func TestAnalyzeFile_BaselineArtifactComparisonAcrossContractLines(t *testing.T)
 	if len(diff.Profiles[0].Endpoints) == 0 {
 		t.Fatalf("expected overlapping endpoint metrics to produce diffs, got %+v", diff.Profiles[0])
 	}
-	foundNonComparable := false
 	for _, metric := range diff.Profiles[0].AdvancedMetrics {
 		if metric.Status == "non_comparable" {
-			foundNonComparable = true
-			break
+			t.Fatalf("did not expect current-line advanced metrics to be non-comparable, got %+v", diff.Profiles[0].AdvancedMetrics)
 		}
-	}
-	if !foundNonComparable {
-		t.Fatalf("expected advanced metrics missing on the v1.0.0 baseline to be marked non-comparable, got %+v", diff.Profiles[0].AdvancedMetrics)
 	}
 }
 

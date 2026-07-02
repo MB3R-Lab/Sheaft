@@ -60,7 +60,7 @@ If no richer predicate definition is supplied for an endpoint:
 - `any_of` is applied across discovered or overridden paths
 - `all_of` is applied within each path
 
-This fallback remains the baseline rule for `1.0.0` semantics and for backward-compatible journey discovery under `1.1.0`, `1.2.0`, and `1.3.0`.
+This fallback remains the baseline rule for supported artifacts that do not provide richer endpoint semantics.
 
 ## Advanced Diagnostics
 

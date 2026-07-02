@@ -28,7 +28,7 @@ func TestLoad_PlainModelContract(t *testing.T) {
 	if loaded.Metadata.Kind != modelcontract.KindModel {
 		t.Fatalf("expected model kind, got %s", loaded.Metadata.Kind)
 	}
-	if loaded.Metadata.Contract.Name != modelcontract.BeringModelV100Name {
+	if loaded.Metadata.Contract.Name != modelcontract.BeringModelV130Name {
 		t.Fatalf("unexpected contract: %+v", loaded.Metadata.Contract)
 	}
 }
@@ -89,10 +89,10 @@ func TestLoad_SnapshotContract(t *testing.T) {
 			EmittedAt:  "2026-03-11T08:00:00Z",
 			Confidence: 0.8,
 			Schema: modelcontract.SchemaRef{
-				Name:    modelcontract.BeringSnapshotV100Name,
-				Version: modelcontract.BeringSnapshotV100Version,
-				URI:     modelcontract.BeringSnapshotV100URI,
-				Digest:  modelcontract.BeringSnapshotV100Digest,
+				Name:    modelcontract.BeringSnapshotV130Name,
+				Version: modelcontract.BeringSnapshotV130Version,
+				URI:     modelcontract.BeringSnapshotV130URI,
+				Digest:  modelcontract.BeringSnapshotV130Digest,
 			},
 		},
 	}
@@ -159,8 +159,8 @@ func TestLoad_CheckedInSnapshotSample(t *testing.T) {
 	if loaded.Metadata.Kind != modelcontract.KindSnapshot {
 		t.Fatalf("expected snapshot kind, got %s", loaded.Metadata.Kind)
 	}
-	if loaded.Metadata.Contract.Digest != modelcontract.BeringSnapshotV100Digest {
-		t.Fatalf("unexpected snapshot digest: got %s want %s", loaded.Metadata.Contract.Digest, modelcontract.BeringSnapshotV100Digest)
+	if loaded.Metadata.Contract.Digest != modelcontract.BeringSnapshotV130Digest {
+		t.Fatalf("unexpected snapshot digest: got %s want %s", loaded.Metadata.Contract.Digest, modelcontract.BeringSnapshotV130Digest)
 	}
 	if loaded.Metadata.TopologyVersion == "" {
 		t.Fatal("expected topology version from snapshot sample")

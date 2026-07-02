@@ -4,8 +4,8 @@
 
 - Input topology and endpoint metadata are produced upstream.
 - Supported contracts are explicitly versioned and whitelisted.
-- `1.0.0` semantics are fail-stop and profile-driven.
-- `1.3.0` advanced analysis depends on explicit retry, timeout, latency, placement, and shared-resource metadata.
+- `1.3.0` is the current accepted Bering contract line.
+- Advanced analysis depends on explicit retry, timeout, latency, placement, and shared-resource metadata.
 - Weighted aggregates reflect configured workload mix, not observed runtime traffic by default.
 
 ## Current Limitations
@@ -42,7 +42,7 @@ Severity means:
 | `DNT-META-001` | Upstream discovery confidence is too low for release gating. | Treat `metadata.confidence < 0.80` as review-required by default. For snapshots, also review low `service_support_min`, `edge_support_min`, or `endpoint_support_min` values when present. | `review` | Re-run upstream discovery with better telemetry coverage or document why the missing support does not affect the release path. |
 | `DNT-COV-001` | High-weight endpoint or path has weak coverage. | Inspect configured endpoint weights. Any endpoint with weight `>= 0.10`, or any endpoint in the top 20% of configured workload weight, should have an explicit predicate, journey, or path diagnostic source. | `review` | Add explicit journeys or predicate overlays for the release-critical endpoints before using the gate as a blocker. |
 | `DNT-ADV-001` | A gate decision depends on an endpoint or profile whose advanced metric is unavailable. | In `report.json`, look for advanced metrics with `available: false`, `provenance: "unavailable"`, or non-comparable diff entries on the same profile or endpoint that triggered the gate. | `review` | Add retry, timeout, latency, placement, shared-resource, or fault-contract metadata, or narrow the gate to metrics that are actually available. |
-| `DNT-BASE-001` | Baseline comparison has no meaningful overlap. | If the diff marks the primary metrics as missing, non-comparable, or compares only unrelated advanced metrics, the baseline is not release evidence. This is common when comparing a rich `1.3.0` artifact to a sparse `1.0.0` baseline without shared metrics. | `review` | Pick a baseline artifact with overlapping metrics or publish the comparison as informational only. |
+| `DNT-BASE-001` | Baseline comparison has no meaningful overlap. | If the diff marks the primary metrics as missing, non-comparable, or compares only unrelated advanced metrics, the baseline is not release evidence. | `review` | Pick a supported baseline artifact with overlapping metrics or publish the comparison as informational only. |
 | `DNT-WATCH-001` | Serve/watch mode is pointed at a directory that operators expect to merge. | Directory watch mode selects the newest matching artifact. If the handoff produces multiple partial files that should be combined, the served report reflects only one file. | `block` | Publish a single merged Bering artifact before Sheaft consumes it, or point Sheaft at the exact generated artifact file. |
 | `DNT-POLICY-001` | Gate policy is copied across environments without environment-specific assumptions. | Compare policy thresholds, profile weights, sampling mode, and fault assumptions against checked-in examples. Defaults or copy-pasted staging thresholds used for production release gates require review. | `review` | Create environment-specific policy files and record the release assumptions in the PR or release issue. |
 | `DNT-STALE-001` | Artifact provenance does not match the release candidate. | Compare artifact provenance, generated-at/emitted-at timestamps, source refs, and the release issue or CI build ID. Treat artifacts older than the release candidate build, or from a different source ref, as stale. | `block` | Regenerate the artifact from the release candidate pipeline and attach the matching report to the release evidence. |

@@ -23,10 +23,10 @@ func TestValidate_StructuralAndContractValidation(t *testing.T) {
 			DiscoveredAt: "2026-03-03T00:00:00Z",
 			Confidence:   0.8,
 			Schema: Schema{
-				Name:    "io.mb3r.bering.model",
-				Version: "1.0.0",
-				URI:     "https://mb3r-lab.github.io/Bering/schema/model/v1.0.0/model.schema.json",
-				Digest:  "sha256:272277c093f37580adcd2dded225bd37c86539d642d7910baad7e4228227d1a7",
+				Name:    modelcontract.BeringModelV130Name,
+				Version: modelcontract.BeringModelV130Version,
+				URI:     modelcontract.BeringModelV130URI,
+				Digest:  modelcontract.BeringModelV130Digest,
 			},
 		},
 	}
@@ -43,7 +43,7 @@ func TestValidate_StructuralAndContractValidation(t *testing.T) {
 		t.Fatalf("expected supported contract, got error: %v", err)
 	}
 
-	mdl.Metadata.Schema.Version = "1.0.1"
+	mdl.Metadata.Schema.Version = "1.2.0"
 	if err := mdl.Validate(); err != nil {
 		t.Fatalf("expected structural validation to ignore supported-contract resolution, got error: %v", err)
 	}
@@ -61,8 +61,6 @@ func TestValidate_VersionedContractsRequireEdgeIDs(t *testing.T) {
 	t.Parallel()
 
 	refs := []modelcontract.SchemaRef{
-		modelcontract.ExpectedModelV110Ref(),
-		modelcontract.ExpectedModelV120Ref(),
 		modelcontract.ExpectedModelV130Ref(),
 	}
 	for _, ref := range refs {

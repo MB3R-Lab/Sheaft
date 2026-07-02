@@ -293,7 +293,7 @@ func (m ResilienceModel) Validate() error {
 
 func requiresEdgeID(schemaVersion string) bool {
 	switch strings.TrimSpace(schemaVersion) {
-	case "1.1.0", "1.2.0", "1.3.0":
+	case "1.3.0":
 		return true
 	default:
 		return false

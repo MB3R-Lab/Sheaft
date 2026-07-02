@@ -28,7 +28,7 @@ Key sections:
 - `contract_policy`
 - `gate`
 
-`schema_version: "1.0"` remains the baseline surface. `schema_version: "1.1"` adds fault-profile selection and cross-line artifact baselines without changing legacy `1.0` configs.
+`schema_version: "1.0"` remains the simple analysis-config surface. `schema_version: "1.1"` adds fault-profile selection and artifact baselines without changing legacy `1.0` configs.
 
 `failure_probability` remains a legacy shorthand for homogeneous node failures. Prefer `reliability` for stochastic connectivity analysis:
 
@@ -39,7 +39,7 @@ Key sections:
 
 Profile-level `reliability` values inherit the top-level block and can override individual defaults or service/edge entries. Edge reliability requires path-aware artifact analysis because legacy service predicates do not identify which edge carried a successful call.
 
-For cross-line baseline comparisons, prefer homogeneous `reliability.edge_live_probability` unless every compared artifact exposes the same edge IDs. Per-edge `reliability.edges` entries are validated against each artifact under analysis, so a Bering `1.3.0` operation-aware edge ID will not match a sparse `1.0.0` baseline artifact.
+For artifact baseline comparisons, prefer homogeneous `reliability.edge_live_probability` unless every compared artifact exposes the same edge IDs. Per-edge `reliability.edges` entries are validated against each artifact under analysis.
 
 ## Serve Config
 
@@ -83,10 +83,6 @@ The same structure can be embedded inline under `analysis.contract_policy`, or p
 
 ## Artifact Schemas
 
-- Plain model schema: [api/schema/model.schema.json](../api/schema/model.schema.json)
-- Snapshot envelope schema: [api/schema/snapshot.schema.json](../api/schema/snapshot.schema.json)
-- Versioned Bering `1.1.0` model schema mirror: [api/schema/model.v1.1.0.schema.json](../api/schema/model.v1.1.0.schema.json)
-- Versioned Bering `1.1.0` snapshot schema mirror: [api/schema/snapshot.v1.1.0.schema.json](../api/schema/snapshot.v1.1.0.schema.json)
 - Versioned Bering `1.3.0` model schema mirror: [api/schema/model.v1.3.0.schema.json](../api/schema/model.v1.3.0.schema.json)
 - Versioned Bering `1.3.0` snapshot schema mirror: [api/schema/snapshot.v1.3.0.schema.json](../api/schema/snapshot.v1.3.0.schema.json)
 - Report schema: [api/schema/report.schema.json](../api/schema/report.schema.json)
@@ -102,5 +98,5 @@ Report output now carries both:
 
 - keep `--policy` when one profile and simple thresholds are enough
 - move to `--analysis` when you need profiles, weights, baselines, overlays, or contract pinning
-- move to `schema_version: "1.1"` when you need `fault_contract`, `profiles[].fault_profile`, or artifact-vs-artifact baseline comparison across Bering contract lines
+- move to `schema_version: "1.1"` when you need `fault_contract`, `profiles[].fault_profile`, or artifact-vs-artifact baseline comparison
 - use `serve` when posture must stay current as new artifacts arrive

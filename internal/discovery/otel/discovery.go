@@ -68,6 +68,7 @@ func Discover(inputPath string) (model.ResilienceModel, error) {
 			if rec.Target != "" && rec.Target != rec.Source {
 				key := edgeKey(rec.Source, rec.Target, rec.Kind, rec.Blocking)
 				edgeSet[key] = model.Edge{
+					ID:       key,
 					From:     rec.Source,
 					To:       rec.Target,
 					Kind:     rec.Kind,

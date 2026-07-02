@@ -15,16 +15,16 @@ func TestContractPolicyEvaluate_AllowsSupportedContract(t *testing.T) {
 		AllowedContracts: []ContractPolicySelector{
 			{
 				Kind:     "snapshot",
-				Name:     modelcontract.BeringSnapshotV100Name,
-				Versions: []string{modelcontract.BeringSnapshotV100Version},
+				Name:     modelcontract.BeringSnapshotV130Name,
+				Versions: []string{modelcontract.BeringSnapshotV130Version},
 			},
 		},
 	}
 
 	decision, err := policy.Evaluate(modelcontract.SupportedContract{
 		Kind:    modelcontract.KindSnapshot,
-		Name:    modelcontract.BeringSnapshotV100Name,
-		Version: modelcontract.BeringSnapshotV100Version,
+		Name:    modelcontract.BeringSnapshotV130Name,
+		Version: modelcontract.BeringSnapshotV130Version,
 	})
 	if err != nil {
 		t.Fatalf("evaluate: %v", err)
@@ -42,16 +42,16 @@ func TestContractPolicyEvaluate_WarnsOnDeprecatedContract(t *testing.T) {
 		DeprecatedContracts: []DeprecatedContractSelector{
 			{
 				Kind:     "snapshot",
-				Name:     modelcontract.BeringSnapshotV100Name,
-				Versions: []string{modelcontract.BeringSnapshotV100Version},
+				Name:     modelcontract.BeringSnapshotV130Name,
+				Versions: []string{modelcontract.BeringSnapshotV130Version},
 			},
 		},
 	}
 
 	decision, err := policy.Evaluate(modelcontract.SupportedContract{
 		Kind:    modelcontract.KindSnapshot,
-		Name:    modelcontract.BeringSnapshotV100Name,
-		Version: modelcontract.BeringSnapshotV100Version,
+		Name:    modelcontract.BeringSnapshotV130Name,
+		Version: modelcontract.BeringSnapshotV130Version,
 	})
 	if err != nil {
 		t.Fatalf("evaluate: %v", err)
@@ -70,8 +70,8 @@ func TestContractPolicyEvaluate_FailsOnDisallowedKind(t *testing.T) {
 
 	_, err := policy.Evaluate(modelcontract.SupportedContract{
 		Kind:    modelcontract.KindSnapshot,
-		Name:    modelcontract.BeringSnapshotV100Name,
-		Version: modelcontract.BeringSnapshotV100Version,
+		Name:    modelcontract.BeringSnapshotV130Name,
+		Version: modelcontract.BeringSnapshotV130Version,
 	})
 	if err == nil {
 		t.Fatal("expected disallowed kind error")
@@ -88,7 +88,7 @@ func TestContractPolicyValidate_RejectsUnknownSelector(t *testing.T) {
 		AllowedContracts: []ContractPolicySelector{
 			{
 				Kind:     "model",
-				Name:     modelcontract.BeringModelV100Name,
+				Name:     modelcontract.BeringModelV130Name,
 				Versions: []string{"9.9.9"},
 			},
 		},

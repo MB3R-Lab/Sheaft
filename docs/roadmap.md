@@ -23,7 +23,7 @@ This file captures the repository-side audit refreshed on 2026-05-31: current Gi
 - Active backlog milestone: `Post-v0.2.4 technical preview`
 - Previous release-tracking issue: [#82](https://github.com/MB3R-Lab/Sheaft/issues/82)
 - Current release-tracking issue: [#83](https://github.com/MB3R-Lab/Sheaft/issues/83)
-- Current upstream Bering app/package sync target: [Bering v0.3.4](https://github.com/MB3R-Lab/Bering/releases/tag/v0.3.4), with accepted `1.0.0`, `1.1.0`, `1.2.0`, and `1.3.0` schema contract pins tracked in the compatibility matrix.
+- Current upstream Bering app/package sync target: [Bering v1.0.0](https://github.com/MB3R-Lab/Bering/releases/tag/v1.0.0), with accepted `1.3.0` schema contract pins tracked in the compatibility matrix.
 - GitHub issue and milestone sync was refreshed on 2026-05-31 after shipping the `v0.2.4` technical-preview release.
 
 ## Latest Release/Package Checkpoint
@@ -48,7 +48,7 @@ The published `v0.2.4` release payload is the baseline for the next technical-pr
 | R3 | open | partial | Reproducible analysis and explicit parameter/calibration provenance are now in place, but pluginization and scale benchmarks are still backlog items. |
 | R4 | closed | done | The do-not-trust signal catalogue, fixed benchmark slice, quality report, and external benchmark contract are now in-repo. |
 | R5 | open | partial | CI gate, `serve` watch-loop mode, output artifacts, and validated cross-CI handoff smoke pipelines are implemented; chaos triage remains the main workflow gap. |
-| R6 | closed | done | Strict contract pinning, conformance checks, vendored schemas, compatibility matrix, contract release workflow, and real dual-line `1.0.0`/`1.1.0` support are now implemented end to end. |
+| R6 | closed | done | Strict contract pinning, conformance checks, vendored schemas, compatibility matrix, and contract release workflow are implemented end to end. The current v1 line intentionally accepts only Bering `1.3.0`. |
 | R7 | open | gap | No open-core/export playbook material exists yet beyond issue-level planning. |
 | R8 | open | gap | Security/privacy work is not yet implemented beyond lightweight assumptions/limitations guidance. |
 | R9 | open | partial | Gate why output now explains threshold/assertion causes, but the broader debugging toolkit and dependency-level explanation layer are still backlog items. |
@@ -110,7 +110,7 @@ The published `v0.2.4` release payload is the baseline for the next technical-pr
 | R6.3 | closed | done | The repository already functions as the open reference consumer implementation. |
 | R6.4 | closed | done | Contract release workflow, release checklist, and CI verification against published Bering release metadata are now in-repo. |
 | R6.5 | closed | done | Compatibility matrix is now published in-repo, linked from `README.md`, and guarded in CI when contract pin files change. |
-| R6.6 | closed | done | Project-level contract policy now coexists with real dual-line support, end-to-end `1.0.0`/`1.1.0` contract tests, and cross-line artifact baseline comparison coverage. |
+| R6.6 | closed | done | Project-level contract policy now coexists with strict Bering `1.3.0` support and artifact baseline comparison coverage. |
 
 ### R7. Commercialization without lock-in
 
@@ -198,5 +198,5 @@ Goal: make the Bering -> Sheaft workflow repeatable beyond a technical preview.
 - R4.3 landed on 2026-05-30 as the first trustable-gate documentation step: `docs/assumptions-and-limitations.md` now contains the do-not-trust signal catalogue and detector field shape.
 - R4.1/R4.2 landed on 2026-05-31: `make benchmark-slice` now runs the fixed Sheaft-on-Bering benchmark and emits `quality-report.json`.
 - R9.1 landed on 2026-05-31: gate decisions now include machine-readable why reasons and CLI `--why` output.
-- Bering app/package sync refreshed on 2026-05-31 after Bering `v0.3.4`: `compatibility-manifest.json` now records `tested_bering_app_versions: ["v0.3.4"]`; schema contract pins are unchanged.
+- Bering app/package sync for the v1 preparation line records Bering `v1.0.0` and strict schema contract support for `1.3.0`.
 - The next highest-priority repo task is **R9.2: add a debugging toolkit for common contract, path, and policy failures**.

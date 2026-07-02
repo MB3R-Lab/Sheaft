@@ -122,54 +122,6 @@ check_contract_version() {
 }
 
 check_contract_version \
-  "model-v1.0.0" \
-  "BeringModelV100URI" \
-  "BeringModelV100Digest" \
-  "BeringModelV100Version" \
-  "${REPO_ROOT}/internal/modelcontract/schema/model.v1.0.0.schema.json" \
-  "${REPO_ROOT}/api/schema/model.v1.0.0.schema.json"
-
-check_contract_version \
-  "snapshot-v1.0.0" \
-  "BeringSnapshotV100URI" \
-  "BeringSnapshotV100Digest" \
-  "BeringSnapshotV100Version" \
-  "${REPO_ROOT}/internal/modelcontract/schema/snapshot.v1.0.0.schema.json" \
-  "${REPO_ROOT}/api/schema/snapshot.v1.0.0.schema.json"
-
-check_contract_version \
-  "model-v1.1.0" \
-  "BeringModelV110URI" \
-  "BeringModelV110Digest" \
-  "BeringModelV110Version" \
-  "${REPO_ROOT}/internal/modelcontract/schema/model.v1.1.0.schema.json" \
-  "${REPO_ROOT}/api/schema/model.v1.1.0.schema.json"
-
-check_contract_version \
-  "snapshot-v1.1.0" \
-  "BeringSnapshotV110URI" \
-  "BeringSnapshotV110Digest" \
-  "BeringSnapshotV110Version" \
-  "${REPO_ROOT}/internal/modelcontract/schema/snapshot.v1.1.0.schema.json" \
-  "${REPO_ROOT}/api/schema/snapshot.v1.1.0.schema.json"
-
-check_contract_version \
-  "model-v1.2.0" \
-  "BeringModelV120URI" \
-  "BeringModelV120Digest" \
-  "BeringModelV120Version" \
-  "${REPO_ROOT}/internal/modelcontract/schema/model.v1.2.0.schema.json" \
-  "${REPO_ROOT}/api/schema/model.v1.2.0.schema.json"
-
-check_contract_version \
-  "snapshot-v1.2.0" \
-  "BeringSnapshotV120URI" \
-  "BeringSnapshotV120Digest" \
-  "BeringSnapshotV120Version" \
-  "${REPO_ROOT}/internal/modelcontract/schema/snapshot.v1.2.0.schema.json" \
-  "${REPO_ROOT}/api/schema/snapshot.v1.2.0.schema.json"
-
-check_contract_version \
   "model-v1.3.0" \
   "BeringModelV130URI" \
   "BeringModelV130Digest" \

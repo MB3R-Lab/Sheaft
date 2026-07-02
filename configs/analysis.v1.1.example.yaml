@@ -13,8 +13,8 @@ reliability:
 fault_contract: configs/fault-contract.example.yaml
 
 baselines:
-  - name: bering-1.0.0-baseline
-    path: examples/outputs/snapshot-v1.0.0.sample.json
+  - name: bering-1.3.0-baseline
+    path: examples/outputs/snapshot.sample.json
 
 profiles:
   - name: steady-state

@@ -14,7 +14,7 @@ func TestRoundtripSimulateGateFromBeringModel(t *testing.T) {
 	root := filepath.Clean(filepath.Join("..", ".."))
 	modelPath := filepath.Join(root, "test", "fixtures", "model.disconnected.json")
 	policyPath := filepath.Join(root, "test", "fixtures", "policy.fixture.yaml")
-	schemaModel := filepath.Join(root, "api", "schema", "model.schema.json")
+	schemaModel := filepath.Join(root, "api", "schema", "model.v1.3.0.schema.json")
 	schemaReport := filepath.Join(root, "api", "schema", "report.schema.json")
 
 	outDir := t.TempDir()

@@ -1,6 +1,7 @@
 package simulation
 
 import (
+	"fmt"
 	"math"
 	"strings"
 	"testing"
@@ -19,7 +20,7 @@ func TestRun_DeterministicWithSameSeed(t *testing.T) {
 			{ID: "checkout", Name: "checkout", Replicas: 1},
 		},
 		Edges: []model.Edge{
-			{From: "frontend", To: "checkout", Kind: model.EdgeKindSync, Blocking: true},
+			{ID: "frontend|checkout|sync|true", From: "frontend", To: "checkout", Kind: model.EdgeKindSync, Blocking: true},
 		},
 		Endpoints: []model.Endpoint{
 			{ID: "frontend:GET /checkout", EntryService: "frontend", SuccessPredicateRef: "frontend:GET /checkout"},
@@ -30,10 +31,10 @@ func TestRun_DeterministicWithSameSeed(t *testing.T) {
 			DiscoveredAt: "2026-03-03T00:00:00Z",
 			Confidence:   0.7,
 			Schema: model.Schema{
-				Name:    "io.mb3r.bering.model",
-				Version: "1.0.0",
-				URI:     "https://mb3r-lab.github.io/Bering/schema/model/v1.0.0/model.schema.json",
-				Digest:  "sha256:272277c093f37580adcd2dded225bd37c86539d642d7910baad7e4228227d1a7",
+				Name:    modelcontract.ExpectedSchemaName,
+				Version: modelcontract.ExpectedSchemaVersion,
+				URI:     modelcontract.ExpectedSchemaURI,
+				Digest:  modelcontract.ExpectedSchemaDigest,
 			},
 		},
 	}
@@ -69,8 +70,8 @@ func TestRun_UsesJourneyAnyPathSemantics(t *testing.T) {
 			{ID: "checkoutB", Name: "checkoutB", Replicas: 1},
 		},
 		Edges: []model.Edge{
-			{From: "frontend", To: "checkoutA", Kind: model.EdgeKindSync, Blocking: true},
-			{From: "frontend", To: "checkoutB", Kind: model.EdgeKindSync, Blocking: true},
+			{ID: "frontend|checkoutA|sync|true", From: "frontend", To: "checkoutA", Kind: model.EdgeKindSync, Blocking: true},
+			{ID: "frontend|checkoutB|sync|true", From: "frontend", To: "checkoutB", Kind: model.EdgeKindSync, Blocking: true},
 		},
 		Endpoints: []model.Endpoint{
 			{ID: "frontend:GET /checkout", EntryService: "frontend", SuccessPredicateRef: "frontend:GET /checkout"},
@@ -81,10 +82,10 @@ func TestRun_UsesJourneyAnyPathSemantics(t *testing.T) {
 			DiscoveredAt: "2026-03-03T00:00:00Z",
 			Confidence:   0.7,
 			Schema: model.Schema{
-				Name:    "io.mb3r.bering.model",
-				Version: "1.0.0",
-				URI:     "https://mb3r-lab.github.io/Bering/schema/model/v1.0.0/model.schema.json",
-				Digest:  "sha256:272277c093f37580adcd2dded225bd37c86539d642d7910baad7e4228227d1a7",
+				Name:    modelcontract.ExpectedSchemaName,
+				Version: modelcontract.ExpectedSchemaVersion,
+				URI:     modelcontract.ExpectedSchemaURI,
+				Digest:  modelcontract.ExpectedSchemaDigest,
 			},
 		},
 	}
@@ -116,8 +117,8 @@ func TestRun_UsesManualJourneyOverrides(t *testing.T) {
 			{ID: "checkoutB", Name: "checkoutB", Replicas: 1},
 		},
 		Edges: []model.Edge{
-			{From: "frontend", To: "checkoutA", Kind: model.EdgeKindSync, Blocking: true},
-			{From: "frontend", To: "checkoutB", Kind: model.EdgeKindSync, Blocking: true},
+			{ID: "frontend|checkoutA|sync|true", From: "frontend", To: "checkoutA", Kind: model.EdgeKindSync, Blocking: true},
+			{ID: "frontend|checkoutB|sync|true", From: "frontend", To: "checkoutB", Kind: model.EdgeKindSync, Blocking: true},
 		},
 		Endpoints: []model.Endpoint{
 			{ID: "frontend:GET /checkout", EntryService: "frontend", SuccessPredicateRef: "frontend:GET /checkout"},
@@ -128,10 +129,10 @@ func TestRun_UsesManualJourneyOverrides(t *testing.T) {
 			DiscoveredAt: "2026-03-03T00:00:00Z",
 			Confidence:   0.7,
 			Schema: model.Schema{
-				Name:    "io.mb3r.bering.model",
-				Version: "1.0.0",
-				URI:     "https://mb3r-lab.github.io/Bering/schema/model/v1.0.0/model.schema.json",
-				Digest:  "sha256:272277c093f37580adcd2dded225bd37c86539d642d7910baad7e4228227d1a7",
+				Name:    modelcontract.ExpectedSchemaName,
+				Version: modelcontract.ExpectedSchemaVersion,
+				URI:     modelcontract.ExpectedSchemaURI,
+				Digest:  modelcontract.ExpectedSchemaDigest,
 			},
 		},
 	}
@@ -175,10 +176,10 @@ func TestRun_FailsOnUnknownJourneyOverrideEndpoint(t *testing.T) {
 			DiscoveredAt: "2026-03-03T00:00:00Z",
 			Confidence:   0.7,
 			Schema: model.Schema{
-				Name:    "io.mb3r.bering.model",
-				Version: "1.0.0",
-				URI:     "https://mb3r-lab.github.io/Bering/schema/model/v1.0.0/model.schema.json",
-				Digest:  "sha256:272277c093f37580adcd2dded225bd37c86539d642d7910baad7e4228227d1a7",
+				Name:    modelcontract.ExpectedSchemaName,
+				Version: modelcontract.ExpectedSchemaVersion,
+				URI:     modelcontract.ExpectedSchemaURI,
+				Digest:  modelcontract.ExpectedSchemaDigest,
 			},
 		},
 	}
@@ -453,6 +454,12 @@ func TestRunProfiles_RejectsEdgeAwarePredicate(t *testing.T) {
 }
 
 func testModel(services []model.Service, edges []model.Edge, endpoints []model.Endpoint) model.ResilienceModel {
+	edges = append([]model.Edge(nil), edges...)
+	for i := range edges {
+		if strings.TrimSpace(edges[i].ID) == "" {
+			edges[i].ID = fmt.Sprintf("%s|%s|%s|%t", edges[i].From, edges[i].To, edges[i].Kind, edges[i].Blocking)
+		}
+	}
 	return model.ResilienceModel{
 		Services:  services,
 		Edges:     edges,

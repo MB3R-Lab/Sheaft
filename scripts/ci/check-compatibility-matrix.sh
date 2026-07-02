@@ -60,48 +60,6 @@ require_contract_in_matrix() {
 }
 
 require_contract_in_matrix \
-  "BeringModelV100Name" \
-  "BeringModelV100Version" \
-  "BeringModelV100URI" \
-  "BeringModelV100Digest" \
-  "model v1.0.0"
-
-require_contract_in_matrix \
-  "BeringSnapshotV100Name" \
-  "BeringSnapshotV100Version" \
-  "BeringSnapshotV100URI" \
-  "BeringSnapshotV100Digest" \
-  "snapshot v1.0.0"
-
-require_contract_in_matrix \
-  "BeringModelV110Name" \
-  "BeringModelV110Version" \
-  "BeringModelV110URI" \
-  "BeringModelV110Digest" \
-  "model v1.1.0"
-
-require_contract_in_matrix \
-  "BeringSnapshotV110Name" \
-  "BeringSnapshotV110Version" \
-  "BeringSnapshotV110URI" \
-  "BeringSnapshotV110Digest" \
-  "snapshot v1.1.0"
-
-require_contract_in_matrix \
-  "BeringModelV120Name" \
-  "BeringModelV120Version" \
-  "BeringModelV120URI" \
-  "BeringModelV120Digest" \
-  "model v1.2.0"
-
-require_contract_in_matrix \
-  "BeringSnapshotV120Name" \
-  "BeringSnapshotV120Version" \
-  "BeringSnapshotV120URI" \
-  "BeringSnapshotV120Digest" \
-  "snapshot v1.2.0"
-
-require_contract_in_matrix \
   "BeringModelV130Name" \
   "BeringModelV130Version" \
   "BeringModelV130URI" \
@@ -125,25 +83,9 @@ if [ -n "${BASE_REF}" ]; then
 
   contract_changes="$(git diff --name-only "${BASE_REF}"...HEAD -- \
     internal/modelcontract/contract.go \
-    internal/modelcontract/schema/model.schema.json \
-    internal/modelcontract/schema/model.v1.0.0.schema.json \
-    internal/modelcontract/schema/model.v1.1.0.schema.json \
-    internal/modelcontract/schema/model.v1.2.0.schema.json \
     internal/modelcontract/schema/model.v1.3.0.schema.json \
-    internal/modelcontract/schema/snapshot.schema.json \
-    internal/modelcontract/schema/snapshot.v1.0.0.schema.json \
-    internal/modelcontract/schema/snapshot.v1.1.0.schema.json \
-    internal/modelcontract/schema/snapshot.v1.2.0.schema.json \
     internal/modelcontract/schema/snapshot.v1.3.0.schema.json \
-    api/schema/model.schema.json \
-    api/schema/model.v1.0.0.schema.json \
-    api/schema/model.v1.1.0.schema.json \
-    api/schema/model.v1.2.0.schema.json \
     api/schema/model.v1.3.0.schema.json \
-    api/schema/snapshot.schema.json \
-    api/schema/snapshot.v1.0.0.schema.json \
-    api/schema/snapshot.v1.1.0.schema.json \
-    api/schema/snapshot.v1.2.0.schema.json \
     api/schema/snapshot.v1.3.0.schema.json)"
   matrix_changes="$(git diff --name-only "${BASE_REF}"...HEAD -- docs/compatibility-matrix.md)"
 
@@ -156,11 +98,5 @@ if [ -n "${BASE_REF}" ]; then
 fi
 
 echo "Compatibility matrix check passed"
-echo "Model:    $(extract_const BeringModelV100Name)@$(extract_const BeringModelV100Version)"
-echo "Snapshot: $(extract_const BeringSnapshotV100Name)@$(extract_const BeringSnapshotV100Version)"
-echo "Model:    $(extract_const BeringModelV110Name)@$(extract_const BeringModelV110Version)"
-echo "Snapshot: $(extract_const BeringSnapshotV110Name)@$(extract_const BeringSnapshotV110Version)"
-echo "Model:    $(extract_const BeringModelV120Name)@$(extract_const BeringModelV120Version)"
-echo "Snapshot: $(extract_const BeringSnapshotV120Name)@$(extract_const BeringSnapshotV120Version)"
 echo "Model:    $(extract_const BeringModelV130Name)@$(extract_const BeringModelV130Version)"
 echo "Snapshot: $(extract_const BeringSnapshotV130Name)@$(extract_const BeringSnapshotV130Version)"

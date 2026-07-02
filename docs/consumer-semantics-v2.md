@@ -1,6 +1,6 @@
 # Sheaft Consumer Semantics v2
 
-This document defines the richer dual-line analysis behavior used when Sheaft consumes Bering `1.3.0` artifacts or when a `1.0.0` artifact is analyzed with an opt-in Sheaft fault contract.
+This document defines the richer analysis behavior used when Sheaft consumes Bering `1.3.0` artifacts.
 
 The v1 major release claim and its formal mapping to `G`, `R`, `P`, `Phi`, `theta`, and `rho` are documented in [v1-major-semantics.md](v1-major-semantics.md).
 
@@ -9,14 +9,11 @@ The v1 major release claim and its formal mapping to `G`, `R`, `P`, `Phi`, `thet
 - `io.mb3r.bering.model@1.3.0`
 - `io.mb3r.bering.snapshot@1.3.0`
 
-`1.0.0` remains supported, but it stays the baseline semantics line from [consumer-semantics-v1.md](consumer-semantics-v1.md). `1.1.0` remains accepted as a historical advanced-preview contract. `1.2.0` remains accepted as a historical v1 preview contract. Sheaft does not silently reinterpret old `1.0.0`, `1.1.0`, or `1.2.0` artifacts under richer `1.3.0` semantics.
+Pre-v1 preview lines `1.0.0`, `1.1.0`, and `1.2.0` are retired on the current main line. Sheaft does not silently reinterpret old artifacts under richer `1.3.0` semantics; regenerate them upstream before use with Sheaft v1.
 
 ## Semantics Split
 
-- `1.0.0`: stable fail-stop baseline semantics
-- `1.1.0`: historical advanced-preview contract line
 - `1.3.0`: additive typed metadata for reliability evidence, endpoint semantic hints, edge IDs, placements, shared resources, retries, timeouts, and observed latency/error summaries
-- `1.0.0` plus Sheaft fault contract: only the honest subset that can be expressed with the artifact plus the external contract is enabled
 
 ## Execution Order
 
@@ -112,7 +109,7 @@ The existing `analysis.baselines` flow now accepts either:
 - a prior Sheaft report, or
 - a raw supported Bering artifact
 
-This allows primary `1.3.0` artifacts to be compared directly against `1.0.0` baseline artifacts in CI. Overlapping metrics produce diffs. Missing advanced metrics remain in the diff as non-comparable entries with explicit reasons.
+This allows primary `1.3.0` artifacts to be compared directly against supported `1.3.0` baseline artifacts or prior Sheaft reports in CI. Overlapping metrics produce diffs. Missing advanced metrics remain in the diff as non-comparable entries with explicit reasons.
 
 ## Out of Scope
 

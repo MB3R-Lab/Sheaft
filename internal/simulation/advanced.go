@@ -112,10 +112,6 @@ type edgeStep struct {
 }
 
 func RunArtifactProfiles(loaded artifact.Loaded, params AnalysisParams) (AnalysisOutput, error) {
-	if loaded.Metadata.Contract.Version == "1.0.0" && params.FaultContract == nil && !requiresAdvancedArtifactRunner(loaded, params) {
-		return RunProfiles(loaded.Model, params)
-	}
-
 	ctx, err := buildAdvancedContext(loaded, params.PredicateSet, params.JourneyOverrides)
 	if err != nil {
 		return AnalysisOutput{}, err

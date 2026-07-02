@@ -176,8 +176,8 @@ func validateV1LinkedDocs(root string, v1Doc string) error {
 		return err
 	}
 
-	if !strings.Contains(v1Doc, "Bering `1.0.0` artifacts as baselines") {
-		return fmt.Errorf("%s must document Bering 1.0.0 baseline migration", DefaultV1SemanticsDocPath)
+	if !strings.Contains(v1Doc, "Pre-v1 Bering preview lines `1.0.0`, `1.1.0`, and `1.2.0` are retired") {
+		return fmt.Errorf("%s must document retired pre-v1 Bering contract lines", DefaultV1SemanticsDocPath)
 	}
 	return nil
 }

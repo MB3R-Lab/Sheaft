@@ -106,7 +106,7 @@ deprecated_action: warn
 deprecated_contracts:
   - kind: snapshot
     name: io.mb3r.bering.snapshot
-    versions: ["1.0.0"]
+    versions: ["1.3.0"]
 `)
 
 	cfg, err := loadExecutionConfig("", analysisPath, contractPolicyPath, nil, "")
@@ -172,6 +172,7 @@ func TestRun_DeprecatedContractPolicyFailReturnsExitError(t *testing.T) {
   },
   "model": {
     "services": [{ "id": "frontend", "name": "frontend", "replicas": 1 }],
+    "edges": [],
     "endpoints": [{ "id": "frontend:GET /health", "entry_service": "frontend", "success_predicate_ref": "frontend:GET /health" }],
     "metadata": {
       "source_type": "bering",
@@ -180,9 +181,9 @@ func TestRun_DeprecatedContractPolicyFailReturnsExitError(t *testing.T) {
       "confidence": 0.8,
       "schema": {
         "name": "io.mb3r.bering.model",
-        "version": "1.0.0",
-        "uri": "https://mb3r-lab.github.io/Bering/schema/model/v1.0.0/model.schema.json",
-        "digest": "sha256:272277c093f37580adcd2dded225bd37c86539d642d7910baad7e4228227d1a7"
+        "version": "1.3.0",
+        "uri": "https://mb3r-lab.github.io/Bering/schema/model/v1.3.0/model.schema.json",
+        "digest": "sha256:2aa8a3550a25dc626ba6d2f5833569efca2f382b9e5c9c3405be93695d7d48ae"
       }
     }
   },
@@ -191,11 +192,11 @@ func TestRun_DeprecatedContractPolicyFailReturnsExitError(t *testing.T) {
     "source_ref": "bering://snapshot/1",
     "emitted_at": "2026-03-11T08:00:00Z",
     "confidence": 0.8,
-    "schema": {
-      "name": "io.mb3r.bering.snapshot",
-      "version": "1.0.0",
-      "uri": "https://mb3r-lab.github.io/Bering/schema/snapshot/v1.0.0/snapshot.schema.json",
-      "digest": "sha256:87e4e887ed4a37b72f6136e268b73552eccb92941c4de2c6f3a514dd066ea972"
+      "schema": {
+        "name": "io.mb3r.bering.snapshot",
+        "version": "1.3.0",
+        "uri": "https://mb3r-lab.github.io/Bering/schema/snapshot/v1.3.0/snapshot.schema.json",
+        "digest": "sha256:cb778e5b0866d9ce5cfe7f23b8d98a339603593a0247cccd9cddaf05c7ae4bb1"
     }
   }
 }
@@ -218,7 +219,7 @@ deprecated_action: fail
 deprecated_contracts:
   - kind: snapshot
     name: io.mb3r.bering.snapshot
-    versions: ["1.0.0"]
+    versions: ["1.3.0"]
 `)
 
 	var stdout bytes.Buffer

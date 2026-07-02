@@ -6,8 +6,8 @@ allowed_contracts:
   - kind: model
     name: io.mb3r.bering.model
     versions:
-      - "1.0.0"
+      - "1.3.0"
   - kind: snapshot
     name: io.mb3r.bering.snapshot
     versions:
-      - "1.0.0"
+      - "1.3.0"

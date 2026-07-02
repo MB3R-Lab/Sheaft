@@ -1,15 +1,15 @@
 # Sheaft Consumer Semantics v1
 
-This document defines the baseline `1.0.0` semantics line in Sheaft.
+Historical note: this document describes the retired `1.0.0` semantics line used by Sheaft `v0.1.x` and `v0.2.x`. It is not part of the current Sheaft v1 acceptance surface. Current v1 support is defined by Bering `1.3.0` in [consumer-semantics-v2.md](consumer-semantics-v2.md) and [v1-major-semantics.md](v1-major-semantics.md).
 
 ## Version Scope
 
-This semantics profile is bound to the currently supported contracts:
+This historical semantics profile was bound to these contracts:
 
 - `io.mb3r.bering.model@1.0.0`
 - `io.mb3r.bering.snapshot@1.0.0`
 
-Contract pins, URIs, and digests are tracked in [compatibility-matrix.md](compatibility-matrix.md). The richer `1.3.0` analysis line is defined separately in [consumer-semantics-v2.md](consumer-semantics-v2.md).
+Current contract pins, URIs, and digests are tracked in [compatibility-matrix.md](compatibility-matrix.md). The current `1.3.0` analysis line is defined separately in [consumer-semantics-v2.md](consumer-semantics-v2.md).
 
 ## Consumer Pipeline
 
@@ -58,7 +58,7 @@ There is no silent fallback to "best effort" parsing for unsupported contracts.
 - `services[].id` is the identity used by predicates, journeys, and reports.
 - `services[].name` is descriptive only; simulation logic keys on `id`.
 - `replicas` must be positive for newly analyzed artifacts.
-- Historical artifacts from schema lines that admitted `replicas=0` are still accepted only when the normalized Sheaft model satisfies the positive-replica invariant.
+- Historical artifacts from schema lines that admitted `replicas=0` must be regenerated on a current supported contract before use with Sheaft v1.
 
 ### Edges
 
@@ -173,17 +173,17 @@ Cross-profile aggregate threshold:
 
 `default` means no artifact-level predicate or weight data was present for that dimension.
 
-With the current `io.mb3r.bering.snapshot@1.0.0` envelope, `snapshot` provenance is expected for weights sourced from `discovery.endpoints[].metadata.weight`, not for top-level snapshot predicates.
+With the historical `io.mb3r.bering.snapshot@1.0.0` envelope, `snapshot` provenance was expected for weights sourced from `discovery.endpoints[].metadata.weight`, not for top-level snapshot predicates.
 
 ## Examples
 
-The examples below are normative expected behaviors for v1.
+The examples below were normative expected behaviors for the retired v0.1/v0.2 semantics line. Current `main` no longer keeps active `1.0.0` fixtures; use the historical release tags if these examples need to be reproduced.
 
 ### 1. Plain model with exact model contract is accepted
 
 Input:
 
-- [examples/outputs/model.sample.json](../examples/outputs/model.sample.json)
+- historical v0.1/v0.2 `examples/outputs/model.sample.json` carrying `io.mb3r.bering.model@1.0.0`
 
 Expected outcome:
 
@@ -205,12 +205,12 @@ Expected outcome:
 
 Input:
 
-- [examples/outputs/snapshot.sample.json](../examples/outputs/snapshot.sample.json)
+- historical v0.1/v0.2 `examples/outputs/snapshot.sample.json` carrying `io.mb3r.bering.snapshot@1.0.0`
 
 Expected outcome:
 
 - artifact kind resolves to `snapshot`;
-- report input artifact carries `contract_name=io.mb3r.bering.snapshot` and `contract_version=1.0.0`.
+- report input artifact carried `contract_name=io.mb3r.bering.snapshot` and `contract_version=1.0.0`.
 
 ### 4. Snapshot metadata overrides nested model metadata where present
 

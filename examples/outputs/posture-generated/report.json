@@ -7,68 +7,164 @@
   "endpoint_results": [
     {
       "profile": "steady-state",
-      "endpoint_id": "checkout:POST /process",
-      "availability": 0.9715833333333334,
-      "threshold": 0.97,
-      "status": "pass"
+      "endpoint_id": "gateway:GET /explicit",
+      "availability": 0.9459166666666666,
+      "threshold": 0.99,
+      "threshold_delta": -0.04408333333333336,
+      "status": "fail"
     },
     {
       "profile": "steady-state",
-      "endpoint_id": "frontend:GET /checkout",
-      "availability": 0.9416666666666667,
-      "threshold": 0.985,
-      "status": "warn"
-    },
-    {
-      "profile": "steady-state",
-      "endpoint_id": "frontend:GET /health",
-      "availability": 0.9695,
-      "threshold": 0.985,
-      "status": "warn"
+      "endpoint_id": "gateway:POST /checkout",
+      "availability": 0.9635,
+      "threshold": 0.99,
+      "threshold_delta": -0.026499999999999968,
+      "status": "fail"
     }
   ],
   "summary": {
-    "overall_availability": 0.9609166666666668,
-    "weighted_overall_availability": 0.9596166666666667,
-    "cross_profile_availability": 0.768074074074074,
-    "cross_profile_weighted_availability": 0.7248888888888888,
-    "risk_score": 0.04038333333333333,
-    "confidence": 0.94
+    "overall_availability": 0.9547083333333333,
+    "weighted_overall_availability": 0.9599833333333334,
+    "cross_profile_availability": 0.7114375,
+    "cross_profile_weighted_availability": 0.8588500000000001,
+    "risk_score": 0.04001666666666659,
+    "confidence": 0.95
   },
   "policy_evaluation": {
-    "mode": "warn",
-    "decision": "warn",
+    "mode": "fail",
+    "decision": "fail",
     "failed_endpoints": [
-      "checkout:POST /process",
-      "frontend:GET /checkout",
-      "frontend:GET /health"
+      "gateway:GET /explicit",
+      "gateway:POST /checkout"
+    ],
+    "failed_assertions": [
+      "expected_success_rate path \u003e= 0.1000 (actual=0.0000)"
     ],
     "failed_profiles": [
       "steady-state",
-      "service-fault",
-      "fixed-blast-radius"
+      "az-us-east-1a-outage",
+      "payment-brownout",
+      "checkout-payment-cut"
     ],
-    "evaluation_rule": "all_profiles"
+    "evaluation_rule": "all_profiles",
+    "reasons": [
+      {
+        "id": "endpoint_below_threshold",
+        "scope": "endpoint",
+        "profile": "steady-state",
+        "endpoint_id": "gateway:GET /explicit",
+        "status": "fail",
+        "availability": 0.9459166666666666,
+        "threshold": 0.99,
+        "delta": -0.04408333333333336,
+        "message": "endpoint \"gateway:GET /explicit\" availability 0.9459 is below threshold 0.9900"
+      },
+      {
+        "id": "endpoint_below_threshold",
+        "scope": "endpoint",
+        "profile": "steady-state",
+        "endpoint_id": "gateway:POST /checkout",
+        "status": "fail",
+        "availability": 0.9635,
+        "threshold": 0.99,
+        "delta": -0.026499999999999968,
+        "message": "endpoint \"gateway:POST /checkout\" availability 0.9635 is below threshold 0.9900"
+      },
+      {
+        "id": "endpoint_below_threshold",
+        "scope": "endpoint",
+        "profile": "az-us-east-1a-outage",
+        "endpoint_id": "gateway:GET /explicit",
+        "status": "fail",
+        "availability": 0.9170833333333334,
+        "threshold": 0.99,
+        "delta": -0.07291666666666663,
+        "message": "endpoint \"gateway:GET /explicit\" availability 0.9171 is below threshold 0.9900"
+      },
+      {
+        "id": "endpoint_below_threshold",
+        "scope": "endpoint",
+        "profile": "az-us-east-1a-outage",
+        "endpoint_id": "gateway:POST /checkout",
+        "status": "fail",
+        "availability": 0.9360833333333334,
+        "threshold": 0.99,
+        "delta": -0.05391666666666661,
+        "message": "endpoint \"gateway:POST /checkout\" availability 0.9361 is below threshold 0.9900"
+      },
+      {
+        "id": "endpoint_below_threshold",
+        "scope": "endpoint",
+        "profile": "payment-brownout",
+        "endpoint_id": "gateway:GET /explicit",
+        "status": "fail",
+        "availability": 0,
+        "threshold": 0.99,
+        "delta": -0.99,
+        "message": "endpoint \"gateway:GET /explicit\" availability 0.0000 is below threshold 0.9900"
+      },
+      {
+        "id": "endpoint_below_threshold",
+        "scope": "endpoint",
+        "profile": "payment-brownout",
+        "endpoint_id": "gateway:POST /checkout",
+        "status": "fail",
+        "availability": 0.9624166666666667,
+        "threshold": 0.99,
+        "delta": -0.027583333333333293,
+        "message": "endpoint \"gateway:POST /checkout\" availability 0.9624 is below threshold 0.9900"
+      },
+      {
+        "id": "assertion_failed",
+        "scope": "assertion",
+        "profile": "payment-brownout",
+        "metric": "expected_success_rate",
+        "status": "fail",
+        "message": "expected_success_rate path \u003e= 0.1000 (actual=0.0000)"
+      },
+      {
+        "id": "endpoint_below_threshold",
+        "scope": "endpoint",
+        "profile": "checkout-payment-cut",
+        "endpoint_id": "gateway:GET /explicit",
+        "status": "fail",
+        "availability": 0,
+        "threshold": 0.99,
+        "delta": -0.99,
+        "message": "endpoint \"gateway:GET /explicit\" availability 0.0000 is below threshold 0.9900"
+      },
+      {
+        "id": "endpoint_below_threshold",
+        "scope": "endpoint",
+        "profile": "checkout-payment-cut",
+        "endpoint_id": "gateway:POST /checkout",
+        "status": "fail",
+        "availability": 0.9665,
+        "threshold": 0.99,
+        "delta": -0.023499999999999965,
+        "message": "endpoint \"gateway:POST /checkout\" availability 0.9665 is below threshold 0.9900"
+      }
+    ]
   },
   "input_artifact": {
     "path": "examples/outputs/snapshot.sample.json",
-    "digest": "sha256:3656573fdccc2deb9142ab830fed64aed44584d2cf82416d937dc7733dd2d6d6",
-    "artifact_id": "snap-87b9684332d99fa3564dea4f",
+    "digest": "sha256:7177a7f202b4fb56c4a7d087001c53573123e07508cbc7f12a8f68b43be8d3a7",
+    "artifact_id": "snap-v11-0001",
     "kind": "snapshot",
     "contract_name": "io.mb3r.bering.snapshot",
-    "contract_version": "1.0.0",
+    "contract_version": "1.3.0",
     "source_type": "bering",
-    "source_ref": "bering://discover?input=examples%2Ftraces%2Fnormalized.sample.json",
-    "produced_at": "2026-03-03T00:00:00Z",
-    "topology_version": "sha256:b20ebd677050d035b78b26a7d915a5d459a187dc7e2f3288d9e4ec32e24ae610"
+    "source_ref": "bering://fixtures/checkout-v11",
+    "produced_at": "2026-03-22T00:05:00Z",
+    "topology_version": "topology-checkout-v11"
   },
   "contract_policy": {
     "status": "current",
     "action": "allow"
   },
   "provenance": {
-    "predicate_source": "external_overlay",
-    "weights_source": "external_overlay"
+    "predicate_source": "model",
+    "weights_source": "snapshot"
   },
   "parameters": {
     "config_source": "override",
@@ -91,75 +187,159 @@
           "value": 0.03,
           "source": "override"
         },
-        "fixed_k_failures": {
-          "value": 0,
-          "source": "default"
-        },
-        "endpoint_weights": {
+        "reliability": {
           "active": true,
-          "source": "override"
-        }
-      },
-      {
-        "name": "service-fault",
-        "trials": {
-          "value": 12000,
-          "source": "override"
-        },
-        "seed": {
-          "value": 9183701956244008838,
-          "source": "override"
-        },
-        "sampling_mode": {
-          "value": "independent_service",
-          "source": "override"
-        },
-        "failure_probability": {
-          "value": 0.08,
-          "source": "override"
+          "source": "override",
+          "names": [
+            "node_live_probability",
+            "edge_live_probability",
+            "services:1"
+          ]
         },
         "fixed_k_failures": {
           "value": 0,
           "source": "default"
         },
+        "fault_profile": {
+          "value": "",
+          "source": "external"
+        },
         "endpoint_weights": {
           "active": true,
-          "source": "override"
+          "source": "external"
         }
       },
       {
-        "name": "fixed-blast-radius",
+        "name": "az-us-east-1a-outage",
         "trials": {
           "value": 12000,
           "source": "override"
         },
         "seed": {
-          "value": 1381864373498677985,
+          "value": -570874845265682475,
           "source": "override"
         },
         "sampling_mode": {
-          "value": "fixed_k_service_set",
+          "value": "independent_replica",
           "source": "override"
         },
         "failure_probability": {
-          "value": 0.05,
+          "value": 0.03,
           "source": "override"
         },
+        "reliability": {
+          "active": true,
+          "source": "override",
+          "names": [
+            "node_live_probability",
+            "edge_live_probability",
+            "services:1"
+          ]
+        },
         "fixed_k_failures": {
-          "value": 1,
+          "value": 0,
+          "source": "default"
+        },
+        "fault_profile": {
+          "value": "az-us-east-1a-outage",
           "source": "override"
         },
         "endpoint_weights": {
           "active": true,
+          "source": "external"
+        }
+      },
+      {
+        "name": "payment-brownout",
+        "trials": {
+          "value": 12000,
           "source": "override"
+        },
+        "seed": {
+          "value": 3456129456313698898,
+          "source": "override"
+        },
+        "sampling_mode": {
+          "value": "independent_replica",
+          "source": "override"
+        },
+        "failure_probability": {
+          "value": 0.03,
+          "source": "override"
+        },
+        "reliability": {
+          "active": true,
+          "source": "override",
+          "names": [
+            "node_live_probability",
+            "edge_live_probability",
+            "services:1"
+          ]
+        },
+        "fixed_k_failures": {
+          "value": 0,
+          "source": "default"
+        },
+        "fault_profile": {
+          "value": "payment-brownout",
+          "source": "override"
+        },
+        "endpoint_weights": {
+          "active": true,
+          "source": "external"
+        }
+      },
+      {
+        "name": "checkout-payment-cut",
+        "trials": {
+          "value": 12000,
+          "source": "override"
+        },
+        "seed": {
+          "value": 6543343825666323110,
+          "source": "override"
+        },
+        "sampling_mode": {
+          "value": "independent_replica",
+          "source": "override"
+        },
+        "failure_probability": {
+          "value": 0.03,
+          "source": "override"
+        },
+        "reliability": {
+          "active": true,
+          "source": "override",
+          "names": [
+            "node_live_probability",
+            "edge_live_probability",
+            "services:1"
+          ]
+        },
+        "fixed_k_failures": {
+          "value": 0,
+          "source": "default"
+        },
+        "fault_profile": {
+          "value": "checkout-payment-cut",
+          "source": "override"
+        },
+        "endpoint_weights": {
+          "active": true,
+          "source": "external"
         }
       }
     ],
     "calibration": {
       "predicate_overlay": {
+        "active": false,
+        "source": "external",
+        "fallback": "using artifact predicates or legacy path resolution without external predicate overlay"
+      },
+      "fault_contract": {
         "active": true,
         "source": "external",
-        "path": "configs/predicate-contract.example.yaml"
+        "path": "configs/fault-contract.example.yaml"
       },
       "journey_overrides": {
         "active": false,
@@ -170,7 +350,7 @@
         "active": true,
         "source": "external",
         "names": [
-          "last-release"
+          "bering-1.3.0-baseline"
         ]
       },
       "historical_signals": {
@@ -190,368 +370,1545 @@
         "sampling_mode": "independent_replica",
         "failure_probability": 0.03,
         "endpoint_availability": {
-          "checkout:POST /process": 0.9715833333333334,
-          "frontend:GET /checkout": 0.9416666666666667,
-          "frontend:GET /health": 0.9695
+          "gateway:GET /explicit": 0.9459166666666666,
+          "gateway:POST /checkout": 0.9635
         },
         "endpoint_weights": {
-          "checkout:POST /process": 0.6,
-          "frontend:GET /checkout": 0.4
+          "gateway:GET /explicit": 0.2,
+          "gateway:POST /checkout": 0.8
         },
-        "weighted_aggregate": 0.9596166666666667,
-        "unweighted_aggregate": 0.9609166666666668
+        "weighted_aggregate": 0.9599833333333334,
+        "unweighted_aggregate": 0.9547083333333333,
+        "advanced": {
+          "blast_radius": {
+            "service_count": {
+              "available": true,
+              "provenance": "external_contract"
+            },
+            "endpoint_count": {
+              "available": true,
+              "provenance": "external_contract"
+            }
+          },
+          "endpoints": [
+            {
+              "endpoint_id": "gateway:GET /explicit",
+              "expected_success_rate": {
+                "available": true,
+                "value": 0.9459166666666666,
+                "provenance": "artifact"
+              },
+              "max_amplification_factor": {
+                "available": true,
+                "value": 1.0736789312500001,
+                "provenance": "artifact"
+              }
+            },
+            {
+              "endpoint_id": "gateway:POST /checkout",
+              "expected_success_rate": {
+                "available": true,
+                "value": 0.9635,
+                "provenance": "artifact"
+              },
+              "max_amplification_factor": {
+                "available": true,
+                "value": 1.02,
+                "provenance": "artifact"
+              }
+            }
+          ],
+          "paths": [
+            {
+              "path_id": "gateway-\u003echeckout",
+              "services": [
+                "gateway",
+                "checkout"
+              ],
+              "edge_ids": [
+                "gateway|checkout|sync|true|protocol=http|operation=POST|route=%2Fcheckout"
+              ],
+              "expected_success_rate": {
+                "available": true,
+                "value": 0.9635,
+                "provenance": "artifact"
+              },
+              "max_amplification_factor": {
+                "available": true,
+                "value": 1.02,
+                "provenance": "artifact"
+              },
+              "timeout_mismatch_count": {
+                "available": true,
+                "provenance": "artifact"
+              }
+            },
+            {
+              "path_id": "gateway-\u003echeckout-\u003epayment",
+              "services": [
+                "gateway",
+                "checkout",
+                "payment"
+              ],
+              "edge_ids": [
+                "gateway|checkout|sync|true|protocol=http|operation=POST|route=%2Fcheckout",
+                "checkout|payment|sync|true|protocol=http|operation=POST|route=%2Fcharge"
+              ],
+              "expected_success_rate": {
+                "available": true,
+                "value": 0.9459166666666666,
+                "provenance": "artifact"
+              },
+              "max_amplification_factor": {
+                "available": true,
+                "value": 1.0736789312500001,
+                "provenance": "artifact"
+              },
+              "timeout_mismatch_count": {
+                "available": true,
+                "provenance": "artifact"
+              }
+            }
+          ],
+          "edges": [
+            {
+              "edge_id": "checkout|payment|sync|true|protocol=http|operation=POST|route=%2Fcharge",
+              "max_amplification_factor": {
+                "available": true,
+                "value": 1.0525,
+                "provenance": "artifact"
+              }
+            },
+            {
+              "edge_id": "gateway|checkout|sync|true|protocol=http|operation=POST|route=%2Fcheckout",
+              "max_amplification_factor": {
+                "available": true,
+                "value": 1.0736789312500001,
+                "provenance": "artifact"
+              }
+            }
+          ]
+        }
       },
       "endpoint_results": [
         {
           "profile": "steady-state",
-          "endpoint_id": "checkout:POST /process",
-          "availability": 0.9715833333333334,
-          "threshold": 0.97,
-          "status": "pass"
+          "endpoint_id": "gateway:GET /explicit",
+          "availability": 0.9459166666666666,
+          "threshold": 0.99,
+          "threshold_delta": -0.04408333333333336,
+          "status": "fail"
         },
         {
           "profile": "steady-state",
-          "endpoint_id": "frontend:GET /checkout",
-          "availability": 0.9416666666666667,
-          "threshold": 0.985,
-          "status": "warn"
-        },
-        {
-          "profile": "steady-state",
-          "endpoint_id": "frontend:GET /health",
-          "availability": 0.9695,
-          "threshold": 0.985,
-          "status": "warn"
+          "endpoint_id": "gateway:POST /checkout",
+          "availability": 0.9635,
+          "threshold": 0.99,
+          "threshold_delta": -0.026499999999999968,
+          "status": "fail"
         }
       ],
-      "decision": "warn",
+      "decision": "fail",
       "endpoints_below_threshold": 2,
-      "aggregate": {
-        "availability": 0.9596166666666667,
-        "threshold": 0.97,
-        "status": "warn"
-      }
+      "reasons": [
+        {
+          "id": "endpoint_below_threshold",
+          "scope": "endpoint",
+          "profile": "steady-state",
+          "endpoint_id": "gateway:GET /explicit",
+          "status": "fail",
+          "availability": 0.9459166666666666,
+          "threshold": 0.99,
+          "delta": -0.04408333333333336,
+          "message": "endpoint \"gateway:GET /explicit\" availability 0.9459 is below threshold 0.9900"
+        },
+        {
+          "id": "endpoint_below_threshold",
+          "scope": "endpoint",
+          "profile": "steady-state",
+          "endpoint_id": "gateway:POST /checkout",
+          "status": "fail",
+          "availability": 0.9635,
+          "threshold": 0.99,
+          "delta": -0.026499999999999968,
+          "message": "endpoint \"gateway:POST /checkout\" availability 0.9635 is below threshold 0.9900"
+        }
+      ]
     },
     {
-      "name": "service-fault",
+      "name": "az-us-east-1a-outage",
       "simulation": {
-        "name": "service-fault",
+        "name": "az-us-east-1a-outage",
         "trials": 12000,
-        "seed": 9183701956244008838,
-        "sampling_mode": "independent_service",
-        "failure_probability": 0.08,
+        "seed": -570874845265682475,
+        "sampling_mode": "independent_replica",
+        "failure_probability": 0.03,
+        "fault_profile": "az-us-east-1a-outage",
         "endpoint_availability": {
-          "checkout:POST /process": 0.8446666666666667,
-          "frontend:GET /checkout": 0.7731666666666667,
-          "frontend:GET /health": 0.9164166666666667
+          "gateway:GET /explicit": 0.9170833333333334,
+          "gateway:POST /checkout": 0.9360833333333334
         },
         "endpoint_weights": {
-          "checkout:POST /process": 0.6,
-          "frontend:GET /checkout": 0.4
+          "gateway:GET /explicit": 0.2,
+          "gateway:POST /checkout": 0.8
         },
-        "weighted_aggregate": 0.8160666666666667,
-        "unweighted_aggregate": 0.84475
+        "weighted_aggregate": 0.9322833333333335,
+        "unweighted_aggregate": 0.9265833333333333,
+        "assertions": [
+          {
+            "metric": "blast_radius_endpoint_count",
+            "target": {
+              "type": "profile"
+            },
+            "op": "\u003c=",
+            "expected": 2,
+            "status": "pass",
+            "available": true,
+            "actual_value": 2
+          }
+        ],
+        "advanced": {
+          "active_fault_profile": "az-us-east-1a-outage",
+          "fault_matches": [
+            {
+              "fault_type": "correlated_failure_domain",
+              "selector": {
+                "placement_labels": {
+                  "az": "us-east-1a"
+                }
+              },
+              "matched_service_ids": [
+                "checkout"
+              ],
+              "matched_placement_bucket_ids": [
+                "checkout#0"
+              ],
+              "matched_endpoint_ids": [
+                "gateway:GET /explicit",
+                "gateway:POST /checkout"
+              ],
+              "matched_shared_resources": [
+                "db:payments"
+              ]
+            }
+          ],
+          "blast_radius": {
+            "service_count": {
+              "available": true,
+              "value": 1,
+              "provenance": "external_contract"
+            },
+            "endpoint_count": {
+              "available": true,
+              "value": 2,
+              "provenance": "external_contract"
+            },
+            "service_ids": [
+              "checkout"
+            ],
+            "endpoint_ids": [
+              "gateway:GET /explicit",
+              "gateway:POST /checkout"
+            ]
+          },
+          "endpoints": [
+            {
+              "endpoint_id": "gateway:GET /explicit",
+              "expected_success_rate": {
+                "available": true,
+                "value": 0.9170833333333334,
+                "provenance": "artifact"
+              },
+              "max_amplification_factor": {
+                "available": true,
+                "value": 1.0736789312500001,
+                "provenance": "artifact"
+              }
+            },
+            {
+              "endpoint_id": "gateway:POST /checkout",
+              "expected_success_rate": {
+                "available": true,
+                "value": 0.9360833333333334,
+                "provenance": "artifact"
+              },
+              "max_amplification_factor": {
+                "available": true,
+                "value": 1.02,
+                "provenance": "artifact"
+              }
+            }
+          ],
+          "paths": [
+            {
+              "path_id": "gateway-\u003echeckout",
+              "services": [
+                "gateway",
+                "checkout"
+              ],
+              "edge_ids": [
+                "gateway|checkout|sync|true|protocol=http|operation=POST|route=%2Fcheckout"
+              ],
+              "expected_success_rate": {
+                "available": true,
+                "value": 0.9360833333333334,
+                "provenance": "artifact"
+              },
+              "max_amplification_factor": {
+                "available": true,
+                "value": 1.02,
+                "provenance": "artifact"
+              },
+              "timeout_mismatch_count": {
+                "available": true,
+                "provenance": "artifact"
+              }
+            },
+            {
+              "path_id": "gateway-\u003echeckout-\u003epayment",
+              "services": [
+                "gateway",
+                "checkout",
+                "payment"
+              ],
+              "edge_ids": [
+                "gateway|checkout|sync|true|protocol=http|operation=POST|route=%2Fcheckout",
+                "checkout|payment|sync|true|protocol=http|operation=POST|route=%2Fcharge"
+              ],
+              "expected_success_rate": {
+                "available": true,
+                "value": 0.9170833333333334,
+                "provenance": "artifact"
+              },
+              "max_amplification_factor": {
+                "available": true,
+                "value": 1.0736789312500001,
+                "provenance": "artifact"
+              },
+              "timeout_mismatch_count": {
+                "available": true,
+                "provenance": "artifact"
+              }
+            }
+          ],
+          "edges": [
+            {
+              "edge_id": "checkout|payment|sync|true|protocol=http|operation=POST|route=%2Fcharge",
+              "max_amplification_factor": {
+                "available": true,
+                "value": 1.0525,
+                "provenance": "artifact"
+              }
+            },
+            {
+              "edge_id": "gateway|checkout|sync|true|protocol=http|operation=POST|route=%2Fcheckout",
+              "max_amplification_factor": {
+                "available": true,
+                "value": 1.0736789312500001,
+                "provenance": "artifact"
+              }
+            }
+          ]
+        }
       },
       "endpoint_results": [
         {
-          "profile": "service-fault",
-          "endpoint_id": "checkout:POST /process",
-          "availability": 0.8446666666666667,
-          "threshold": 0.97,
-          "status": "warn"
+          "profile": "az-us-east-1a-outage",
+          "endpoint_id": "gateway:GET /explicit",
+          "availability": 0.9170833333333334,
+          "threshold": 0.99,
+          "threshold_delta": -0.07291666666666663,
+          "status": "fail"
         },
         {
-          "profile": "service-fault",
-          "endpoint_id": "frontend:GET /checkout",
-          "availability": 0.7731666666666667,
-          "threshold": 0.985,
-          "status": "warn"
-        },
-        {
-          "profile": "service-fault",
-          "endpoint_id": "frontend:GET /health",
-          "availability": 0.9164166666666667,
-          "threshold": 0.985,
-          "status": "warn"
+          "profile": "az-us-east-1a-outage",
+          "endpoint_id": "gateway:POST /checkout",
+          "availability": 0.9360833333333334,
+          "threshold": 0.99,
+          "threshold_delta": -0.05391666666666661,
+          "status": "fail"
         }
       ],
-      "decision": "warn",
-      "endpoints_below_threshold": 3,
-      "aggregate": {
-        "availability": 0.8160666666666667,
-        "threshold": 0.97,
-        "status": "warn"
-      }
+      "decision": "fail",
+      "endpoints_below_threshold": 2,
+      "reasons": [
+        {
+          "id": "endpoint_below_threshold",
+          "scope": "endpoint",
+          "profile": "az-us-east-1a-outage",
+          "endpoint_id": "gateway:GET /explicit",
+          "status": "fail",
+          "availability": 0.9170833333333334,
+          "threshold": 0.99,
+          "delta": -0.07291666666666663,
+          "message": "endpoint \"gateway:GET /explicit\" availability 0.9171 is below threshold 0.9900"
+        },
+        {
+          "id": "endpoint_below_threshold",
+          "scope": "endpoint",
+          "profile": "az-us-east-1a-outage",
+          "endpoint_id": "gateway:POST /checkout",
+          "status": "fail",
+          "availability": 0.9360833333333334,
+          "threshold": 0.99,
+          "delta": -0.05391666666666661,
+          "message": "endpoint \"gateway:POST /checkout\" availability 0.9361 is below threshold 0.9900"
+        }
+      ]
     },
     {
-      "name": "fixed-blast-radius",
+      "name": "payment-brownout",
       "simulation": {
-        "name": "fixed-blast-radius",
+        "name": "payment-brownout",
         "trials": 12000,
-        "seed": 1381864373498677985,
-        "sampling_mode": "fixed_k_service_set",
-        "failure_probability": 0.05,
-        "fixed_k_failures": 1,
+        "seed": 3456129456313698898,
+        "sampling_mode": "independent_replica",
+        "failure_probability": 0.03,
+        "fault_profile": "payment-brownout",
         "endpoint_availability": {
-          "checkout:POST /process": 0.49975,
-          "frontend:GET /checkout": 0.24783333333333332,
-          "frontend:GET /health": 0.7480833333333333
+          "gateway:GET /explicit": 0,
+          "gateway:POST /checkout": 0.9624166666666667
         },
         "endpoint_weights": {
-          "checkout:POST /process": 0.6,
-          "frontend:GET /checkout": 0.4
+          "gateway:GET /explicit": 0.2,
+          "gateway:POST /checkout": 0.8
         },
-        "weighted_aggregate": 0.39898333333333336,
-        "unweighted_aggregate": 0.4985555555555556
+        "weighted_aggregate": 0.7699333333333334,
+        "unweighted_aggregate": 0.48120833333333335,
+        "assertions": [
+          {
+            "metric": "expected_success_rate",
+            "target": {
+              "type": "path",
+              "services": [
+                "gateway",
+                "checkout",
+                "payment"
+              ]
+            },
+            "op": "\u003e=",
+            "expected": 0.1,
+            "status": "fail",
+            "available": true
+          },
+          {
+            "metric": "max_amplification_factor",
+            "target": {
+              "type": "path",
+              "services": [
+                "gateway",
+                "checkout",
+                "payment"
+              ]
+            },
+            "op": "\u003c=",
+            "expected": 10,
+            "status": "pass",
+            "available": true,
+            "actual_value": 3.0576125000000003
+          },
+          {
+            "metric": "timeout_mismatch_count",
+            "target": {
+              "type": "path",
+              "services": [
+                "gateway",
+                "checkout",
+                "payment"
+              ]
+            },
+            "op": "\u003e=",
+            "expected": 1,
+            "status": "pass",
+            "available": true,
+            "actual_value": 2
+          }
+        ],
+        "advanced": {
+          "active_fault_profile": "payment-brownout",
+          "fault_matches": [
+            {
+              "fault_type": "edge_partial_degradation",
+              "selector": {
+                "edge_ids": [
+                  "checkout|payment|sync|true|protocol=http|operation=POST|route=%2Fcharge"
+                ]
+              },
+              "matched_edge_ids": [
+                "checkout|payment|sync|true|protocol=http|operation=POST|route=%2Fcharge"
+              ]
+            }
+          ],
+          "blast_radius": {
+            "service_count": {
+              "available": true,
+              "provenance": "external_contract"
+            },
+            "endpoint_count": {
+              "available": true,
+              "provenance": "external_contract"
+            }
+          },
+          "endpoints": [
+            {
+              "endpoint_id": "gateway:GET /explicit",
+              "expected_success_rate": {
+                "available": true,
+                "provenance": "artifact"
+              },
+              "max_amplification_factor": {
+                "available": true,
+                "value": 3.0576125000000003,
+                "provenance": "artifact"
+              }
+            },
+            {
+              "endpoint_id": "gateway:POST /checkout",
+              "expected_success_rate": {
+                "available": true,
+                "value": 0.9624166666666667,
+                "provenance": "artifact"
+              },
+              "max_amplification_factor": {
+                "available": true,
+                "value": 1.02,
+                "provenance": "artifact"
+              }
+            }
+          ],
+          "paths": [
+            {
+              "path_id": "gateway-\u003echeckout",
+              "services": [
+                "gateway",
+                "checkout"
+              ],
+              "edge_ids": [
+                "gateway|checkout|sync|true|protocol=http|operation=POST|route=%2Fcheckout"
+              ],
+              "expected_success_rate": {
+                "available": true,
+                "value": 0.9624166666666667,
+                "provenance": "artifact"
+              },
+              "max_amplification_factor": {
+                "available": true,
+                "value": 1.02,
+                "provenance": "artifact"
+              },
+              "timeout_mismatch_count": {
+                "available": true,
+                "provenance": "artifact"
+              }
+            },
+            {
+              "path_id": "gateway-\u003echeckout-\u003epayment",
+              "services": [
+                "gateway",
+                "checkout",
+                "payment"
+              ],
+              "edge_ids": [
+                "gateway|checkout|sync|true|protocol=http|operation=POST|route=%2Fcheckout",
+                "checkout|payment|sync|true|protocol=http|operation=POST|route=%2Fcharge"
+              ],
+              "expected_success_rate": {
+                "available": true,
+                "provenance": "artifact+external_contract"
+              },
+              "max_amplification_factor": {
+                "available": true,
+                "value": 3.0576125000000003,
+                "provenance": "artifact"
+              },
+              "timeout_mismatch_count": {
+                "available": true,
+                "value": 2,
+                "provenance": "artifact+external_contract"
+              }
+            }
+          ],
+          "edges": [
+            {
+              "edge_id": "checkout|payment|sync|true|protocol=http|operation=POST|route=%2Fcharge",
+              "max_amplification_factor": {
+                "available": true,
+                "value": 1.5288062500000001,
+                "provenance": "artifact+external_contract"
+              }
+            },
+            {
+              "edge_id": "gateway|checkout|sync|true|protocol=http|operation=POST|route=%2Fcheckout",
+              "max_amplification_factor": {
+                "available": true,
+                "value": 3.0576125000000003,
+                "provenance": "artifact"
+              }
+            }
+          ]
+        }
       },
       "endpoint_results": [
         {
-          "profile": "fixed-blast-radius",
-          "endpoint_id": "checkout:POST /process",
-          "availability": 0.49975,
-          "threshold": 0.97,
-          "status": "warn"
+          "profile": "payment-brownout",
+          "endpoint_id": "gateway:GET /explicit",
+          "availability": 0,
+          "threshold": 0.99,
+          "threshold_delta": -0.99,
+          "status": "fail"
         },
         {
-          "profile": "fixed-blast-radius",
-          "endpoint_id": "frontend:GET /checkout",
-          "availability": 0.24783333333333332,
-          "threshold": 0.985,
-          "status": "warn"
-        },
-        {
-          "profile": "fixed-blast-radius",
-          "endpoint_id": "frontend:GET /health",
-          "availability": 0.7480833333333333,
-          "threshold": 0.985,
-          "status": "warn"
+          "profile": "payment-brownout",
+          "endpoint_id": "gateway:POST /checkout",
+          "availability": 0.9624166666666667,
+          "threshold": 0.99,
+          "threshold_delta": -0.027583333333333293,
+          "status": "fail"
         }
       ],
-      "decision": "warn",
-      "endpoints_below_threshold": 3,
-      "aggregate": {
-        "availability": 0.39898333333333336,
-        "threshold": 0.9,
-        "status": "warn"
-      }
+      "decision": "fail",
+      "endpoints_below_threshold": 2,
+      "reasons": [
+        {
+          "id": "endpoint_below_threshold",
+          "scope": "endpoint",
+          "profile": "payment-brownout",
+          "endpoint_id": "gateway:GET /explicit",
+          "status": "fail",
+          "availability": 0,
+          "threshold": 0.99,
+          "delta": -0.99,
+          "message": "endpoint \"gateway:GET /explicit\" availability 0.0000 is below threshold 0.9900"
+        },
+        {
+          "id": "endpoint_below_threshold",
+          "scope": "endpoint",
+          "profile": "payment-brownout",
+          "endpoint_id": "gateway:POST /checkout",
+          "status": "fail",
+          "availability": 0.9624166666666667,
+          "threshold": 0.99,
+          "delta": -0.027583333333333293,
+          "message": "endpoint \"gateway:POST /checkout\" availability 0.9624 is below threshold 0.9900"
+        },
+        {
+          "id": "assertion_failed",
+          "scope": "assertion",
+          "profile": "payment-brownout",
+          "metric": "expected_success_rate",
+          "status": "fail",
+          "message": "expected_success_rate path \u003e= 0.1000 (actual=0.0000)"
+        }
+      ]
+    },
+    {
+      "name": "checkout-payment-cut",
+      "simulation": {
+        "name": "checkout-payment-cut",
+        "trials": 12000,
+        "seed": 6543343825666323110,
+        "sampling_mode": "independent_replica",
+        "failure_probability": 0.03,
+        "fault_profile": "checkout-payment-cut",
+        "endpoint_availability": {
+          "gateway:GET /explicit": 0,
+          "gateway:POST /checkout": 0.9665
+        },
+        "endpoint_weights": {
+          "gateway:GET /explicit": 0.2,
+          "gateway:POST /checkout": 0.8
+        },
+        "weighted_aggregate": 0.7732000000000001,
+        "unweighted_aggregate": 0.48325,
+        "advanced": {
+          "active_fault_profile": "checkout-payment-cut",
+          "fault_matches": [
+            {
+              "fault_type": "edge_fail_stop",
+              "selector": {
+                "edge_ids": [
+                  "checkout|payment|sync|true|protocol=http|operation=POST|route=%2Fcharge"
+                ]
+              },
+              "matched_edge_ids": [
+                "checkout|payment|sync|true|protocol=http|operation=POST|route=%2Fcharge"
+              ],
+              "matched_endpoint_ids": [
+                "gateway:GET /explicit"
+              ]
+            }
+          ],
+          "blast_radius": {
+            "service_count": {
+              "available": true,
+              "provenance": "external_contract"
+            },
+            "endpoint_count": {
+              "available": true,
+              "value": 1,
+              "provenance": "external_contract"
+            },
+            "endpoint_ids": [
+              "gateway:GET /explicit"
+            ]
+          },
+          "endpoints": [
+            {
+              "endpoint_id": "gateway:GET /explicit",
+              "expected_success_rate": {
+                "available": true,
+                "provenance": "artifact"
+              },
+              "max_amplification_factor": {
+                "available": true,
+                "value": 2.105,
+                "provenance": "artifact"
+              }
+            },
+            {
+              "endpoint_id": "gateway:POST /checkout",
+              "expected_success_rate": {
+                "available": true,
+                "value": 0.9665,
+                "provenance": "artifact"
+              },
+              "max_amplification_factor": {
+                "available": true,
+                "value": 1.02,
+                "provenance": "artifact"
+              }
+            }
+          ],
+          "paths": [
+            {
+              "path_id": "gateway-\u003echeckout",
+              "services": [
+                "gateway",
+                "checkout"
+              ],
+              "edge_ids": [
+                "gateway|checkout|sync|true|protocol=http|operation=POST|route=%2Fcheckout"
+              ],
+              "expected_success_rate": {
+                "available": true,
+                "value": 0.9665,
+                "provenance": "artifact"
+              },
+              "max_amplification_factor": {
+                "available": true,
+                "value": 1.02,
+                "provenance": "artifact"
+              },
+              "timeout_mismatch_count": {
+                "available": true,
+                "provenance": "artifact"
+              }
+            },
+            {
+              "path_id": "gateway-\u003echeckout-\u003epayment",
+              "services": [
+                "gateway",
+                "checkout",
+                "payment"
+              ],
+              "edge_ids": [
+                "gateway|checkout|sync|true|protocol=http|operation=POST|route=%2Fcheckout",
+                "checkout|payment|sync|true|protocol=http|operation=POST|route=%2Fcharge"
+              ],
+              "expected_success_rate": {
+                "available": true,
+                "provenance": "artifact"
+              },
+              "max_amplification_factor": {
+                "available": true,
+                "value": 2.105,
+                "provenance": "artifact"
+              },
+              "timeout_mismatch_count": {
+                "available": true,
+                "provenance": "artifact"
+              }
+            }
+          ],
+          "edges": [
+            {
+              "edge_id": "checkout|payment|sync|true|protocol=http|operation=POST|route=%2Fcharge",
+              "max_amplification_factor": {
+                "available": true,
+                "value": 1.0525,
+                "provenance": "artifact"
+              }
+            },
+            {
+              "edge_id": "gateway|checkout|sync|true|protocol=http|operation=POST|route=%2Fcheckout",
+              "max_amplification_factor": {
+                "available": true,
+                "value": 2.105,
+                "provenance": "artifact"
+              }
+            }
+          ]
+        }
+      },
+      "endpoint_results": [
+        {
+          "profile": "checkout-payment-cut",
+          "endpoint_id": "gateway:GET /explicit",
+          "availability": 0,
+          "threshold": 0.99,
+          "threshold_delta": -0.99,
+          "status": "fail"
+        },
+        {
+          "profile": "checkout-payment-cut",
+          "endpoint_id": "gateway:POST /checkout",
+          "availability": 0.9665,
+          "threshold": 0.99,
+          "threshold_delta": -0.023499999999999965,
+          "status": "fail"
+        }
+      ],
+      "decision": "fail",
+      "endpoints_below_threshold": 2,
+      "reasons": [
+        {
+          "id": "endpoint_below_threshold",
+          "scope": "endpoint",
+          "profile": "checkout-payment-cut",
+          "endpoint_id": "gateway:GET /explicit",
+          "status": "fail",
+          "availability": 0,
+          "threshold": 0.99,
+          "delta": -0.99,
+          "message": "endpoint \"gateway:GET /explicit\" availability 0.0000 is below threshold 0.9900"
+        },
+        {
+          "id": "endpoint_below_threshold",
+          "scope": "endpoint",
+          "profile": "checkout-payment-cut",
+          "endpoint_id": "gateway:POST /checkout",
+          "status": "fail",
+          "availability": 0.9665,
+          "threshold": 0.99,
+          "delta": -0.023499999999999965,
+          "message": "endpoint \"gateway:POST /checkout\" availability 0.9665 is below threshold 0.9900"
+        }
+      ]
     }
   ],
   "diffs": {
     "baselines": [
       {
-        "name": "last-release",
-        "current_digest": "sha256:3656573fdccc2deb9142ab830fed64aed44584d2cf82416d937dc7733dd2d6d6",
-        "current_topology_version": "sha256:b20ebd677050d035b78b26a7d915a5d459a187dc7e2f3288d9e4ec32e24ae610",
+        "name": "bering-1.3.0-baseline",
+        "current_digest": "sha256:7177a7f202b4fb56c4a7d087001c53573123e07508cbc7f12a8f68b43be8d3a7",
+        "reference_digest": "sha256:7177a7f202b4fb56c4a7d087001c53573123e07508cbc7f12a8f68b43be8d3a7",
+        "current_topology_version": "topology-checkout-v11",
+        "reference_topology_version": "topology-checkout-v11",
         "cross_profile_weighted": {
-          "current": 0.7248888888888888,
-          "reference": 0.9055,
-          "signed": -0.18061111111111117,
-          "absolute": 0.18061111111111117
+          "current": 0.8588500000000001,
+          "reference": 0.8588500000000001,
+          "signed": 0,
+          "absolute": 0
         },
         "cross_profile_unweighted": {
-          "current": 0.768074074074074,
-          "reference": 0.9055,
-          "signed": -0.13742592592592595,
-          "absolute": 0.13742592592592595
+          "current": 0.7114375,
+          "reference": 0.7114375,
+          "signed": 0,
+          "absolute": 0
         },
         "profiles": [
           {
             "profile": "steady-state",
             "weighted_aggregate": {
-              "current": 0.9596166666666667,
-              "reference": 0.9055,
-              "signed": 0.0541166666666667,
-              "absolute": 0.0541166666666667
+              "current": 0.9599833333333334,
+              "reference": 0.9599833333333334,
+              "signed": 0,
+              "absolute": 0
             },
             "unweighted_aggregate": {
-              "current": 0.9609166666666668,
-              "reference": 0.9055,
-              "signed": 0.05541666666666678,
-              "absolute": 0.05541666666666678
+              "current": 0.9547083333333333,
+              "reference": 0.9547083333333333,
+              "signed": 0,
+              "absolute": 0
             },
             "decision": {
-              "current": "warn",
-              "reference": "warn",
+              "current": "fail",
+              "reference": "fail",
               "changed": false
             },
             "endpoints": [
               {
                 "profile": "steady-state",
-                "endpoint_id": "checkout:POST /process",
+                "endpoint_id": "gateway:GET /explicit",
                 "availability": {
-                  "current": 0.9715833333333334,
+                  "current": 0.9459166666666666,
+                  "reference": 0.9459166666666666,
+                  "signed": 0,
+                  "absolute": 0
+                },
+                "status": {
+                  "current": "fail",
+                  "reference": "fail",
+                  "changed": false
+                }
+              },
+              {
+                "profile": "steady-state",
+                "endpoint_id": "gateway:POST /checkout",
+                "availability": {
+                  "current": 0.9635,
+                  "reference": 0.9635,
+                  "signed": 0,
+                  "absolute": 0
+                },
+                "status": {
+                  "current": "fail",
+                  "reference": "fail",
+                  "changed": false
+                }
+              }
+            ],
+            "advanced_metrics": [
+              {
+                "metric": "blast_radius_endpoint_count",
+                "target_type": "profile",
+                "target": "profile",
+                "status": "comparable",
+                "delta": {
+                  "current": 0,
                   "reference": 0,
-                  "signed": 0.9715833333333334,
-                  "absolute": 0.9715833333333334
-                },
-                "status": {
-                  "current": "pass",
-                  "reference": "",
-                  "changed": true
+                  "signed": 0,
+                  "absolute": 0
                 }
               },
               {
-                "profile": "steady-state",
-                "endpoint_id": "frontend:GET /checkout",
-                "availability": {
-                  "current": 0.9416666666666667,
-                  "reference": 0.8612,
-                  "signed": 0.08046666666666669,
-                  "absolute": 0.08046666666666669
-                },
-                "status": {
-                  "current": "warn",
-                  "reference": "warn",
-                  "changed": false
+                "metric": "blast_radius_service_count",
+                "target_type": "profile",
+                "target": "profile",
+                "status": "comparable",
+                "delta": {
+                  "current": 0,
+                  "reference": 0,
+                  "signed": 0,
+                  "absolute": 0
                 }
               },
               {
-                "profile": "steady-state",
-                "endpoint_id": "frontend:GET /health",
-                "availability": {
-                  "current": 0.9695,
-                  "reference": 0.9498,
-                  "signed": 0.01970000000000005,
-                  "absolute": 0.01970000000000005
-                },
-                "status": {
-                  "current": "warn",
-                  "reference": "warn",
-                  "changed": false
+                "metric": "expected_success_rate",
+                "target_type": "path",
+                "target": "gateway-\u003echeckout",
+                "status": "comparable",
+                "delta": {
+                  "current": 0.9635,
+                  "reference": 0.9635,
+                  "signed": 0,
+                  "absolute": 0
+                }
+              },
+              {
+                "metric": "expected_success_rate",
+                "target_type": "path",
+                "target": "gateway-\u003echeckout-\u003epayment",
+                "status": "comparable",
+                "delta": {
+                  "current": 0.9459166666666666,
+                  "reference": 0.9459166666666666,
+                  "signed": 0,
+                  "absolute": 0
+                }
+              },
+              {
+                "metric": "max_amplification_factor",
+                "target_type": "edge",
+                "target": "checkout|payment|sync|true|protocol=http|operation=POST|route=%2Fcharge",
+                "status": "comparable",
+                "delta": {
+                  "current": 1.0525,
+                  "reference": 1.0525,
+                  "signed": 0,
+                  "absolute": 0
+                }
+              },
+              {
+                "metric": "max_amplification_factor",
+                "target_type": "edge",
+                "target": "gateway|checkout|sync|true|protocol=http|operation=POST|route=%2Fcheckout",
+                "status": "comparable",
+                "delta": {
+                  "current": 1.0736789312500001,
+                  "reference": 1.0736789312500001,
+                  "signed": 0,
+                  "absolute": 0
+                }
+              },
+              {
+                "metric": "max_amplification_factor",
+                "target_type": "path",
+                "target": "gateway-\u003echeckout",
+                "status": "comparable",
+                "delta": {
+                  "current": 1.02,
+                  "reference": 1.02,
+                  "signed": 0,
+                  "absolute": 0
+                }
+              },
+              {
+                "metric": "max_amplification_factor",
+                "target_type": "path",
+                "target": "gateway-\u003echeckout-\u003epayment",
+                "status": "comparable",
+                "delta": {
+                  "current": 1.0736789312500001,
+                  "reference": 1.0736789312500001,
+                  "signed": 0,
+                  "absolute": 0
+                }
+              },
+              {
+                "metric": "timeout_mismatch_count",
+                "target_type": "path",
+                "target": "gateway-\u003echeckout",
+                "status": "comparable",
+                "delta": {
+                  "current": 0,
+                  "reference": 0,
+                  "signed": 0,
+                  "absolute": 0
+                }
+              },
+              {
+                "metric": "timeout_mismatch_count",
+                "target_type": "path",
+                "target": "gateway-\u003echeckout-\u003epayment",
+                "status": "comparable",
+                "delta": {
+                  "current": 0,
+                  "reference": 0,
+                  "signed": 0,
+                  "absolute": 0
                 }
               }
             ]
           },
           {
-            "profile": "service-fault",
+            "profile": "az-us-east-1a-outage",
             "weighted_aggregate": {
-              "current": 0.8160666666666667,
-              "reference": 0.9055,
-              "signed": -0.08943333333333325,
-              "absolute": 0.08943333333333325
+              "current": 0.9322833333333335,
+              "reference": 0.9322833333333335,
+              "signed": 0,
+              "absolute": 0
             },
             "unweighted_aggregate": {
-              "current": 0.84475,
-              "reference": 0.9055,
-              "signed": -0.06074999999999997,
-              "absolute": 0.06074999999999997
+              "current": 0.9265833333333333,
+              "reference": 0.9265833333333333,
+              "signed": 0,
+              "absolute": 0
             },
             "decision": {
-              "current": "warn",
-              "reference": "warn",
+              "current": "fail",
+              "reference": "fail",
               "changed": false
             },
             "endpoints": [
               {
-                "profile": "service-fault",
-                "endpoint_id": "checkout:POST /process",
+                "profile": "az-us-east-1a-outage",
+                "endpoint_id": "gateway:GET /explicit",
                 "availability": {
-                  "current": 0.8446666666666667,
+                  "current": 0.9170833333333334,
+                  "reference": 0.9170833333333334,
+                  "signed": 0,
+                  "absolute": 0
+                },
+                "status": {
+                  "current": "fail",
+                  "reference": "fail",
+                  "changed": false
+                }
+              },
+              {
+                "profile": "az-us-east-1a-outage",
+                "endpoint_id": "gateway:POST /checkout",
+                "availability": {
+                  "current": 0.9360833333333334,
+                  "reference": 0.9360833333333334,
+                  "signed": 0,
+                  "absolute": 0
+                },
+                "status": {
+                  "current": "fail",
+                  "reference": "fail",
+                  "changed": false
+                }
+              }
+            ],
+            "advanced_metrics": [
+              {
+                "metric": "blast_radius_endpoint_count",
+                "target_type": "profile",
+                "target": "profile",
+                "status": "comparable",
+                "delta": {
+                  "current": 2,
+                  "reference": 2,
+                  "signed": 0,
+                  "absolute": 0
+                }
+              },
+              {
+                "metric": "blast_radius_service_count",
+                "target_type": "profile",
+                "target": "profile",
+                "status": "comparable",
+                "delta": {
+                  "current": 1,
+                  "reference": 1,
+                  "signed": 0,
+                  "absolute": 0
+                }
+              },
+              {
+                "metric": "expected_success_rate",
+                "target_type": "path",
+                "target": "gateway-\u003echeckout",
+                "status": "comparable",
+                "delta": {
+                  "current": 0.9360833333333334,
+                  "reference": 0.9360833333333334,
+                  "signed": 0,
+                  "absolute": 0
+                }
+              },
+              {
+                "metric": "expected_success_rate",
+                "target_type": "path",
+                "target": "gateway-\u003echeckout-\u003epayment",
+                "status": "comparable",
+                "delta": {
+                  "current": 0.9170833333333334,
+                  "reference": 0.9170833333333334,
+                  "signed": 0,
+                  "absolute": 0
+                }
+              },
+              {
+                "metric": "max_amplification_factor",
+                "target_type": "edge",
+                "target": "checkout|payment|sync|true|protocol=http|operation=POST|route=%2Fcharge",
+                "status": "comparable",
+                "delta": {
+                  "current": 1.0525,
+                  "reference": 1.0525,
+                  "signed": 0,
+                  "absolute": 0
+                }
+              },
+              {
+                "metric": "max_amplification_factor",
+                "target_type": "edge",
+                "target": "gateway|checkout|sync|true|protocol=http|operation=POST|route=%2Fcheckout",
+                "status": "comparable",
+                "delta": {
+                  "current": 1.0736789312500001,
+                  "reference": 1.0736789312500001,
+                  "signed": 0,
+                  "absolute": 0
+                }
+              },
+              {
+                "metric": "max_amplification_factor",
+                "target_type": "path",
+                "target": "gateway-\u003echeckout",
+                "status": "comparable",
+                "delta": {
+                  "current": 1.02,
+                  "reference": 1.02,
+                  "signed": 0,
+                  "absolute": 0
+                }
+              },
+              {
+                "metric": "max_amplification_factor",
+                "target_type": "path",
+                "target": "gateway-\u003echeckout-\u003epayment",
+                "status": "comparable",
+                "delta": {
+                  "current": 1.0736789312500001,
+                  "reference": 1.0736789312500001,
+                  "signed": 0,
+                  "absolute": 0
+                }
+              },
+              {
+                "metric": "timeout_mismatch_count",
+                "target_type": "path",
+                "target": "gateway-\u003echeckout",
+                "status": "comparable",
+                "delta": {
+                  "current": 0,
                   "reference": 0,
-                  "signed": 0.8446666666666667,
-                  "absolute": 0.8446666666666667
-                },
-                "status": {
-                  "current": "warn",
-                  "reference": "",
-                  "changed": true
+                  "signed": 0,
+                  "absolute": 0
                 }
               },
               {
-                "profile": "service-fault",
-                "endpoint_id": "frontend:GET /checkout",
-                "availability": {
-                  "current": 0.7731666666666667,
-                  "reference": 0.8612,
-                  "signed": -0.0880333333333333,
-                  "absolute": 0.0880333333333333
-                },
-                "status": {
-                  "current": "warn",
-                  "reference": "warn",
-                  "changed": false
-                }
-              },
-              {
-                "profile": "service-fault",
-                "endpoint_id": "frontend:GET /health",
-                "availability": {
-                  "current": 0.9164166666666667,
-                  "reference": 0.9498,
-                  "signed": -0.03338333333333332,
-                  "absolute": 0.03338333333333332
-                },
-                "status": {
-                  "current": "warn",
-                  "reference": "warn",
-                  "changed": false
+                "metric": "timeout_mismatch_count",
+                "target_type": "path",
+                "target": "gateway-\u003echeckout-\u003epayment",
+                "status": "comparable",
+                "delta": {
+                  "current": 0,
+                  "reference": 0,
+                  "signed": 0,
+                  "absolute": 0
                 }
               }
             ]
           },
           {
-            "profile": "fixed-blast-radius",
+            "profile": "payment-brownout",
             "weighted_aggregate": {
-              "current": 0.39898333333333336,
-              "reference": 0.9055,
-              "signed": -0.5065166666666666,
-              "absolute": 0.5065166666666666
+              "current": 0.7699333333333334,
+              "reference": 0.7699333333333334,
+              "signed": 0,
+              "absolute": 0
             },
             "unweighted_aggregate": {
-              "current": 0.4985555555555556,
-              "reference": 0.9055,
-              "signed": -0.4069444444444444,
-              "absolute": 0.4069444444444444
+              "current": 0.48120833333333335,
+              "reference": 0.48120833333333335,
+              "signed": 0,
+              "absolute": 0
             },
             "decision": {
-              "current": "warn",
-              "reference": "warn",
+              "current": "fail",
+              "reference": "fail",
               "changed": false
             },
             "endpoints": [
               {
-                "profile": "fixed-blast-radius",
-                "endpoint_id": "checkout:POST /process",
+                "profile": "payment-brownout",
+                "endpoint_id": "gateway:GET /explicit",
                 "availability": {
-                  "current": 0.49975,
+                  "current": 0,
                   "reference": 0,
-                  "signed": 0.49975,
-                  "absolute": 0.49975
+                  "signed": 0,
+                  "absolute": 0
                 },
                 "status": {
-                  "current": "warn",
-                  "reference": "",
-                  "changed": true
-                }
-              },
-              {
-                "profile": "fixed-blast-radius",
-                "endpoint_id": "frontend:GET /checkout",
-                "availability": {
-                  "current": 0.24783333333333332,
-                  "reference": 0.8612,
-                  "signed": -0.6133666666666666,
-                  "absolute": 0.6133666666666666
-                },
-                "status": {
-                  "current": "warn",
-                  "reference": "warn",
+                  "current": "fail",
+                  "reference": "fail",
                   "changed": false
                 }
               },
               {
-                "profile": "fixed-blast-radius",
-                "endpoint_id": "frontend:GET /health",
+                "profile": "payment-brownout",
+                "endpoint_id": "gateway:POST /checkout",
                 "availability": {
-                  "current": 0.7480833333333333,
-                  "reference": 0.9498,
-                  "signed": -0.20171666666666666,
-                  "absolute": 0.20171666666666666
+                  "current": 0.9624166666666667,
+                  "reference": 0.9624166666666667,
+                  "signed": 0,
+                  "absolute": 0
                 },
                 "status": {
-                  "current": "warn",
-                  "reference": "warn",
+                  "current": "fail",
+                  "reference": "fail",
                   "changed": false
+                }
+              }
+            ],
+            "advanced_metrics": [
+              {
+                "metric": "blast_radius_endpoint_count",
+                "target_type": "profile",
+                "target": "profile",
+                "status": "comparable",
+                "delta": {
+                  "current": 0,
+                  "reference": 0,
+                  "signed": 0,
+                  "absolute": 0
+                }
+              },
+              {
+                "metric": "blast_radius_service_count",
+                "target_type": "profile",
+                "target": "profile",
+                "status": "comparable",
+                "delta": {
+                  "current": 0,
+                  "reference": 0,
+                  "signed": 0,
+                  "absolute": 0
+                }
+              },
+              {
+                "metric": "expected_success_rate",
+                "target_type": "path",
+                "target": "gateway-\u003echeckout",
+                "status": "comparable",
+                "delta": {
+                  "current": 0.9624166666666667,
+                  "reference": 0.9624166666666667,
+                  "signed": 0,
+                  "absolute": 0
+                }
+              },
+              {
+                "metric": "expected_success_rate",
+                "target_type": "path",
+                "target": "gateway-\u003echeckout-\u003epayment",
+                "status": "comparable",
+                "delta": {
+                  "current": 0,
+                  "reference": 0,
+                  "signed": 0,
+                  "absolute": 0
+                }
+              },
+              {
+                "metric": "max_amplification_factor",
+                "target_type": "edge",
+                "target": "checkout|payment|sync|true|protocol=http|operation=POST|route=%2Fcharge",
+                "status": "comparable",
+                "delta": {
+                  "current": 1.5288062500000001,
+                  "reference": 1.5288062500000001,
+                  "signed": 0,
+                  "absolute": 0
+                }
+              },
+              {
+                "metric": "max_amplification_factor",
+                "target_type": "edge",
+                "target": "gateway|checkout|sync|true|protocol=http|operation=POST|route=%2Fcheckout",
+                "status": "comparable",
+                "delta": {
+                  "current": 3.0576125000000003,
+                  "reference": 3.0576125000000003,
+                  "signed": 0,
+                  "absolute": 0
+                }
+              },
+              {
+                "metric": "max_amplification_factor",
+                "target_type": "path",
+                "target": "gateway-\u003echeckout",
+                "status": "comparable",
+                "delta": {
+                  "current": 1.02,
+                  "reference": 1.02,
+                  "signed": 0,
+                  "absolute": 0
+                }
+              },
+              {
+                "metric": "max_amplification_factor",
+                "target_type": "path",
+                "target": "gateway-\u003echeckout-\u003epayment",
+                "status": "comparable",
+                "delta": {
+                  "current": 3.0576125000000003,
+                  "reference": 3.0576125000000003,
+                  "signed": 0,
+                  "absolute": 0
+                }
+              },
+              {
+                "metric": "timeout_mismatch_count",
+                "target_type": "path",
+                "target": "gateway-\u003echeckout",
+                "status": "comparable",
+                "delta": {
+                  "current": 0,
+                  "reference": 0,
+                  "signed": 0,
+                  "absolute": 0
+                }
+              },
+              {
+                "metric": "timeout_mismatch_count",
+                "target_type": "path",
+                "target": "gateway-\u003echeckout-\u003epayment",
+                "status": "comparable",
+                "delta": {
+                  "current": 2,
+                  "reference": 2,
+                  "signed": 0,
+                  "absolute": 0
+                }
+              }
+            ]
+          },
+          {
+            "profile": "checkout-payment-cut",
+            "weighted_aggregate": {
+              "current": 0.7732000000000001,
+              "reference": 0.7732000000000001,
+              "signed": 0,
+              "absolute": 0
+            },
+            "unweighted_aggregate": {
+              "current": 0.48325,
+              "reference": 0.48325,
+              "signed": 0,
+              "absolute": 0
+            },
+            "decision": {
+              "current": "fail",
+              "reference": "fail",
+              "changed": false
+            },
+            "endpoints": [
+              {
+                "profile": "checkout-payment-cut",
+                "endpoint_id": "gateway:GET /explicit",
+                "availability": {
+                  "current": 0,
+                  "reference": 0,
+                  "signed": 0,
+                  "absolute": 0
+                },
+                "status": {
+                  "current": "fail",
+                  "reference": "fail",
+                  "changed": false
+                }
+              },
+              {
+                "profile": "checkout-payment-cut",
+                "endpoint_id": "gateway:POST /checkout",
+                "availability": {
+                  "current": 0.9665,
+                  "reference": 0.9665,
+                  "signed": 0,
+                  "absolute": 0
+                },
+                "status": {
+                  "current": "fail",
+                  "reference": "fail",
+                  "changed": false
+                }
+              }
+            ],
+            "advanced_metrics": [
+              {
+                "metric": "blast_radius_endpoint_count",
+                "target_type": "profile",
+                "target": "profile",
+                "status": "comparable",
+                "delta": {
+                  "current": 1,
+                  "reference": 1,
+                  "signed": 0,
+                  "absolute": 0
+                }
+              },
+              {
+                "metric": "blast_radius_service_count",
+                "target_type": "profile",
+                "target": "profile",
+                "status": "comparable",
+                "delta": {
+                  "current": 0,
+                  "reference": 0,
+                  "signed": 0,
+                  "absolute": 0
+                }
+              },
+              {
+                "metric": "expected_success_rate",
+                "target_type": "path",
+                "target": "gateway-\u003echeckout",
+                "status": "comparable",
+                "delta": {
+                  "current": 0.9665,
+                  "reference": 0.9665,
+                  "signed": 0,
+                  "absolute": 0
+                }
+              },
+              {
+                "metric": "expected_success_rate",
+                "target_type": "path",
+                "target": "gateway-\u003echeckout-\u003epayment",
+                "status": "comparable",
+                "delta": {
+                  "current": 0,
+                  "reference": 0,
+                  "signed": 0,
+                  "absolute": 0
+                }
+              },
+              {
+                "metric": "max_amplification_factor",
+                "target_type": "edge",
+                "target": "checkout|payment|sync|true|protocol=http|operation=POST|route=%2Fcharge",
+                "status": "comparable",
+                "delta": {
+                  "current": 1.0525,
+                  "reference": 1.0525,
+                  "signed": 0,
+                  "absolute": 0
+                }
+              },
+              {
+                "metric": "max_amplification_factor",
+                "target_type": "edge",
+                "target": "gateway|checkout|sync|true|protocol=http|operation=POST|route=%2Fcheckout",
+                "status": "comparable",
+                "delta": {
+                  "current": 2.105,
+                  "reference": 2.105,
+                  "signed": 0,
+                  "absolute": 0
+                }
+              },
+              {
+                "metric": "max_amplification_factor",
+                "target_type": "path",
+                "target": "gateway-\u003echeckout",
+                "status": "comparable",
+                "delta": {
+                  "current": 1.02,
+                  "reference": 1.02,
+                  "signed": 0,
+                  "absolute": 0
+                }
+              },
+              {
+                "metric": "max_amplification_factor",
+                "target_type": "path",
+                "target": "gateway-\u003echeckout-\u003epayment",
+                "status": "comparable",
+                "delta": {
+                  "current": 2.105,
+                  "reference": 2.105,
+                  "signed": 0,
+                  "absolute": 0
+                }
+              },
+              {
+                "metric": "timeout_mismatch_count",
+                "target_type": "path",
+                "target": "gateway-\u003echeckout",
+                "status": "comparable",
+                "delta": {
+                  "current": 0,
+                  "reference": 0,
+                  "signed": 0,
+                  "absolute": 0
+                }
+              },
+              {
+                "metric": "timeout_mismatch_count",
+                "target_type": "path",
+                "target": "gateway-\u003echeckout-\u003epayment",
+                "status": "comparable",
+                "delta": {
+                  "current": 0,
+                  "reference": 0,
+                  "signed": 0,
+                  "absolute": 0
                 }
               }
             ]
@@ -560,6 +1917,6 @@
       }
     ]
   },
-  "generated_at": "2026-03-14T17:10:33.8544183Z",
-  "recompute_duration_ms": 18
+  "generated_at": "2026-07-02T09:12:39.1276701Z",
+  "recompute_duration_ms": 74
 }

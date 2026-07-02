@@ -47,7 +47,7 @@ deprecated_contracts:
   - kind: snapshot
     name: io.mb3r.bering.snapshot
     versions:
-      - "1.0.0"
+      - "1.3.0"
 EOF
 
 if "${GO_BIN}" run ./cmd/sheaft run \

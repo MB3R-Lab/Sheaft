@@ -1,394 +1,471 @@
 {
+  "snapshot_id": "snap-v11-0001",
+  "topology_version": "topology-checkout-v11",
+  "window_start": "2026-03-22T00:00:00Z",
+  "window_end": "2026-03-22T00:05:00Z",
+  "ingest": {
+    "spans": 36,
+    "traces": 9,
+    "dropped_spans": 0,
+    "late_spans": 0
+  },
   "counts": {
-    "edges": 3,
-    "endpoints": 3,
-    "services": 4
+    "services": 3,
+    "edges": 2,
+    "endpoints": 2
   },
   "coverage": {
-    "confidence": 0.94,
+    "confidence": 0.95,
+    "service_support_min": 1,
     "edge_support_min": 1,
-    "endpoint_support_min": 1,
-    "service_support_min": 1
+    "endpoint_support_min": 1
   },
+  "sources": [
+    {
+      "type": "traces",
+      "connector": "trace_file",
+      "ref": "bering://fixtures/checkout-v11",
+      "observations": 36
+    }
+  ],
   "diff": {
-    "added_edges": 3,
-    "added_endpoints": 3,
-    "added_services": 4,
-    "changed_edges": 0,
-    "changed_endpoints": 0,
+    "added_services": 3,
+    "removed_services": 0,
     "changed_services": 0,
+    "added_edges": 2,
     "removed_edges": 0,
+    "changed_edges": 0,
+    "added_endpoints": 2,
     "removed_endpoints": 0,
-    "removed_services": 0
+    "changed_endpoints": 0
   },
   "discovery": {
-    "edges": [
-      {
-        "blocking": true,
-        "from": "checkout",
-        "id": "checkout|inventory|sync|true",
-        "kind": "sync",
-        "metadata": {},
-        "provenance": [
-          {
-            "connector": "trace_file",
-            "ref": "bering://discover?input=examples%2Ftraces%2Fnormalized.sample.json",
-            "type": "traces"
-          }
-        ],
-        "support": {
-          "evidence": [
-            "default_sync"
-          ],
-          "observations": 1,
-          "trace_count": 1
-        },
-        "to": "inventory"
-      },
-      {
-        "blocking": false,
-        "from": "checkout",
-        "id": "checkout|payment|async|false",
-        "kind": "async",
-        "metadata": {},
-        "provenance": [
-          {
-            "connector": "trace_file",
-            "ref": "bering://discover?input=examples%2Ftraces%2Fnormalized.sample.json",
-            "type": "traces"
-          }
-        ],
-        "support": {
-          "evidence": [
-            "child_async_signal",
-            "messaging.destination",
-            "messaging.system",
-            "span.kind=consumer"
-          ],
-          "observations": 1,
-          "trace_count": 1
-        },
-        "to": "payment"
-      },
-      {
-        "blocking": true,
-        "from": "frontend",
-        "id": "frontend|checkout|sync|true",
-        "kind": "sync",
-        "metadata": {
-          "labels": {
-            "flow": "checkout"
-          },
-          "weight": 0.8
-        },
-        "provenance": [
-          {
-            "connector": "trace_file",
-            "ref": "bering://discover?input=examples%2Ftraces%2Fnormalized.sample.json",
-            "type": "traces"
-          },
-          {
-            "name": "sample-discovery-overlay",
-            "precedence": 1,
-            "ref": "configs\\discovery.overlay.sample.yaml",
-            "type": "overlay"
-          }
-        ],
-        "support": {
-          "evidence": [
-            "default_sync"
-          ],
-          "observations": 1,
-          "trace_count": 1
-        },
-        "to": "checkout"
-      }
-    ],
-    "endpoints": [
-      {
-        "entry_service": "checkout",
-        "id": "checkout:POST /process",
-        "metadata": {
-          "labels": {
-            "workflow": "purchase"
-          },
-          "predicate_ref": "catalog.checkout.success",
-          "weight": 0.6
-        },
-        "method": "POST",
-        "path": "/process",
-        "provenance": [
-          {
-            "connector": "trace_file",
-            "ref": "bering://discover?input=examples%2Ftraces%2Fnormalized.sample.json",
-            "type": "traces"
-          },
-          {
-            "name": "sample-discovery-overlay",
-            "precedence": 1,
-            "ref": "configs\\discovery.overlay.sample.yaml",
-            "type": "overlay"
-          }
-        ],
-        "support": {
-          "observations": 1,
-          "trace_count": 1
-        }
-      },
-      {
-        "entry_service": "frontend",
-        "id": "frontend:GET /checkout",
-        "metadata": {
-          "labels": {
-            "workflow": "browse"
-          },
-          "weight": 0.4
-        },
-        "method": "GET",
-        "path": "/checkout",
-        "provenance": [
-          {
-            "connector": "trace_file",
-            "ref": "bering://discover?input=examples%2Ftraces%2Fnormalized.sample.json",
-            "type": "traces"
-          },
-          {
-            "name": "sample-discovery-overlay",
-            "precedence": 1,
-            "ref": "configs\\discovery.overlay.sample.yaml",
-            "type": "overlay"
-          }
-        ],
-        "support": {
-          "observations": 1,
-          "trace_count": 1
-        }
-      },
-      {
-        "entry_service": "frontend",
-        "id": "frontend:GET /health",
-        "metadata": {},
-        "method": "GET",
-        "path": "/health",
-        "provenance": [
-          {
-            "connector": "trace_file",
-            "ref": "bering://discover?input=examples%2Ftraces%2Fnormalized.sample.json",
-            "type": "traces"
-          }
-        ],
-        "support": {
-          "observations": 1,
-          "trace_count": 1
-        }
-      }
-    ],
-    "overlays": [
-      {
-        "name": "sample-discovery-overlay",
-        "precedence": 1,
-        "ref": "configs\\discovery.overlay.sample.yaml"
-      }
-    ],
     "services": [
       {
+        "id": "gateway",
+        "name": "gateway",
+        "replicas": 1,
+        "support": {
+          "observations": 9,
+          "trace_count": 9
+        },
+        "metadata": {
+          "labels": {
+            "team": "edge"
+          },
+          "reliability": {
+            "live_probability": 0.99,
+            "source": "sre-calibration",
+            "confidence": 0.8
+          }
+        }
+      },
+      {
         "id": "checkout",
+        "name": "checkout",
+        "replicas": 2,
+        "support": {
+          "observations": 9,
+          "trace_count": 9
+        },
         "metadata": {
           "failure_eligible": true,
           "labels": {
-            "team": "commerce",
-            "tier": "backend"
+            "team": "commerce"
           },
-          "replicas_override": 3,
-          "slo_refs": [
-            "slo:checkout-latency"
-          ]
-        },
-        "name": "checkout",
-        "provenance": [
-          {
-            "connector": "trace_file",
-            "ref": "bering://discover?input=examples%2Ftraces%2Fnormalized.sample.json",
-            "type": "traces"
+          "placements": [
+            {
+              "replicas": 1,
+              "labels": {
+                "az": "us-east-1a",
+                "replica_group": "blue"
+              }
+            },
+            {
+              "replicas": 1,
+              "labels": {
+                "az": "us-east-1b",
+                "replica_group": "green"
+              },
+              "reliability": {
+                "live_probability": 0.985,
+                "source": "az-history",
+                "confidence": 0.75
+              }
+            }
+          ],
+          "reliability": {
+            "live_probability": 0.985,
+            "source": "sre-calibration",
+            "confidence": 0.8
           },
-          {
-            "name": "sample-discovery-overlay",
-            "precedence": 1,
-            "ref": "configs\\discovery.overlay.sample.yaml",
-            "type": "overlay"
-          }
-        ],
-        "replicas": 3,
-        "support": {
-          "observations": 1,
-          "trace_count": 1
-        }
-      },
-      {
-        "id": "frontend",
-        "metadata": {},
-        "name": "frontend",
-        "provenance": [
-          {
-            "connector": "trace_file",
-            "ref": "bering://discover?input=examples%2Ftraces%2Fnormalized.sample.json",
-            "type": "traces"
-          }
-        ],
-        "replicas": 1,
-        "support": {
-          "observations": 2,
-          "trace_count": 2
-        }
-      },
-      {
-        "id": "inventory",
-        "metadata": {},
-        "name": "inventory",
-        "provenance": [
-          {
-            "connector": "trace_file",
-            "ref": "bering://discover?input=examples%2Ftraces%2Fnormalized.sample.json",
-            "type": "traces"
-          }
-        ],
-        "replicas": 1,
-        "support": {
-          "observations": 1,
-          "trace_count": 1
+          "shared_resource_refs": ["db:payments"]
         }
       },
       {
         "id": "payment",
-        "metadata": {
-          "labels": {
-            "team": "payments",
-            "tier": "backend"
-          }
-        },
         "name": "payment",
-        "provenance": [
-          {
-            "connector": "trace_file",
-            "ref": "bering://discover?input=examples%2Ftraces%2Fnormalized.sample.json",
-            "type": "traces"
-          },
-          {
-            "name": "sample-discovery-overlay",
-            "precedence": 1,
-            "ref": "configs\\discovery.overlay.sample.yaml",
-            "type": "overlay"
-          }
-        ],
         "replicas": 1,
         "support": {
-          "observations": 1,
-          "trace_count": 1
+          "observations": 9,
+          "trace_count": 9
+        },
+        "metadata": {
+          "failure_eligible": true,
+          "labels": {
+            "team": "payments"
+          },
+          "reliability": {
+            "live_probability": 0.98,
+            "source": "sre-calibration",
+            "confidence": 0.8
+          },
+          "shared_resource_refs": ["db:payments"]
         }
       }
-    ]
-  },
-  "ingest": {
-    "dropped_spans": 0,
-    "late_spans": 0,
-    "spans": 5,
-    "traces": 2
-  },
-  "metadata": {
-    "confidence": 0.94,
-    "emitted_at": "2026-03-03T00:00:00Z",
-    "schema": {
-      "digest": "sha256:87e4e887ed4a37b72f6136e268b73552eccb92941c4de2c6f3a514dd066ea972",
-      "name": "io.mb3r.bering.snapshot",
-      "uri": "https://mb3r-lab.github.io/Bering/schema/snapshot/v1.0.0/snapshot.schema.json",
-      "version": "1.0.0"
-    },
-    "source_ref": "bering://discover?input=examples%2Ftraces%2Fnormalized.sample.json",
-    "source_type": "bering"
-  },
-  "model": {
-    "edges": [
-      {
-        "blocking": true,
-        "from": "checkout",
-        "kind": "sync",
-        "to": "inventory"
-      },
-      {
-        "blocking": false,
-        "from": "checkout",
-        "kind": "async",
-        "to": "payment"
-      },
-      {
-        "blocking": true,
-        "from": "frontend",
-        "kind": "sync",
-        "to": "checkout"
+      ],
+      "edges": [
+        {
+          "id": "gateway|checkout|sync|true|protocol=http|operation=POST|route=%2Fcheckout",
+          "from": "gateway",
+          "to": "checkout",
+          "kind": "sync",
+          "blocking": true,
+          "identity": {
+            "protocol": "http",
+            "operation": "POST",
+            "route": "/checkout"
+          },
+          "metadata": {
+            "weight": 0.8,
+            "reliability": {
+              "live_probability": 0.995,
+              "source": "dependency-slo",
+              "confidence": 0.85
+            }
+          },
+          "support": {
+            "observations": 9,
+            "trace_count": 9
+        },
+        "resilience": {
+          "request_timeout_ms": 4500,
+          "retry": {
+            "max_attempts": 2
+          },
+          "circuit_breaker": {
+            "enabled": true,
+            "max_requests": 2
+          }
+        },
+        "observed": {
+          "latency_ms": {
+            "p90": 800
+          },
+          "error_rate": 0.02
+        }
+        },
+        {
+          "id": "checkout|payment|sync|true|protocol=http|operation=POST|route=%2Fcharge",
+          "from": "checkout",
+          "to": "payment",
+          "kind": "sync",
+          "blocking": true,
+          "identity": {
+            "protocol": "http",
+            "operation": "POST",
+            "route": "/charge"
+          },
+          "metadata": {
+            "weight": 0.7,
+            "reliability": {
+              "live_probability": 0.99,
+              "source": "dependency-slo",
+              "confidence": 0.85
+            }
+          },
+          "support": {
+            "observations": 9,
+            "trace_count": 9
+        },
+        "resilience": {
+          "request_timeout_ms": 4000,
+          "retry": {
+            "max_attempts": 3
+          },
+          "circuit_breaker": {
+            "enabled": true,
+            "max_requests": 3
+          }
+        },
+        "observed": {
+          "latency_ms": {
+            "p90": 1200
+          },
+          "error_rate": 0.05
+        }
       }
     ],
     "endpoints": [
       {
-        "entry_service": "checkout",
-        "id": "checkout:POST /process",
-        "success_predicate_ref": "catalog.checkout.success"
+        "id": "gateway:POST /checkout",
+        "entry_service": "gateway",
+        "method": "POST",
+        "path": "/checkout",
+        "support": {
+          "observations": 9,
+          "trace_count": 9
+        },
+        "metadata": {
+          "semantics": {
+            "predicate_mode": "immediate_response",
+            "mandatory_targets": ["checkout"],
+            "dependency_modes": ["sync"],
+            "source": "service-catalog",
+            "confidence": 0.9
+          },
+          "weight": 0.8
+        }
       },
       {
-        "entry_service": "frontend",
-        "id": "frontend:GET /checkout",
-        "success_predicate_ref": "frontend:GET /checkout"
-      },
-      {
-        "entry_service": "frontend",
-        "id": "frontend:GET /health",
-        "success_predicate_ref": "frontend:GET /health"
+        "id": "gateway:GET /explicit",
+        "entry_service": "gateway",
+        "method": "GET",
+        "path": "/explicit",
+        "support": {
+          "observations": 9,
+          "trace_count": 9
+        },
+        "metadata": {
+          "predicate_ref": "explicit.flow",
+          "semantics": {
+            "predicate_mode": "eventual_completion",
+            "mandatory_targets": ["payment"],
+            "dependency_modes": ["sync"],
+            "source": "service-catalog",
+            "confidence": 0.85
+          },
+          "weight": 0.2
+        }
       }
-    ],
-    "metadata": {
-      "confidence": 0.94,
-      "discovered_at": "2026-03-03T00:00:00Z",
-      "schema": {
-        "digest": "sha256:272277c093f37580adcd2dded225bd37c86539d642d7910baad7e4228227d1a7",
-        "name": "io.mb3r.bering.model",
-        "uri": "https://mb3r-lab.github.io/Bering/schema/model/v1.0.0/model.schema.json",
-        "version": "1.0.0"
-      },
-      "source_ref": "bering://discover?input=examples%2Ftraces%2Fnormalized.sample.json",
-      "source_type": "bering"
-    },
+    ]
+  },
+  "model": {
     "services": [
+      {
+        "id": "gateway",
+        "name": "gateway",
+        "replicas": 1,
+        "metadata": {
+          "labels": {
+            "team": "edge"
+          },
+          "reliability": {
+            "live_probability": 0.99,
+            "source": "sre-calibration",
+            "confidence": 0.8
+          }
+        }
+      },
       {
         "id": "checkout",
         "name": "checkout",
-        "replicas": 3
-      },
-      {
-        "id": "frontend",
-        "name": "frontend",
-        "replicas": 1
-      },
-      {
-        "id": "inventory",
-        "name": "inventory",
-        "replicas": 1
+        "replicas": 2,
+        "metadata": {
+          "failure_eligible": true,
+          "labels": {
+            "team": "commerce"
+          },
+          "placements": [
+            {
+              "replicas": 1,
+              "labels": {
+                "az": "us-east-1a",
+                "replica_group": "blue"
+              }
+            },
+            {
+              "replicas": 1,
+              "labels": {
+                "az": "us-east-1b",
+                "replica_group": "green"
+              },
+              "reliability": {
+                "live_probability": 0.985,
+                "source": "az-history",
+                "confidence": 0.75
+              }
+            }
+          ],
+          "reliability": {
+            "live_probability": 0.985,
+            "source": "sre-calibration",
+            "confidence": 0.8
+          },
+          "shared_resource_refs": ["db:payments"]
+        }
       },
       {
         "id": "payment",
         "name": "payment",
-        "replicas": 1
+        "replicas": 1,
+        "metadata": {
+          "failure_eligible": true,
+          "labels": {
+            "team": "payments"
+          },
+          "reliability": {
+            "live_probability": 0.98,
+            "source": "sre-calibration",
+            "confidence": 0.8
+          },
+          "shared_resource_refs": ["db:payments"]
+        }
       }
-    ]
-  },
-  "snapshot_id": "snap-87b9684332d99fa3564dea4f",
-  "sources": [
-    {
-      "connector": "trace_file",
-      "observations": 5,
-      "ref": "bering://discover?input=examples%2Ftraces%2Fnormalized.sample.json",
-      "type": "traces"
+    ],
+    "edges": [
+      {
+        "id": "gateway|checkout|sync|true|protocol=http|operation=POST|route=%2Fcheckout",
+        "from": "gateway",
+        "to": "checkout",
+        "kind": "sync",
+        "blocking": true,
+        "identity": {
+          "protocol": "http",
+          "operation": "POST",
+          "route": "/checkout"
+        },
+        "metadata": {
+          "weight": 0.8,
+          "reliability": {
+            "live_probability": 0.995,
+            "source": "dependency-slo",
+            "confidence": 0.85
+          }
+        },
+        "resilience": {
+          "request_timeout_ms": 4500,
+          "retry": {
+            "max_attempts": 2
+          },
+          "circuit_breaker": {
+            "enabled": true,
+            "max_requests": 2
+          }
+        },
+        "observed": {
+          "latency_ms": {
+            "p90": 800
+          },
+          "error_rate": 0.02
+        }
+      },
+      {
+        "id": "checkout|payment|sync|true|protocol=http|operation=POST|route=%2Fcharge",
+        "from": "checkout",
+        "to": "payment",
+        "kind": "sync",
+        "blocking": true,
+        "identity": {
+          "protocol": "http",
+          "operation": "POST",
+          "route": "/charge"
+        },
+        "metadata": {
+          "weight": 0.7,
+          "reliability": {
+            "live_probability": 0.99,
+            "source": "dependency-slo",
+            "confidence": 0.85
+          }
+        },
+        "resilience": {
+          "request_timeout_ms": 4000,
+          "retry": {
+            "max_attempts": 3
+          },
+          "circuit_breaker": {
+            "enabled": true,
+            "max_requests": 3
+          }
+        },
+        "observed": {
+          "latency_ms": {
+            "p90": 1200
+          },
+          "error_rate": 0.05
+        }
+      }
+    ],
+    "endpoints": [
+      {
+        "id": "gateway:POST /checkout",
+        "entry_service": "gateway",
+        "success_predicate_ref": "gateway:POST /checkout",
+        "method": "POST",
+        "path": "/checkout",
+        "metadata": {
+          "semantics": {
+            "predicate_mode": "immediate_response",
+            "mandatory_targets": ["checkout"],
+            "dependency_modes": ["sync"],
+            "source": "service-catalog",
+            "confidence": 0.9
+          },
+          "weight": 0.8
+        }
+      },
+      {
+        "id": "gateway:GET /explicit",
+        "entry_service": "gateway",
+        "success_predicate_ref": "explicit.flow",
+        "method": "GET",
+        "path": "/explicit",
+        "metadata": {
+          "semantics": {
+            "predicate_mode": "eventual_completion",
+            "mandatory_targets": ["payment"],
+            "dependency_modes": ["sync"],
+            "source": "service-catalog",
+            "confidence": 0.85
+          },
+          "weight": 0.2
+        }
+      }
+    ],
+    "predicates": {
+      "explicit.flow": {
+        "type": "all_of",
+        "services": ["gateway", "checkout", "payment"]
+      }
+    },
+    "endpoint_weights": {
+      "gateway:POST /checkout": 0.8,
+      "gateway:GET /explicit": 0.2
+    },
+    "metadata": {
+      "source_type": "bering",
+      "source_ref": "bering://fixtures/checkout-v11",
+      "discovered_at": "2026-03-22T00:00:00Z",
+      "confidence": 0.95,
+      "schema": {
+        "name": "io.mb3r.bering.model",
+        "version": "1.3.0",
+        "uri": "https://mb3r-lab.github.io/Bering/schema/model/v1.3.0/model.schema.json",
+        "digest": "sha256:2aa8a3550a25dc626ba6d2f5833569efca2f382b9e5c9c3405be93695d7d48ae"
+      }
     }
-  ],
-  "topology_version": "sha256:b20ebd677050d035b78b26a7d915a5d459a187dc7e2f3288d9e4ec32e24ae610",
-  "window_end": "2026-03-03T00:00:00Z",
-  "window_start": "2026-03-03T00:00:00Z"
+  },
+  "metadata": {
+    "source_type": "bering",
+    "source_ref": "bering://fixtures/checkout-v11",
+    "emitted_at": "2026-03-22T00:05:00Z",
+    "confidence": 0.95,
+    "schema": {
+      "name": "io.mb3r.bering.snapshot",
+      "version": "1.3.0",
+      "uri": "https://mb3r-lab.github.io/Bering/schema/snapshot/v1.3.0/snapshot.schema.json",
+      "digest": "sha256:cb778e5b0866d9ce5cfe7f23b8d98a339603593a0247cccd9cddaf05c7ae4bb1"
+    }
+  }
 }

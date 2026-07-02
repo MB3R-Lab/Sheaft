@@ -4,7 +4,6 @@ import (
 	"math"
 	"path/filepath"
 	"runtime"
-	"strings"
 	"testing"
 
 	"github.com/MB3R-Lab/Sheaft/internal/artifact"
@@ -14,35 +13,6 @@ import (
 	"github.com/MB3R-Lab/Sheaft/internal/modelcontract"
 	"github.com/MB3R-Lab/Sheaft/internal/predicates"
 )
-
-func TestRunArtifactProfiles_V100MatchesLegacyWithoutFaultContract(t *testing.T) {
-	t.Parallel()
-
-	loaded := loadExampleArtifact(t, "snapshot-v1.0.0.sample.json")
-	params := AnalysisParams{
-		Seed:           42,
-		DefaultWeights: loaded.EndpointWeights,
-		Profiles: []ProfileParams{
-			{Name: "steady", Trials: 5000, SamplingMode: "independent_replica", FailureProbability: 0.05},
-		},
-	}
-
-	legacy, err := RunProfiles(loaded.Model, params)
-	if err != nil {
-		t.Fatalf("RunProfiles failed: %v", err)
-	}
-	advanced, err := RunArtifactProfiles(loaded, params)
-	if err != nil {
-		t.Fatalf("RunArtifactProfiles failed: %v", err)
-	}
-
-	if legacy.Profiles[0].WeightedAggregate != advanced.Profiles[0].WeightedAggregate {
-		t.Fatalf("expected v1.0.0 advanced runner to preserve weighted aggregate: legacy=%f advanced=%f", legacy.Profiles[0].WeightedAggregate, advanced.Profiles[0].WeightedAggregate)
-	}
-	if legacy.Profiles[0].EndpointAvailability["gateway:POST /checkout"] != advanced.Profiles[0].EndpointAvailability["gateway:POST /checkout"] {
-		t.Fatalf("expected v1.0.0 advanced runner to preserve endpoint availability")
-	}
-}
 
 func TestRunArtifactProfiles_StochasticConnectivityChainMatchesClosedForm(t *testing.T) {
 	t.Parallel()
@@ -535,54 +505,6 @@ func TestRunArtifactProfiles_RetryAmplificationExposed(t *testing.T) {
 	}
 	if pathMetric.MaxAmplificationFactor.Value <= 1 {
 		t.Fatalf("expected amplification > 1, got %+v", pathMetric.MaxAmplificationFactor)
-	}
-}
-
-func TestRunArtifactProfiles_V100AdvancedMetricsUnavailableWhenMetadataMissing(t *testing.T) {
-	t.Parallel()
-
-	loaded := loadExampleArtifact(t, "snapshot-v1.0.0.sample.json")
-	errorRate := 0.10
-	contract := faults.Contract{
-		SchemaVersion: faults.SchemaVersion,
-		Profiles: map[string]faults.Profile{
-			"service-brownout": {
-				Faults: []faults.Fault{
-					{
-						Type:      faults.TypeServicePartialDegradation,
-						ErrorRate: &errorRate,
-						Selector: faults.Selector{
-							ServiceIDs: []string{"checkout"},
-						},
-					},
-				},
-			},
-		},
-	}
-	out, err := RunArtifactProfiles(loaded, AnalysisParams{
-		Seed:           42,
-		DefaultWeights: loaded.EndpointWeights,
-		FaultContract:  &contract,
-		Profiles: []ProfileParams{
-			{Name: "service-brownout", FaultProfile: "service-brownout", Trials: 1000, SamplingMode: "independent_replica", FailureProbability: 0},
-		},
-	})
-	if err != nil {
-		t.Fatalf("RunArtifactProfiles failed: %v", err)
-	}
-
-	pathMetric := findPathMetric(out.Profiles[0].Advanced.Paths, []string{"gateway", "checkout", "payment"})
-	if pathMetric == nil {
-		t.Fatal("expected path diagnostics")
-	}
-	if pathMetric.MaxAmplificationFactor.Available {
-		t.Fatalf("expected amplification to be unavailable on v1.0.0 artifact, got %+v", pathMetric.MaxAmplificationFactor)
-	}
-	if !strings.Contains(pathMetric.MaxAmplificationFactor.Reason, "retry metadata unavailable") {
-		t.Fatalf("expected explicit unavailable reason, got %+v", pathMetric.MaxAmplificationFactor)
-	}
-	if pathMetric.TimeoutMismatchCount.Available {
-		t.Fatalf("expected timeout mismatch metric to be unavailable on v1.0.0 artifact, got %+v", pathMetric.TimeoutMismatchCount)
 	}
 }
 
