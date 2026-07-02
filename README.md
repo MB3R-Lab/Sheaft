@@ -1,6 +1,6 @@
 # Sheaft
 
-[![release](https://img.shields.io/github/v/release/MB3R-Lab/Sheaft?label=release)](https://github.com/MB3R-Lab/Sheaft/releases)
+[![release](https://img.shields.io/badge/release-v1.0.0-blue)](https://github.com/MB3R-Lab/Sheaft/releases/tag/v1.0.0)
 [![checks](https://img.shields.io/github/actions/workflow/status/MB3R-Lab/Sheaft/release-dry-run.yml?branch=main&label=checks)](https://github.com/MB3R-Lab/Sheaft/actions/workflows/release-dry-run.yml)
 [![bering schema](https://img.shields.io/badge/bering%20schema-1.3.0-blue)](https://github.com/MB3R-Lab/Sheaft/blob/main/docs/compatibility-matrix.md)
 
