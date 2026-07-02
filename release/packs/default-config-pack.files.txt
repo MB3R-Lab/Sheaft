@@ -7,10 +7,10 @@ configs/predicate-contract.example.yaml
 configs/sheaft.example.yaml
 examples/otel/journeys.sample.json
 examples/outputs/model.sample.json
-examples/outputs/model-v1.2.0.sample.json
+examples/outputs/model-v1.3.0.sample.json
 examples/outputs/snapshot.sample.json
 examples/outputs/snapshot-v1.0.0.sample.json
-examples/outputs/snapshot-v1.2.0.sample.json
+examples/outputs/snapshot-v1.3.0.sample.json
 examples/outputs/report.sample.json
 examples/outputs/posture-generated/report.json
 examples/outputs/posture-generated/summary.md

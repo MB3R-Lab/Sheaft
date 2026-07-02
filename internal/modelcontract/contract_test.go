@@ -36,6 +36,16 @@ func TestVendoredModelV120SchemaDigestMatchesPinned(t *testing.T) {
 	}
 }
 
+func TestVendoredModelV130SchemaDigestMatchesPinned(t *testing.T) {
+	t.Parallel()
+
+	sum := sha256.Sum256([]byte(VendoredModelV130Schema))
+	got := "sha256:" + hex.EncodeToString(sum[:])
+	if got != BeringModelV130Digest {
+		t.Fatalf("vendored model v1.3.0 schema digest mismatch: got=%s want=%s", got, BeringModelV130Digest)
+	}
+}
+
 func TestVendoredSnapshotSchemaDigestMatchesPinned(t *testing.T) {
 	t.Parallel()
 
@@ -63,6 +73,16 @@ func TestVendoredSnapshotV120SchemaDigestMatchesPinned(t *testing.T) {
 	got := "sha256:" + hex.EncodeToString(sum[:])
 	if got != BeringSnapshotV120Digest {
 		t.Fatalf("vendored snapshot v1.2.0 schema digest mismatch: got=%s want=%s", got, BeringSnapshotV120Digest)
+	}
+}
+
+func TestVendoredSnapshotV130SchemaDigestMatchesPinned(t *testing.T) {
+	t.Parallel()
+
+	sum := sha256.Sum256([]byte(VendoredSnapshotV130Schema))
+	got := "sha256:" + hex.EncodeToString(sum[:])
+	if got != BeringSnapshotV130Digest {
+		t.Fatalf("vendored snapshot v1.3.0 schema digest mismatch: got=%s want=%s", got, BeringSnapshotV130Digest)
 	}
 }
 
@@ -111,6 +131,22 @@ func TestValidateStrictSnapshotV120(t *testing.T) {
 
 	if err := ValidateStrict(ExpectedSnapshotV120Ref()); err != nil {
 		t.Fatalf("expected strict v1.2.0 snapshot validation to pass, got error: %v", err)
+	}
+}
+
+func TestValidateStrictModelV130(t *testing.T) {
+	t.Parallel()
+
+	if err := ValidateStrict(ExpectedModelV130Ref()); err != nil {
+		t.Fatalf("expected strict v1.3.0 model validation to pass, got error: %v", err)
+	}
+}
+
+func TestValidateStrictSnapshotV130(t *testing.T) {
+	t.Parallel()
+
+	if err := ValidateStrict(ExpectedSnapshotV130Ref()); err != nil {
+		t.Fatalf("expected strict v1.3.0 snapshot validation to pass, got error: %v", err)
 	}
 }
 

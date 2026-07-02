@@ -197,8 +197,8 @@ func (m ResilienceModel) Validate() error {
 		if strings.TrimSpace(svc.Name) == "" {
 			return fmt.Errorf("service %q has empty name", svc.ID)
 		}
-		if svc.Replicas < 0 {
-			return fmt.Errorf("service %q has negative replicas", svc.ID)
+		if svc.Replicas <= 0 {
+			return fmt.Errorf("service %q replicas must be >= 1", svc.ID)
 		}
 		if err := validateServiceMetadata(svc.ID, svc.Metadata); err != nil {
 			return err
@@ -293,7 +293,7 @@ func (m ResilienceModel) Validate() error {
 
 func requiresEdgeID(schemaVersion string) bool {
 	switch strings.TrimSpace(schemaVersion) {
-	case "1.1.0", "1.2.0":
+	case "1.1.0", "1.2.0", "1.3.0":
 		return true
 	default:
 		return false
@@ -311,8 +311,8 @@ func validateServiceMetadata(serviceID string, metadata *ServiceMetadata) error 
 		return err
 	}
 	for idx, placement := range metadata.Placements {
-		if placement.Replicas < 0 {
-			return fmt.Errorf("service %q placement %d has negative replicas", serviceID, idx)
+		if placement.Replicas <= 0 {
+			return fmt.Errorf("service %q placement %d replicas must be >= 1", serviceID, idx)
 		}
 		if err := validateLabelMap(fmt.Sprintf("service %q placement %d labels", serviceID, idx), placement.Labels); err != nil {
 			return err

@@ -3,7 +3,7 @@ stages:
   - posture
 
 variables:
-  BERING_ARTIFACT_SOURCE: examples/outputs/snapshot-v1.2.0.sample.json
+  BERING_ARTIFACT_SOURCE: examples/outputs/snapshot-v1.3.0.sample.json
   SHEAFT_IMAGE: "$CI_REGISTRY_IMAGE/sheaft-ci:$CI_COMMIT_SHA"
 
 bering_artifact:

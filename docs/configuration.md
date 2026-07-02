@@ -39,7 +39,7 @@ Key sections:
 
 Profile-level `reliability` values inherit the top-level block and can override individual defaults or service/edge entries. Edge reliability requires path-aware artifact analysis because legacy service predicates do not identify which edge carried a successful call.
 
-For cross-line baseline comparisons, prefer homogeneous `reliability.edge_live_probability` unless every compared artifact exposes the same edge IDs. Per-edge `reliability.edges` entries are validated against each artifact under analysis, so a Bering `1.2.0` operation-aware edge ID will not match a sparse `1.0.0` baseline artifact.
+For cross-line baseline comparisons, prefer homogeneous `reliability.edge_live_probability` unless every compared artifact exposes the same edge IDs. Per-edge `reliability.edges` entries are validated against each artifact under analysis, so a Bering `1.3.0` operation-aware edge ID will not match a sparse `1.0.0` baseline artifact.
 
 ## Serve Config
 
@@ -87,8 +87,8 @@ The same structure can be embedded inline under `analysis.contract_policy`, or p
 - Snapshot envelope schema: [api/schema/snapshot.schema.json](../api/schema/snapshot.schema.json)
 - Versioned Bering `1.1.0` model schema mirror: [api/schema/model.v1.1.0.schema.json](../api/schema/model.v1.1.0.schema.json)
 - Versioned Bering `1.1.0` snapshot schema mirror: [api/schema/snapshot.v1.1.0.schema.json](../api/schema/snapshot.v1.1.0.schema.json)
-- Versioned Bering `1.2.0` model schema mirror: [api/schema/model.v1.2.0.schema.json](../api/schema/model.v1.2.0.schema.json)
-- Versioned Bering `1.2.0` snapshot schema mirror: [api/schema/snapshot.v1.2.0.schema.json](../api/schema/snapshot.v1.2.0.schema.json)
+- Versioned Bering `1.3.0` model schema mirror: [api/schema/model.v1.3.0.schema.json](../api/schema/model.v1.3.0.schema.json)
+- Versioned Bering `1.3.0` snapshot schema mirror: [api/schema/snapshot.v1.3.0.schema.json](../api/schema/snapshot.v1.3.0.schema.json)
 - Report schema: [api/schema/report.schema.json](../api/schema/report.schema.json)
 - Oracle suite report schema: [api/schema/oracle-report.schema.json](../api/schema/oracle-report.schema.json)
 

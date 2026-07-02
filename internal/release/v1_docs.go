@@ -50,15 +50,15 @@ func ValidateV1ReleaseDocs(root string) error {
 		"docs/oracle-suite.md",
 		"docs/release-assets.md",
 		"api/schema/analysis.schema.json",
-		"api/schema/model.v1.2.0.schema.json",
+		"api/schema/model.v1.3.0.schema.json",
 		"api/schema/oracle-report.schema.json",
 		"api/schema/predicate-contract.schema.json",
-		"api/schema/snapshot.v1.2.0.schema.json",
+		"api/schema/snapshot.v1.3.0.schema.json",
 		"configs/analysis.v1.1.example.yaml",
 		"configs/fault-contract.example.yaml",
 		"configs/predicate-contract.example.yaml",
-		"examples/outputs/model-v1.2.0.sample.json",
-		"examples/outputs/snapshot-v1.2.0.sample.json",
+		"examples/outputs/model-v1.3.0.sample.json",
+		"examples/outputs/snapshot-v1.3.0.sample.json",
 		"compatibility-manifest.json",
 	}
 	for _, path := range requiredPaths {
@@ -93,14 +93,14 @@ func ValidateV1ReleaseDocs(root string) error {
 	}
 
 	for _, path := range []string{
-		"api/schema/model.v1.2.0.schema.json",
-		"api/schema/snapshot.v1.2.0.schema.json",
+		"api/schema/model.v1.3.0.schema.json",
+		"api/schema/snapshot.v1.3.0.schema.json",
 		"api/schema/predicate-contract.schema.json",
 		"api/schema/oracle-report.schema.json",
 		"configs/analysis.v1.1.example.yaml",
 		"configs/predicate-contract.example.yaml",
-		"examples/outputs/model-v1.2.0.sample.json",
-		"examples/outputs/snapshot-v1.2.0.sample.json",
+		"examples/outputs/model-v1.3.0.sample.json",
+		"examples/outputs/snapshot-v1.3.0.sample.json",
 	} {
 		if !strings.Contains(v1Doc, path) {
 			return fmt.Errorf("%s must reference %s", DefaultV1SemanticsDocPath, path)
@@ -216,16 +216,16 @@ func validateV1CompatibilityDocs(root string) error {
 	}
 	for _, contract := range []modelcontract.SupportedContract{
 		{
-			Name:    modelcontract.BeringModelV120Name,
-			Version: modelcontract.BeringModelV120Version,
-			URI:     modelcontract.BeringModelV120URI,
-			Digest:  modelcontract.BeringModelV120Digest,
+			Name:    modelcontract.BeringModelV130Name,
+			Version: modelcontract.BeringModelV130Version,
+			URI:     modelcontract.BeringModelV130URI,
+			Digest:  modelcontract.BeringModelV130Digest,
 		},
 		{
-			Name:    modelcontract.BeringSnapshotV120Name,
-			Version: modelcontract.BeringSnapshotV120Version,
-			URI:     modelcontract.BeringSnapshotV120URI,
-			Digest:  modelcontract.BeringSnapshotV120Digest,
+			Name:    modelcontract.BeringSnapshotV130Name,
+			Version: modelcontract.BeringSnapshotV130Version,
+			URI:     modelcontract.BeringSnapshotV130URI,
+			Digest:  modelcontract.BeringSnapshotV130Digest,
 		},
 	} {
 		if err := requireContains(DefaultV1SemanticsDocPath, v1Doc, []string{
@@ -244,30 +244,30 @@ func validateV1CompatibilityDocs(root string) error {
 
 func validateV1Examples(root string) error {
 	var sample v1SampleModel
-	if err := readReleaseJSON(root, "examples/outputs/model-v1.2.0.sample.json", &sample); err != nil {
+	if err := readReleaseJSON(root, "examples/outputs/model-v1.3.0.sample.json", &sample); err != nil {
 		return err
 	}
-	if err := requireSchemaRef("model-v1.2.0 sample", sample.Metadata.Schema, modelcontract.ExpectedModelV120Ref()); err != nil {
+	if err := requireSchemaRef("model-v1.3.0 sample", sample.Metadata.Schema, modelcontract.ExpectedModelV130Ref()); err != nil {
 		return err
 	}
-	if err := requireV1ExampleFeatures("model-v1.2.0 sample", sample.Services, sample.Edges, sample.Endpoints); err != nil {
+	if err := requireV1ExampleFeatures("model-v1.3.0 sample", sample.Services, sample.Edges, sample.Endpoints); err != nil {
 		return err
 	}
 
 	var snapshot v1SampleSnapshot
-	if err := readReleaseJSON(root, "examples/outputs/snapshot-v1.2.0.sample.json", &snapshot); err != nil {
+	if err := readReleaseJSON(root, "examples/outputs/snapshot-v1.3.0.sample.json", &snapshot); err != nil {
 		return err
 	}
-	if err := requireSchemaRef("snapshot-v1.2.0 sample", snapshot.Metadata.Schema, modelcontract.ExpectedSnapshotV120Ref()); err != nil {
+	if err := requireSchemaRef("snapshot-v1.3.0 sample", snapshot.Metadata.Schema, modelcontract.ExpectedSnapshotV130Ref()); err != nil {
 		return err
 	}
-	if err := requireSchemaRef("snapshot-v1.2.0 embedded model", snapshot.Model.Metadata.Schema, modelcontract.ExpectedModelV120Ref()); err != nil {
+	if err := requireSchemaRef("snapshot-v1.3.0 embedded model", snapshot.Model.Metadata.Schema, modelcontract.ExpectedModelV130Ref()); err != nil {
 		return err
 	}
-	if err := requireV1ExampleFeatures("snapshot-v1.2.0 embedded model", snapshot.Model.Services, snapshot.Model.Edges, snapshot.Model.Endpoints); err != nil {
+	if err := requireV1ExampleFeatures("snapshot-v1.3.0 embedded model", snapshot.Model.Services, snapshot.Model.Edges, snapshot.Model.Endpoints); err != nil {
 		return err
 	}
-	if err := requireV1ExampleFeatures("snapshot-v1.2.0 discovery", snapshot.Discovery.Services, snapshot.Discovery.Edges, snapshot.Discovery.Endpoints); err != nil {
+	if err := requireV1ExampleFeatures("snapshot-v1.3.0 discovery", snapshot.Discovery.Services, snapshot.Discovery.Edges, snapshot.Discovery.Endpoints); err != nil {
 		return err
 	}
 	return nil
@@ -282,8 +282,8 @@ func validateV1DefaultPack(root string) error {
 		"configs/analysis.v1.1.example.yaml",
 		"configs/fault-contract.example.yaml",
 		"configs/predicate-contract.example.yaml",
-		"examples/outputs/model-v1.2.0.sample.json",
-		"examples/outputs/snapshot-v1.2.0.sample.json",
+		"examples/outputs/model-v1.3.0.sample.json",
+		"examples/outputs/snapshot-v1.3.0.sample.json",
 		"benchmarks/fixed-slice/manifest.json",
 	})
 }

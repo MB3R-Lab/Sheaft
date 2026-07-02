@@ -9,7 +9,7 @@ This semantics profile is bound to the currently supported contracts:
 - `io.mb3r.bering.model@1.0.0`
 - `io.mb3r.bering.snapshot@1.0.0`
 
-Contract pins, URIs, and digests are tracked in [compatibility-matrix.md](compatibility-matrix.md). The richer `1.2.0` analysis line is defined separately in [consumer-semantics-v2.md](consumer-semantics-v2.md).
+Contract pins, URIs, and digests are tracked in [compatibility-matrix.md](compatibility-matrix.md). The richer `1.3.0` analysis line is defined separately in [consumer-semantics-v2.md](consumer-semantics-v2.md).
 
 ## Consumer Pipeline
 
@@ -57,8 +57,8 @@ There is no silent fallback to "best effort" parsing for unsupported contracts.
 
 - `services[].id` is the identity used by predicates, journeys, and reports.
 - `services[].name` is descriptive only; simulation logic keys on `id`.
-- negative `replicas` is invalid.
-- `replicas=0` is accepted by validation but normalized to `1` effective replica during simulation.
+- `replicas` must be positive for newly analyzed artifacts.
+- Historical artifacts from schema lines that admitted `replicas=0` are still accepted only when the normalized Sheaft model satisfies the positive-replica invariant.
 
 ### Edges
 

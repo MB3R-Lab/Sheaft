@@ -21,7 +21,7 @@ func TestBuildQualityReportPassesFixedExpectations(t *testing.T) {
 		PolicyEvaluation: report.PolicyEvaluation{Decision: "fail"},
 		InputArtifact: &report.InputArtifact{
 			ContractName:    "io.mb3r.bering.snapshot",
-			ContractVersion: "1.2.0",
+			ContractVersion: "1.3.0",
 		},
 		Profiles: []report.ProfileSummary{
 			{
@@ -50,7 +50,7 @@ func TestBuildQualityReportPassesFixedExpectations(t *testing.T) {
 		Expected: Expected{
 			Decision:                      "fail",
 			ContractName:                  "io.mb3r.bering.snapshot",
-			ContractVersion:               "1.2.0",
+			ContractVersion:               "1.3.0",
 			Profiles:                      2,
 			MinConfidence:                 0.9,
 			MaxUnavailableAdvancedMetrics: 0,

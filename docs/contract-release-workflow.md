@@ -16,7 +16,7 @@ The canonical published Bering schema metadata currently consumed by Sheaft is:
 
 - `https://mb3r-lab.github.io/Bering/schema/index.json`
 
-Sheaft CI verifies that this published metadata matches the currently published `1.2.0` model and snapshot contracts in `internal/modelcontract/contract.go`.
+Sheaft CI verifies that this published metadata matches the currently published `1.3.0` model and snapshot contracts in `internal/modelcontract/contract.go`.
 Published remote schema sync is verified separately for every supported versioned model and snapshot schema mirror.
 
 The current app-level Bering release/package sync target is:
@@ -24,7 +24,7 @@ The current app-level Bering release/package sync target is:
 - Release: `https://github.com/MB3R-Lab/Bering/releases/tag/v0.3.4`
 - Release manifest asset: `release-manifest.json` (`sha256:d7f4b3d61ff8e36bd370dadd351e51a2b2803677ae12a5e0fbb81faacfd01e20`)
 - Contracts pack asset: `bering-contracts_0.3.4.tar.gz` (`sha256:3865a8e7152c8a383f34d99334bc392cfd0ec793325b530d392723f67839ddbf`)
-- Schema contract pins consumed by Sheaft remain explicit in `internal/modelcontract/contract.go` and currently include `1.0.0`, `1.1.0`, and `1.2.0`.
+- Schema contract pins consumed by Sheaft remain explicit in `internal/modelcontract/contract.go` and currently include `1.0.0`, `1.1.0`, `1.2.0`, and `1.3.0`.
 
 ## Release Policy
 

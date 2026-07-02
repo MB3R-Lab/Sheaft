@@ -28,7 +28,7 @@ For each configured profile Sheaft:
 - `independent_service`: each service is sampled once per trial regardless of replica count
 - `fixed_k_service_set`: exactly `k` services fail per trial
 
-When `1.2.0` placement buckets exist, `independent_replica` samples those buckets explicitly. A service remains effectively alive while at least one bucket still has a live replica.
+When `1.3.0` placement buckets exist, `independent_replica` samples those buckets explicitly. A service remains effectively alive while at least one bucket still has a live replica.
 
 ## Stochastic Connectivity Parameters
 
@@ -60,7 +60,7 @@ If no richer predicate definition is supplied for an endpoint:
 - `any_of` is applied across discovered or overridden paths
 - `all_of` is applied within each path
 
-This fallback remains the baseline rule for `1.0.0` semantics and for backward-compatible journey discovery under `1.1.0` and `1.2.0`.
+This fallback remains the baseline rule for `1.0.0` semantics and for backward-compatible journey discovery under `1.1.0`, `1.2.0`, and `1.3.0`.
 
 ## Advanced Diagnostics
 

@@ -53,7 +53,7 @@ In the example templates below, replace the sample `BERING_ARTIFACT_SOURCE` valu
 
 ## Strict Schema Checks
 
-Sheaft is a strict downstream consumer. `sheaft run` and `sheaft simulate` will fail with exit code `1` when the incoming artifact declares an unsupported contract, mismatched schema URI, or mismatched digest. Supported Bering contract lines are `1.0.0`, `1.1.0`, and `1.2.0`; `1.0.0` remains the baseline comparison line and `1.2.0` is the current v1-rich line.
+Sheaft is a strict downstream consumer. `sheaft run` and `sheaft simulate` will fail with exit code `1` when the incoming artifact declares an unsupported contract, mismatched schema URI, or mismatched digest. Supported Bering contract lines are `1.0.0`, `1.1.0`, `1.2.0`, and `1.3.0`; `1.0.0` remains the baseline comparison line and `1.3.0` is the current v1-rich line.
 
 No extra CI flag is needed for strict checking: it is already part of artifact loading.
 
@@ -104,7 +104,7 @@ The GitHub Actions workflow at `.github/workflows/ci-template-smoke.yml` runs bo
 name: sheaft-gate
 on: [pull_request]
 env:
-  BERING_ARTIFACT_SOURCE: examples/outputs/snapshot-v1.2.0.sample.json
+  BERING_ARTIFACT_SOURCE: examples/outputs/snapshot-v1.3.0.sample.json
 jobs:
   bering-artifact:
     runs-on: ubuntu-latest
@@ -158,7 +158,7 @@ stages:
   - posture
 
 variables:
-  BERING_ARTIFACT_SOURCE: examples/outputs/snapshot-v1.2.0.sample.json
+  BERING_ARTIFACT_SOURCE: examples/outputs/snapshot-v1.3.0.sample.json
   SHEAFT_IMAGE: "$CI_REGISTRY_IMAGE/sheaft-ci:$CI_COMMIT_SHA"
 
 bering_artifact:
@@ -201,7 +201,7 @@ sheaft_gate:
 pipeline {
   agent any
   environment {
-    BERING_ARTIFACT_SOURCE = 'examples/outputs/snapshot-v1.2.0.sample.json'
+    BERING_ARTIFACT_SOURCE = 'examples/outputs/snapshot-v1.3.0.sample.json'
   }
   options {
     timestamps()

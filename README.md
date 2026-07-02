@@ -57,14 +57,14 @@ These are alternative accepted upstream contract lines for incoming artifacts, n
 - `io.mb3r.bering.snapshot@1.0.0`
 - `io.mb3r.bering.model@1.1.0`
 - `io.mb3r.bering.snapshot@1.1.0`
-- `io.mb3r.bering.model@1.2.0`
-- `io.mb3r.bering.snapshot@1.2.0`
+- `io.mb3r.bering.model@1.3.0`
+- `io.mb3r.bering.snapshot@1.3.0`
 
 Pinned URIs, digests, and release-line support are tracked in [docs/compatibility-matrix.md](docs/compatibility-matrix.md). The machine-readable compatibility contract is [compatibility-manifest.json](compatibility-manifest.json).
 
 Unknown or mismatched contracts are rejected. There is no silent fallback for unsupported upstream schemas.
 
-`1.0.0` remains the baseline semantics line and the reference artifact line for cross-version comparisons. `1.1.0` remains accepted as the historical advanced preview line. `1.2.0` is the current v1-rich line for reliability evidence, endpoint semantic hints, timeout, retry, placement, shared-resource, and edge-scoped analysis when the artifact provides it.
+`1.0.0` remains the baseline semantics line and the reference artifact line for cross-version comparisons. `1.1.0` remains accepted as the historical advanced preview line. `1.2.0` remains accepted as a historical v1 preview line. `1.3.0` is the current strict v1-rich line for positive replica counts, reliability evidence, endpoint semantic hints, timeout, retry, placement, shared-resource, and edge-scoped analysis when the artifact provides it.
 
 The current `main` line has also been app-level synced against the published Bering `v0.3.4` release/package. That sync does not change the accepted Bering schema contract pins.
 
@@ -115,12 +115,12 @@ Analysis example:
 
 ```bash
 ./sheaft run \
-  --model examples/outputs/snapshot-v1.2.0.sample.json \
+  --model examples/outputs/snapshot-v1.3.0.sample.json \
   --analysis configs/analysis.v1.1.example.yaml \
   --out-dir out/quickstart-analysis
 ```
 
-The checked-in baseline snapshot sample mirrors the Bering `io.mb3r.bering.snapshot@1.0.0` envelope. The `1.2.0` sample adds typed edge IDs, reliability evidence, endpoint semantic hints, placements, shared resources, retries, timeouts, and observed latency/error metadata. The `configs/analysis.v1.1.example.yaml` example compares that `1.2.0` primary artifact directly against the `1.0.0` baseline artifact through `analysis.baselines`.
+The checked-in baseline snapshot sample mirrors the Bering `io.mb3r.bering.snapshot@1.0.0` envelope. The `1.3.0` sample adds typed edge IDs, reliability evidence, endpoint semantic hints, placements, shared resources, retries, timeouts, and observed latency/error metadata. The `configs/analysis.v1.1.example.yaml` example compares that `1.3.0` primary artifact directly against the `1.0.0` baseline artifact through `analysis.baselines`.
 
 On Windows from a source checkout, the same path is:
 
@@ -181,7 +181,7 @@ Sheaft is intentionally downstream of Bering artifacts and schemas.
 
 - It accepts only the checked-in contract pins listed above.
 - `1.0.0` is kept as the stable fail-stop baseline semantics line.
-- `1.2.0` enables additive path-aware diagnostics and fault-profile analysis when metadata exists.
+- `1.3.0` enables additive path-aware diagnostics and fault-profile analysis when metadata exists.
 - Compatibility metadata is published in [compatibility-manifest.json](compatibility-manifest.json).
 - The current app-level Bering release/package sync target is `v0.3.4`; schema acceptance still comes only from the pinned contracts above.
 - Schema ownership stays with Bering; Sheaft does not redefine those schema versions.
@@ -189,8 +189,8 @@ Sheaft is intentionally downstream of Bering artifacts and schemas.
 
 ## Known limitations
 
-- `1.2.0` analysis is only as rich as the artifact metadata. Missing retry, timeout, latency, placement, or shared-resource metadata is reported as unavailable rather than guessed.
-- Legacy explicit predicates remain service-based even when `1.2.0` edge metadata is present. Edge faults and partial degradations affect journey-based analysis, diagnostics, and explicit `edge_aware` predicates, not old service predicate semantics.
+- `1.3.0` analysis is only as rich as the artifact metadata. Missing retry, timeout, latency, placement, or shared-resource metadata is reported as unavailable rather than guessed.
+- Legacy explicit predicates remain service-based even when `1.3.0` edge metadata is present. Edge faults and partial degradations affect journey-based analysis, diagnostics, and explicit `edge_aware` predicates, not old service predicate semantics.
 - This release does not introduce or stabilize an upstream discovery pipeline. Discovery remains upstream; the local `discover` helper is experimental only.
 - `serve` and its watch loop are suitable for technical-preview evaluation, not yet for a stable long-term operational contract.
 - The richer analysis surface is available, but its configuration ergonomics and operational conventions may still change in later `0.x` releases.
@@ -243,11 +243,11 @@ go vet ./...
 
 - [examples/outputs/model.sample.json](examples/outputs/model.sample.json)
 - [examples/outputs/model-v1.1.0.sample.json](examples/outputs/model-v1.1.0.sample.json)
-- [examples/outputs/model-v1.2.0.sample.json](examples/outputs/model-v1.2.0.sample.json)
+- [examples/outputs/model-v1.3.0.sample.json](examples/outputs/model-v1.3.0.sample.json)
 - [examples/outputs/snapshot.sample.json](examples/outputs/snapshot.sample.json)
 - [examples/outputs/snapshot-v1.0.0.sample.json](examples/outputs/snapshot-v1.0.0.sample.json)
 - [examples/outputs/snapshot-v1.1.0.sample.json](examples/outputs/snapshot-v1.1.0.sample.json)
-- [examples/outputs/snapshot-v1.2.0.sample.json](examples/outputs/snapshot-v1.2.0.sample.json)
+- [examples/outputs/snapshot-v1.3.0.sample.json](examples/outputs/snapshot-v1.3.0.sample.json)
 - [examples/outputs/report.sample.json](examples/outputs/report.sample.json)
 - [examples/outputs/posture-generated/report.json](examples/outputs/posture-generated/report.json)
 - [examples/outputs/posture-generated/summary.md](examples/outputs/posture-generated/summary.md)

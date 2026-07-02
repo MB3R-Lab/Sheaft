@@ -23,7 +23,7 @@ This file captures the repository-side audit refreshed on 2026-05-31: current Gi
 - Active backlog milestone: `Post-v0.2.4 technical preview`
 - Previous release-tracking issue: [#82](https://github.com/MB3R-Lab/Sheaft/issues/82)
 - Current release-tracking issue: [#83](https://github.com/MB3R-Lab/Sheaft/issues/83)
-- Current upstream Bering app/package sync target: [Bering v0.3.4](https://github.com/MB3R-Lab/Bering/releases/tag/v0.3.4), with accepted `1.0.0`, `1.1.0`, and `1.2.0` schema contract pins tracked in the compatibility matrix.
+- Current upstream Bering app/package sync target: [Bering v0.3.4](https://github.com/MB3R-Lab/Bering/releases/tag/v0.3.4), with accepted `1.0.0`, `1.1.0`, `1.2.0`, and `1.3.0` schema contract pins tracked in the compatibility matrix.
 - GitHub issue and milestone sync was refreshed on 2026-05-31 after shipping the `v0.2.4` technical-preview release.
 
 ## Latest Release/Package Checkpoint
@@ -62,7 +62,7 @@ The published `v0.2.4` release payload is the baseline for the next technical-pr
 | --- | --- | --- | --- |
 | R1.1 | closed | done | "Consumer Semantics v1" is documented in-repo with version scope, precedence rules, and 15 expected behavior examples. |
 | R1.2 | closed | done | Fail-stop baseline semantics, three sampling modes, timeout/partial degradation handling, and the external Sheaft fault contract are implemented and tested. |
-| R1.3 | open | partial | Retry/timeout/circuit-breaker inputs from Bering `1.2.0` and the Sheaft fault contract are now handled; fallback/rate-limit annotations still remain outside the implemented surface. |
+| R1.3 | open | partial | Retry/timeout/circuit-breaker inputs from Bering `1.3.0` and the Sheaft fault contract are now handled; fallback/rate-limit annotations still remain outside the implemented surface. |
 
 ### R2. Model discovery from artifacts
 

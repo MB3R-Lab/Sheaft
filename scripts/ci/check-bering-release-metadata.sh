@@ -19,14 +19,14 @@ fi
 # shellcheck source=scripts/ci/contract-constants.sh
 . "${HELPER_FILE}"
 
-EXPECTED_MODEL_NAME="$(extract_const BeringModelV120Name)"
-EXPECTED_MODEL_VERSION="$(extract_const BeringModelV120Version)"
-EXPECTED_MODEL_URI="$(extract_const BeringModelV120URI)"
-EXPECTED_MODEL_DIGEST="$(extract_const BeringModelV120Digest)"
-EXPECTED_SNAPSHOT_NAME="$(extract_const BeringSnapshotV120Name)"
-EXPECTED_SNAPSHOT_VERSION="$(extract_const BeringSnapshotV120Version)"
-EXPECTED_SNAPSHOT_URI="$(extract_const BeringSnapshotV120URI)"
-EXPECTED_SNAPSHOT_DIGEST="$(extract_const BeringSnapshotV120Digest)"
+EXPECTED_MODEL_NAME="$(extract_const BeringModelV130Name)"
+EXPECTED_MODEL_VERSION="$(extract_const BeringModelV130Version)"
+EXPECTED_MODEL_URI="$(extract_const BeringModelV130URI)"
+EXPECTED_MODEL_DIGEST="$(extract_const BeringModelV130Digest)"
+EXPECTED_SNAPSHOT_NAME="$(extract_const BeringSnapshotV130Name)"
+EXPECTED_SNAPSHOT_VERSION="$(extract_const BeringSnapshotV130Version)"
+EXPECTED_SNAPSHOT_URI="$(extract_const BeringSnapshotV130URI)"
+EXPECTED_SNAPSHOT_DIGEST="$(extract_const BeringSnapshotV130Digest)"
 
 TMP_METADATA="$(mktemp)"
 trap 'rm -f "${TMP_METADATA}"' EXIT
@@ -66,8 +66,8 @@ for entry in data.get("contracts", []):
     if name and version:
         contracts[(name, version)] = entry
 for prefix, key in (
-    ("contract_model", ("io.mb3r.bering.model", "1.2.0")),
-    ("contract_snapshot", ("io.mb3r.bering.snapshot", "1.2.0")),
+    ("contract_model", ("io.mb3r.bering.model", "1.3.0")),
+    ("contract_snapshot", ("io.mb3r.bering.snapshot", "1.3.0")),
 ):
     emit(prefix, contracts.get(key, {}))
 print(f"updated_at={data.get('updated_at', '')}")

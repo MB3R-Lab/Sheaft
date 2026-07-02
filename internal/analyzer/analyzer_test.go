@@ -16,7 +16,7 @@ func TestAnalyzeFile_BaselineArtifactComparisonAcrossContractLines(t *testing.T)
 	t.Parallel()
 
 	root := repoRoot(t)
-	primary := filepath.Join(root, "examples", "outputs", "snapshot-v1.2.0.sample.json")
+	primary := filepath.Join(root, "examples", "outputs", "snapshot-v1.3.0.sample.json")
 	baseline := filepath.Join(root, "examples", "outputs", "snapshot-v1.0.0.sample.json")
 
 	result, err := AnalyzeFile(primary, config.AnalysisConfig{
@@ -75,10 +75,10 @@ func TestAnalyzeLoaded_UsesArtifactReliabilityAsProfileDefaults(t *testing.T) {
 		Metadata: artifact.Metadata{
 			Kind: modelcontract.KindModel,
 			Contract: modelcontract.SupportedContract{
-				Name:    modelcontract.BeringModelV120Name,
-				Version: modelcontract.BeringModelV120Version,
-				URI:     modelcontract.BeringModelV120URI,
-				Digest:  modelcontract.BeringModelV120Digest,
+				Name:    modelcontract.BeringModelV130Name,
+				Version: modelcontract.BeringModelV130Version,
+				URI:     modelcontract.BeringModelV130URI,
+				Digest:  modelcontract.BeringModelV130Digest,
 				Kind:    modelcontract.KindModel,
 			},
 		},
@@ -122,10 +122,10 @@ func TestAnalyzeLoaded_UsesArtifactReliabilityAsProfileDefaults(t *testing.T) {
 				DiscoveredAt: "2026-07-01T00:00:00Z",
 				Confidence:   1,
 				Schema: model.Schema{
-					Name:    modelcontract.BeringModelV120Name,
-					Version: modelcontract.BeringModelV120Version,
-					URI:     modelcontract.BeringModelV120URI,
-					Digest:  modelcontract.BeringModelV120Digest,
+					Name:    modelcontract.BeringModelV130Name,
+					Version: modelcontract.BeringModelV130Version,
+					URI:     modelcontract.BeringModelV130URI,
+					Digest:  modelcontract.BeringModelV130Digest,
 				},
 			},
 		},

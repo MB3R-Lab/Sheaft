@@ -198,9 +198,9 @@
     "confidence": 0.95,
     "schema": {
       "name": "io.mb3r.bering.model",
-      "version": "1.2.0",
-      "uri": "https://mb3r-lab.github.io/Bering/schema/model/v1.2.0/model.schema.json",
-      "digest": "sha256:4fa1a34e64703524cfe2289341fcea79986265db08c0220d6c89e38c0ff76bf8"
+      "version": "1.3.0",
+      "uri": "https://mb3r-lab.github.io/Bering/schema/model/v1.3.0/model.schema.json",
+      "digest": "sha256:2aa8a3550a25dc626ba6d2f5833569efca2f382b9e5c9c3405be93695d7d48ae"
     }
   }
 }

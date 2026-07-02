@@ -63,6 +63,7 @@ func TestValidate_VersionedContractsRequireEdgeIDs(t *testing.T) {
 	refs := []modelcontract.SchemaRef{
 		modelcontract.ExpectedModelV110Ref(),
 		modelcontract.ExpectedModelV120Ref(),
+		modelcontract.ExpectedModelV130Ref(),
 	}
 	for _, ref := range refs {
 		ref := ref
@@ -106,6 +107,52 @@ func TestValidate_VersionedContractsRequireEdgeIDs(t *testing.T) {
 	}
 }
 
+func TestValidate_RejectsZeroReplicas(t *testing.T) {
+	t.Parallel()
+
+	ref := modelcontract.ExpectedModelV130Ref()
+	base := ResilienceModel{
+		Services: []Service{
+			{ID: "gateway", Name: "gateway", Replicas: 1},
+		},
+		Edges: []Edge{},
+		Endpoints: []Endpoint{
+			{ID: "gateway:GET /health", EntryService: "gateway", SuccessPredicateRef: "gateway:GET /health"},
+		},
+		Metadata: Metadata{
+			SourceType:   "bering",
+			SourceRef:    "artifact",
+			DiscoveredAt: "2026-03-22T00:00:00Z",
+			Confidence:   0.9,
+			Schema: Schema{
+				Name:    ref.Name,
+				Version: ref.Version,
+				URI:     ref.URI,
+				Digest:  ref.Digest,
+			},
+		},
+	}
+
+	serviceZero := base
+	serviceZero.Services = []Service{{ID: "gateway", Name: "gateway", Replicas: 0}}
+	if err := serviceZero.Validate(); err == nil {
+		t.Fatal("expected zero service replicas to fail validation")
+	}
+
+	placementZero := base
+	placementZero.Services = []Service{{
+		ID:       "gateway",
+		Name:     "gateway",
+		Replicas: 1,
+		Metadata: &ServiceMetadata{
+			Placements: []Placement{{Replicas: 0, Labels: map[string]string{"zone": "a"}}},
+		},
+	}}
+	if err := placementZero.Validate(); err == nil {
+		t.Fatal("expected zero placement replicas to fail validation")
+	}
+}
+
 func TestValidate_EndpointSemantics(t *testing.T) {
 	t.Parallel()
 
@@ -136,10 +183,10 @@ func TestValidate_EndpointSemantics(t *testing.T) {
 			DiscoveredAt: "2026-03-22T00:00:00Z",
 			Confidence:   0.9,
 			Schema: Schema{
-				Name:    modelcontract.BeringModelV120Name,
-				Version: modelcontract.BeringModelV120Version,
-				URI:     modelcontract.BeringModelV120URI,
-				Digest:  modelcontract.BeringModelV120Digest,
+				Name:    modelcontract.BeringModelV130Name,
+				Version: modelcontract.BeringModelV130Version,
+				URI:     modelcontract.BeringModelV130URI,
+				Digest:  modelcontract.BeringModelV130Digest,
 			},
 		},
 	}

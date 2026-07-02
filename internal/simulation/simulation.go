@@ -179,7 +179,7 @@ func RunProfiles(mdl model.ResilienceModel, params AnalysisParams) (AnalysisOutp
 	for _, svc := range mdl.Services {
 		replicas := svc.Replicas
 		if replicas <= 0 {
-			replicas = 1
+			return AnalysisOutput{}, fmt.Errorf("service %q replicas must be >= 1", svc.ID)
 		}
 		serviceReplicas[svc.ID] = replicas
 	}

@@ -57,7 +57,7 @@ func Discover(inputPath string) (model.ResilienceModel, error) {
 				continue
 			}
 			if rec.Replicas <= 0 {
-				rec.Replicas = 1
+				return model.ResilienceModel{}, fmt.Errorf("service %q replicas must be >= 1", rec.Source)
 			}
 			if serviceReplicas[rec.Source] < rec.Replicas {
 				serviceReplicas[rec.Source] = rec.Replicas

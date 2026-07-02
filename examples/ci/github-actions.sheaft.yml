@@ -5,7 +5,7 @@ on:
   workflow_dispatch:
 
 env:
-  BERING_ARTIFACT_SOURCE: examples/outputs/snapshot-v1.2.0.sample.json
+  BERING_ARTIFACT_SOURCE: examples/outputs/snapshot-v1.3.0.sample.json
 
 jobs:
   bering-artifact:

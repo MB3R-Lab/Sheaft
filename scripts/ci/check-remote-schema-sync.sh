@@ -168,3 +168,19 @@ check_contract_version \
   "BeringSnapshotV120Version" \
   "${REPO_ROOT}/internal/modelcontract/schema/snapshot.v1.2.0.schema.json" \
   "${REPO_ROOT}/api/schema/snapshot.v1.2.0.schema.json"
+
+check_contract_version \
+  "model-v1.3.0" \
+  "BeringModelV130URI" \
+  "BeringModelV130Digest" \
+  "BeringModelV130Version" \
+  "${REPO_ROOT}/internal/modelcontract/schema/model.v1.3.0.schema.json" \
+  "${REPO_ROOT}/api/schema/model.v1.3.0.schema.json"
+
+check_contract_version \
+  "snapshot-v1.3.0" \
+  "BeringSnapshotV130URI" \
+  "BeringSnapshotV130Digest" \
+  "BeringSnapshotV130Version" \
+  "${REPO_ROOT}/internal/modelcontract/schema/snapshot.v1.3.0.schema.json" \
+  "${REPO_ROOT}/api/schema/snapshot.v1.3.0.schema.json"

@@ -494,9 +494,6 @@ func sampleAdvancedState(ctx advancedContext, profile ProfileParams, rng *rand.R
 			for _, bucket := range svc.Buckets {
 				live := false
 				effective := bucket.Replicas
-				if len(svc.Buckets) == 1 && effective <= 0 {
-					effective = 1
-				}
 				for replica := 0; replica < effective; replica++ {
 					if rng.Float64() < liveProbability {
 						live = true
@@ -510,7 +507,7 @@ func sampleAdvancedState(ctx advancedContext, profile ProfileParams, rng *rand.R
 		for _, serviceID := range ctx.serviceIDs {
 			alive := rng.Float64() < serviceLiveProbability(profile, serviceID)
 			for _, bucket := range ctx.services[serviceID].Buckets {
-				state.bucketAlive[bucket.ID] = alive && bucket.Replicas != 0
+				state.bucketAlive[bucket.ID] = alive
 			}
 		}
 	case config.SamplingModeFixedKServiceSet:
@@ -527,7 +524,7 @@ func sampleAdvancedState(ctx advancedContext, profile ProfileParams, rng *rand.R
 		for _, serviceID := range ctx.serviceIDs {
 			_, failed := failedServices[serviceID]
 			for _, bucket := range ctx.services[serviceID].Buckets {
-				state.bucketAlive[bucket.ID] = !failed && bucket.Replicas != 0
+				state.bucketAlive[bucket.ID] = !failed
 			}
 		}
 	default:
@@ -1070,7 +1067,10 @@ func buildAdvancedContext(loaded artifact.Loaded, predicateSet map[string]predic
 		if !failureEligible && record.Metadata.FailureEligible != nil && *record.Metadata.FailureEligible {
 			failureEligible = true
 		}
-		buckets := normalizeBuckets(svc, record)
+		buckets, err := normalizeBuckets(svc, record)
+		if err != nil {
+			return advancedContext{}, err
+		}
 		ctx.services[svc.ID] = normalizedService{
 			ID:                 svc.ID,
 			Name:               svc.Name,
@@ -1489,7 +1489,7 @@ func edgeAwareEndpointSuccess(endpoint endpointPlan, pathResults map[string]bool
 	return true
 }
 
-func normalizeBuckets(svc model.Service, record artifact.SnapshotDiscoveryService) []replicaBucket {
+func normalizeBuckets(svc model.Service, record artifact.SnapshotDiscoveryService) ([]replicaBucket, error) {
 	placements := []model.Placement{}
 	switch {
 	case svc.Metadata != nil && len(svc.Metadata.Placements) > 0:
@@ -1498,16 +1498,22 @@ func normalizeBuckets(svc model.Service, record artifact.SnapshotDiscoveryServic
 		placements = append(placements, record.Metadata.Placements...)
 	}
 	if len(placements) == 0 {
+		if svc.Replicas <= 0 {
+			return nil, fmt.Errorf("service %q replicas must be >= 1", svc.ID)
+		}
 		return []replicaBucket{
 			{
 				ID:        svc.ID + "#0",
 				ServiceID: svc.ID,
 				Replicas:  svc.Replicas,
 			},
-		}
+		}, nil
 	}
 	out := make([]replicaBucket, 0, len(placements))
 	for idx, placement := range placements {
+		if placement.Replicas <= 0 {
+			return nil, fmt.Errorf("service %q placement %d replicas must be >= 1", svc.ID, idx)
+		}
 		out = append(out, replicaBucket{
 			ID:        fmt.Sprintf("%s#%d", svc.ID, idx),
 			ServiceID: svc.ID,
@@ -1515,7 +1521,7 @@ func normalizeBuckets(svc model.Service, record artifact.SnapshotDiscoveryServic
 			Labels:    mergeStringMap(nil, placement.Labels),
 		})
 	}
-	return out
+	return out, nil
 }
 
 func findEdgeRecord(records map[string]artifact.SnapshotDiscoveryEdge, edgeID, from, to string, kind model.EdgeKind, blocking bool) artifact.SnapshotDiscoveryEdge {
@@ -1550,7 +1556,7 @@ func resolveFaultProfile(contract *faults.Contract, name string) (*faults.Profil
 func isServiceHardDead(ctx advancedContext, faultState profileFaultState, serviceID string) bool {
 	svc := ctx.services[serviceID]
 	for _, bucket := range svc.Buckets {
-		if _, dead := faultState.hardBucketKill[bucket.ID]; !dead && bucket.Replicas != 0 {
+		if _, dead := faultState.hardBucketKill[bucket.ID]; !dead {
 			return false
 		}
 	}

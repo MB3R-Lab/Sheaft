@@ -1,6 +1,7 @@
 package otel
 
 import (
+	"os"
 	"path/filepath"
 	"testing"
 )
@@ -31,5 +32,20 @@ func TestDiscover_EmptyTraces(t *testing.T) {
 	input := filepath.Join("..", "..", "..", "test", "fixtures", "traces.empty.json")
 	if _, err := Discover(input); err == nil {
 		t.Fatal("expected error for empty traces, got nil")
+	}
+}
+
+func TestDiscover_RejectsZeroReplicas(t *testing.T) {
+	t.Parallel()
+
+	dir := t.TempDir()
+	input := filepath.Join(dir, "traces.json")
+	raw := []byte(`[{"service":"frontend","endpoint":"/health","replicas":0}]`)
+	if err := os.WriteFile(input, raw, 0o600); err != nil {
+		t.Fatalf("write fixture: %v", err)
+	}
+
+	if _, err := Discover(input); err == nil {
+		t.Fatal("expected error for zero replicas, got nil")
 	}
 }
