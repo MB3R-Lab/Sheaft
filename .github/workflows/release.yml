@@ -91,18 +91,18 @@ jobs:
           NOTES_FILE: ${{ steps.release_notes.outputs.file }}
         run: |
           TAG="${GITHUB_REF_NAME}"
-          TITLE="Sheaft ${TAG} technical preview"
+          TITLE="Sheaft ${TAG}"
           if gh release view "${TAG}" >/dev/null 2>&1; then
             if [ -n "${NOTES_FILE}" ]; then
               gh release edit "${TAG}" --title "${TITLE}" --notes-file "${NOTES_FILE}"
             else
-              gh release edit "${TAG}" --title "${TITLE}" --notes "Technical preview release. Canonical release metadata lives in dist/ and release-manifest.json."
+              gh release edit "${TAG}" --title "${TITLE}" --notes "Canonical release metadata lives in dist/ and release-manifest.json."
             fi
           else
             if [ -n "${NOTES_FILE}" ]; then
               gh release create "${TAG}" --verify-tag --title "${TITLE}" --notes-file "${NOTES_FILE}"
             else
-              gh release create "${TAG}" --verify-tag --title "${TITLE}" --notes "Technical preview release. Canonical release metadata lives in dist/ and release-manifest.json."
+              gh release create "${TAG}" --verify-tag --title "${TITLE}" --notes "Canonical release metadata lives in dist/ and release-manifest.json."
             fi
           fi
           mapfile -t files < <(

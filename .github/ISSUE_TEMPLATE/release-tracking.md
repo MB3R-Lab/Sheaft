@@ -8,7 +8,7 @@ labels: ["area: ci", "area: docs", "type: task"]
 ## Release scope
 
 - Version: `vX.Y.Z`
-- Channel: technical preview / experimental / stable
+- Channel: stable / maintenance / preview
 - Planned tag date:
 - Target release URL:
 
@@ -29,7 +29,7 @@ labels: ["area: ci", "area: docs", "type: task"]
 - [ ] release status is clearly stated
 - [ ] compatibility with supported upstream contracts is documented
 - [ ] release notes clearly distinguish public release behavior from unreleased `main`
-- [ ] baseline `1.0.0` versus advanced `1.1.0` behavior is documented when dual-line support is shipped
+- [ ] supported Bering contract line and any migration impact are documented
 - [ ] artifact-vs-artifact baseline comparison and fault-contract surfaces are documented when shipped
 - [ ] changelog / release notes are ready
 

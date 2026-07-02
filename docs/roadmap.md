@@ -14,21 +14,32 @@ GitHub issues remain the source of truth for roadmap tracking:
 - R9: https://github.com/MB3R-Lab/Sheaft/issues/39
 - R10: https://github.com/MB3R-Lab/Sheaft/issues/40
 
-This file captures the repository-side audit refreshed on 2026-05-31: current GitHub issue state versus what is actually implemented in this repository.
+This file captures the repository-side audit refreshed for the `v1.0.0` release line: current GitHub issue state versus what is actually implemented in this repository.
 
 ## Release Tracking State
 
-- Latest public release shipped: [Sheaft v0.2.4 technical preview](https://github.com/MB3R-Lab/Sheaft/releases/tag/v0.2.4)
-- Historical shipped milestones: `v0.1.0 technical preview`, `v0.1.1 technical preview`, `v0.2.0 technical preview`, `v0.2.1 technical preview`, `v0.2.2 technical preview`, `v0.2.3 technical preview`, `v0.2.4 technical preview`
-- Active backlog milestone: `Post-v0.2.4 technical preview`
+- Current release line: [Sheaft v1.0.0](https://github.com/MB3R-Lab/Sheaft/releases/tag/v1.0.0)
+- Previous preview line: [Sheaft v0.2.4](https://github.com/MB3R-Lab/Sheaft/releases/tag/v0.2.4)
+- Historical shipped preview milestones: `v0.1.0`, `v0.1.1`, `v0.2.0`, `v0.2.1`, `v0.2.2`, `v0.2.3`, `v0.2.4`
+- Active v1 release-tracking issue: [#91](https://github.com/MB3R-Lab/Sheaft/issues/91)
 - Previous release-tracking issue: [#82](https://github.com/MB3R-Lab/Sheaft/issues/82)
-- Current release-tracking issue: [#83](https://github.com/MB3R-Lab/Sheaft/issues/83)
+- Post-v1 product backlog milestone: `Post-v1.0.0 product backlog`
+- Post-v1 product backlog index: [#71](https://github.com/MB3R-Lab/Sheaft/issues/71)
 - Current upstream Bering app/package sync target: [Bering v1.0.0](https://github.com/MB3R-Lab/Bering/releases/tag/v1.0.0), with accepted `1.3.0` schema contract pins tracked in the compatibility matrix.
-- GitHub issue and milestone sync was refreshed on 2026-05-31 after shipping the `v0.2.4` technical-preview release.
+- GitHub issue and milestone sync was refreshed for the `v1.0.0` release preparation on 2026-07-02.
 
-## Latest Release/Package Checkpoint
+## Current V1 Release Checkpoint
 
-The published `v0.2.4` release payload is the baseline for the next technical-preview cycle:
+- Release URL: https://github.com/MB3R-Lab/Sheaft/releases/tag/v1.0.0
+- Release notes: [release/v1.0.0.md](../release/v1.0.0.md)
+- V1 semantics: [docs/v1-major-semantics.md](v1-major-semantics.md)
+- Bering app/package sync target: `v1.0.0`
+- Accepted Bering contract line: `io.mb3r.bering.model@1.3.0` and `io.mb3r.bering.snapshot@1.3.0`
+- Compatibility manifest: [compatibility-manifest.json](../compatibility-manifest.json)
+
+## Previous Preview Checkpoint
+
+The published `v0.2.4` release payload is the previous preview baseline:
 
 - Release URL: https://github.com/MB3R-Lab/Sheaft/releases/tag/v0.2.4
 - Release manifest asset: `release-manifest.json` (`sha256:e358eb1a06f22e6880f9bb7fc51031fec6d42c2f950abb2fb66249dc6f35bfea`)
@@ -172,7 +183,7 @@ Goal: connect posture findings to engineering work.
 
 ### Adoption And Enterprise Readiness
 
-Goal: make the Bering -> Sheaft workflow repeatable beyond a technical preview.
+Goal: make the Bering -> Sheaft workflow repeatable beyond the first v1 baseline.
 
 - R7.3: publish a pilot-to-production playbook with success metrics.
 - R7.1: define the open-core boundary for the consumer product.
@@ -192,9 +203,9 @@ Goal: make the Bering -> Sheaft workflow repeatable beyond a technical preview.
 
 ## Current Execution Note
 
-- Repository-side audit refreshed on 2026-05-31 for the `v0.2.4` technical-preview release and the product-capability backlog review.
-- GitHub issue [#71](https://github.com/MB3R-Lab/Sheaft/issues/71) should stay aligned with this file: latest release `v0.2.4`, active milestone `Post-v0.2.4 technical preview`, and the same trust-first priority order.
-- Release/package tracking was synchronized on 2026-05-31: release-tracking issue [#82](https://github.com/MB3R-Lab/Sheaft/issues/82) records the shipped `v0.2.4` payload, and [#83](https://github.com/MB3R-Lab/Sheaft/issues/83) tracks the next cycle.
+- Repository-side audit refreshed on 2026-07-02 for the `v1.0.0` release preparation and the product-capability backlog review.
+- GitHub issue [#71](https://github.com/MB3R-Lab/Sheaft/issues/71) should stay aligned with this file as the post-v1 product backlog index, and milestone `Post-v1.0.0 product backlog` should contain non-release-blocking follow-up work.
+- Release/package tracking now centers on [#91](https://github.com/MB3R-Lab/Sheaft/issues/91) for the v1 major line. Issue [#82](https://github.com/MB3R-Lab/Sheaft/issues/82) records the shipped `v0.2.4` payload, and [#83](https://github.com/MB3R-Lab/Sheaft/issues/83) is superseded by the v1 tracker.
 - R4.3 landed on 2026-05-30 as the first trustable-gate documentation step: `docs/assumptions-and-limitations.md` now contains the do-not-trust signal catalogue and detector field shape.
 - R4.1/R4.2 landed on 2026-05-31: `make benchmark-slice` now runs the fixed Sheaft-on-Bering benchmark and emits `quality-report.json`.
 - R9.1 landed on 2026-05-31: gate decisions now include machine-readable why reasons and CLI `--why` output.

@@ -5,7 +5,7 @@
 [![ci-template-smoke](https://img.shields.io/github/actions/workflow/status/MB3R-Lab/Sheaft/ci-template-smoke.yml?branch=main&label=ci-template-smoke)](https://github.com/MB3R-Lab/Sheaft/actions/workflows/ci-template-smoke.yml)
 [![schema-contract](https://img.shields.io/github/actions/workflow/status/MB3R-Lab/Sheaft/schema-contract.yml?branch=main&label=schema-contract)](https://github.com/MB3R-Lab/Sheaft/actions/workflows/schema-contract.yml)
 [![Go version](https://img.shields.io/github/go-mod/go-version/MB3R-Lab/Sheaft)](https://github.com/MB3R-Lab/Sheaft/blob/main/go.mod)
-[![Technical preview](https://img.shields.io/badge/preview-v0.2.4-orange)](https://github.com/MB3R-Lab/Sheaft/releases/tag/v0.2.4)
+[![Current release](https://img.shields.io/badge/release-v1.0.0-blue)](https://github.com/MB3R-Lab/Sheaft/releases/tag/v1.0.0)
 [![Bering support](https://img.shields.io/badge/Bering-1.3-blue)](https://github.com/MB3R-Lab/Sheaft/blob/main/docs/compatibility-matrix.md)
 [![Bering app](https://img.shields.io/badge/Bering%20app-v1.0.0-informational)](https://github.com/MB3R-Lab/Bering/releases/tag/v1.0.0)
 
@@ -26,9 +26,9 @@ It stays downstream of topology discovery. The public surface in this repository
 
 ## Stability / Release Status
 
-The current public release is `v0.2.4`. The `v0.2.x` line is an experimental public release and should be treated as a technical preview, not a stable GA release.
+The current public release line is `v1.0.0`. It is the first major Sheaft line for the stochastic-connectivity baseline over Bering `1.3.0` model and snapshot contracts.
 
-Stable on the current `main` line for the v1 release candidate:
+Stable in `v1.0.0`:
 
 - strict acceptance of the Bering v1 contract line: `io.mb3r.bering.model@1.3.0` and `io.mb3r.bering.snapshot@1.3.0`
 - batch CLI command names and core flow: `simulate`, `gate`, `run`
@@ -39,11 +39,11 @@ Stable on the current `main` line for the v1 release candidate:
 - fixed benchmark slice and release-quality `quality-report.json` generation
 - release archives for Linux and macOS on `amd64` and `arm64`
 
-Experimental in `v0.2.x`:
+Outside the stable `v1.0.0` release claim:
 
-- long-running `serve` posture service
-- richer analysis configuration beyond the legacy gate-policy subset
-- Helm chart and OCI image operational packaging
+- long-running `serve` posture service as a long-term operations contract
+- richer analysis configuration ergonomics beyond the shipped examples
+- Helm chart and OCI image behavior as a managed operations platform
 - local `discover` helper, which is not the production discovery path
 
 ## Supported upstream contracts
@@ -63,18 +63,18 @@ Unknown or mismatched contracts are rejected. There is no silent fallback for un
 
 The current `main` line has also been app-level synced against the Bering `v1.0.0` release/package. That sync does not change the accepted Bering schema contract pins.
 
-The planned v1 major release claim is documented in [docs/v1-major-semantics.md](docs/v1-major-semantics.md): product-baseline `P_Node * P_Edge` stochastic connectivity over Bering topology `G`, replication map `R`, and endpoint predicates `Phi`, with explicit boundaries for what remains future work. The formal model is described in the preprint [When Is a Trace-Discovered Topological Model Enough?](https://www.alphaxiv.org/abs/2607.00740).
+The v1 major release claim is documented in [docs/v1-major-semantics.md](docs/v1-major-semantics.md): product-baseline `P_Node * P_Edge` stochastic connectivity over Bering topology `G`, replication map `R`, and endpoint predicates `Phi`, with explicit boundaries for what remains future work. The formal model is described in the preprint [When Is a Trace-Discovered Topological Model Enough?](https://www.alphaxiv.org/abs/2607.00740).
 
 ## Installation
 
-Preferred path for the current technical preview release:
+Preferred path for the current v1 release:
 
 1. Download the release binary archive for your platform.
 2. Download the matching `sheaft-default-config-pack_X.Y.Z.tar.gz`.
 3. Verify against `sheaft_X.Y.Z_checksums.txt`.
 4. Extract and run the quickstart below.
 
-Minimum planned binary archives:
+Release binary archives:
 
 - `sheaft_X.Y.Z_linux_amd64.tar.gz`
 - `sheaft_X.Y.Z_linux_arm64.tar.gz`
@@ -145,7 +145,7 @@ sheaft run --model <artifact.json> --analysis <analysis.yaml> --contract-policy 
 
 ## Service mode
 
-The long-running service remains experimental in `v0.2.x`, but it is included in the public technical preview.
+The long-running service is shipped for evaluation and automation experiments, but it is outside the stable v1 stochastic-connectivity release claim.
 
 The checked-in example is runnable without editing paths:
 
@@ -186,9 +186,9 @@ Sheaft is intentionally downstream of Bering artifacts and schemas.
 - `1.3.0` analysis is only as rich as the artifact metadata. Missing retry, timeout, latency, placement, or shared-resource metadata is reported as unavailable rather than guessed.
 - Legacy explicit predicates remain service-based even when `1.3.0` edge metadata is present. Edge faults and partial degradations affect journey-based analysis, diagnostics, and explicit `edge_aware` predicates, not old service predicate semantics.
 - This release does not introduce or stabilize an upstream discovery pipeline. Discovery remains upstream; the local `discover` helper is experimental only.
-- `serve` and its watch loop are suitable for technical-preview evaluation, not yet for a stable long-term operational contract.
-- The richer analysis surface is available, but its configuration ergonomics and operational conventions may still change in later `0.x` releases.
-- Release automation is designed around GitHub Releases, release manifests, OCI image publication, and an OCI Helm chart; Windows release archives can be built, but they are not the primary tested surface in this preview.
+- `serve` and its watch loop are suitable for evaluation and non-critical automation, not yet for a stable long-term operational contract.
+- The richer analysis surface is available, but its configuration ergonomics and operational conventions may still change in later releases.
+- Release automation is designed around GitHub Releases, release manifests, OCI image publication, and an OCI Helm chart; Windows release archives can be built, but Linux and macOS archives are the primary tested binary surface.
 - Before using a Sheaft report as blocking release evidence, review the do-not-trust signal catalogue in [Assumptions and Limitations](docs/assumptions-and-limitations.md).
 
 ## Development
