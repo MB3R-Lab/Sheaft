@@ -116,6 +116,33 @@ gate:
 	}
 }
 
+func TestLoadAnalysis_AcceptsFixedKReplicaSlots(t *testing.T) {
+	t.Parallel()
+
+	path := filepath.Join(t.TempDir(), "analysis.yaml")
+	writeConfigFile(t, path, `
+schema_version: "1.0"
+profiles:
+  - name: experiment
+    sampling_mode: fixed_k_replica_slots
+    failure_probability: 0.30
+gate:
+  mode: report
+  default_action: report
+`)
+
+	cfg, err := LoadAnalysis(path)
+	if err != nil {
+		t.Fatalf("LoadAnalysis failed: %v", err)
+	}
+	if got := cfg.Profiles[0].SamplingMode; got != SamplingModeFixedKReplicaSlots {
+		t.Fatalf("expected fixed replica slot sampling mode, got %q", got)
+	}
+	if got := cfg.Profiles[0].FailureProbability; got != 0.30 {
+		t.Fatalf("expected failure_probability 0.30, got %f", got)
+	}
+}
+
 func writeConfigFile(t *testing.T, path string, content string) {
 	t.Helper()
 	if err := os.WriteFile(path, []byte(content), 0o644); err != nil {

@@ -148,6 +148,10 @@ func runAdvancedProfile(ctx advancedContext, profile ProfileParams, defaultWeigh
 	if err := validateAdvancedReliability(ctx, profile); err != nil {
 		return ProfileOutput{}, err
 	}
+	profile, err := resolveDerivedFixedKProfile(profile, totalAdvancedReplicaSlots(ctx))
+	if err != nil {
+		return ProfileOutput{}, err
+	}
 	rng := rand.New(rand.NewSource(profile.Seed))
 	faultState := buildProfileFaultState(ctx, faultSpec)
 	staticByPath := make(map[string]pathStatic)
@@ -521,6 +525,30 @@ func sampleAdvancedState(ctx advancedContext, profile ProfileParams, rng *rand.R
 			_, failed := failedServices[serviceID]
 			for _, bucket := range ctx.services[serviceID].Buckets {
 				state.bucketAlive[bucket.ID] = !failed
+			}
+		}
+	case config.SamplingModeFixedKReplicaSlots:
+		slotBucketIDs := advancedReplicaSlotBucketIDs(ctx)
+		if profile.FixedKFailures > len(slotBucketIDs) {
+			return sampledState{}, fmt.Errorf("fixed_k_failures %d exceeds replica slot count %d", profile.FixedKFailures, len(slotBucketIDs))
+		}
+		for _, serviceID := range ctx.serviceIDs {
+			for _, bucket := range ctx.services[serviceID].Buckets {
+				state.bucketAlive[bucket.ID] = true
+			}
+		}
+		if profile.FixedKFailures > 0 {
+			failedByBucket := make(map[string]int, len(slotBucketIDs))
+			indices := rng.Perm(len(slotBucketIDs))
+			for _, idx := range indices[:profile.FixedKFailures] {
+				failedByBucket[slotBucketIDs[idx]]++
+			}
+			for _, serviceID := range ctx.serviceIDs {
+				for _, bucket := range ctx.services[serviceID].Buckets {
+					if failedByBucket[bucket.ID] >= bucket.Replicas {
+						state.bucketAlive[bucket.ID] = false
+					}
+				}
 			}
 		}
 	default:
@@ -1518,6 +1546,28 @@ func normalizeBuckets(svc model.Service, record artifact.SnapshotDiscoveryServic
 		})
 	}
 	return out, nil
+}
+
+func totalAdvancedReplicaSlots(ctx advancedContext) int {
+	total := 0
+	for _, serviceID := range ctx.serviceIDs {
+		for _, bucket := range ctx.services[serviceID].Buckets {
+			total += bucket.Replicas
+		}
+	}
+	return total
+}
+
+func advancedReplicaSlotBucketIDs(ctx advancedContext) []string {
+	out := make([]string, 0, totalAdvancedReplicaSlots(ctx))
+	for _, serviceID := range ctx.serviceIDs {
+		for _, bucket := range ctx.services[serviceID].Buckets {
+			for replica := 0; replica < bucket.Replicas; replica++ {
+				out = append(out, bucket.ID)
+			}
+		}
+	}
+	return out
 }
 
 func findEdgeRecord(records map[string]artifact.SnapshotDiscoveryEdge, edgeID, from, to string, kind model.EdgeKind, blocking bool) artifact.SnapshotDiscoveryEdge {

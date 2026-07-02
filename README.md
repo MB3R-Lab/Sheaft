@@ -1,6 +1,6 @@
 # Sheaft
 
-[![release](https://img.shields.io/badge/release-v1.0.0-blue)](https://github.com/MB3R-Lab/Sheaft/releases/tag/v1.0.0)
+[![release](https://img.shields.io/badge/release-v1.1.0-blue)](https://github.com/MB3R-Lab/Sheaft/releases/tag/v1.1.0)
 [![checks](https://img.shields.io/github/actions/workflow/status/MB3R-Lab/Sheaft/release-dry-run.yml?branch=main&label=checks)](https://github.com/MB3R-Lab/Sheaft/actions/workflows/release-dry-run.yml)
 [![bering schema](https://img.shields.io/badge/bering%20schema-1.3.0-blue)](https://github.com/MB3R-Lab/Sheaft/blob/main/docs/compatibility-matrix.md)
 
@@ -21,20 +21,21 @@ It stays downstream of topology discovery. The public surface in this repository
 
 ## Stability / Release Status
 
-The current public release line is `v1.0.0`. It is the first major Sheaft line for the stochastic-connectivity baseline over Bering `1.3.0` model and snapshot contracts.
+The current public release line is `v1.1.0`. It is the current stable Sheaft line for the stochastic-connectivity baseline over Bering `1.3.0` model and snapshot contracts.
 
-Stable in `v1.0.0`:
+Stable in `v1.1.0`:
 
 - strict acceptance of the Bering v1 contract line: `io.mb3r.bering.model@1.3.0` and `io.mb3r.bering.snapshot@1.3.0`
 - batch CLI command names and core flow: `simulate`, `gate`, `run`
 - deterministic batch execution for a fixed seed and config
+- fixed replica-slot sampling through `sampling_mode: fixed_k_replica_slots` for reproducing fixed-fraction experiment protocols
 - baseline comparison through `analysis.baselines` for supported `1.3.0` artifacts
 - additive advanced analysis when `1.3.0` metadata exists
 - gate decision reasons in `report.json`, `summary.md`, and `sheaft gate/run --why`
 - fixed benchmark slice and release-quality `quality-report.json` generation
 - release archives for Linux and macOS on `amd64` and `arm64`
 
-Outside the stable `v1.0.0` release claim:
+Outside the stable `v1.1.0` release claim:
 
 - long-running `serve` posture service as a long-term operations contract
 - richer analysis configuration ergonomics beyond the shipped examples

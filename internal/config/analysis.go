@@ -19,6 +19,7 @@ const (
 	SamplingModeIndependentReplica = "independent_replica"
 	SamplingModeIndependentService = "independent_service"
 	SamplingModeFixedKServiceSet   = "fixed_k_service_set"
+	SamplingModeFixedKReplicaSlots = "fixed_k_replica_slots"
 )
 
 type GateEvaluationRule string
@@ -273,9 +274,12 @@ func (c AnalysisConfig) Validate() error {
 			return fmt.Errorf("profile %q has unsupported sampling_mode %q", profile.Name, profile.SamplingMode)
 		}
 		switch profile.SamplingMode {
-		case SamplingModeIndependentReplica, SamplingModeIndependentService:
+		case SamplingModeIndependentReplica, SamplingModeIndependentService, SamplingModeFixedKReplicaSlots:
 			if profile.FailureProbability < 0 || profile.FailureProbability > 1 {
 				return fmt.Errorf("profile %q failure_probability must be in range [0,1]", profile.Name)
+			}
+			if profile.SamplingMode == SamplingModeFixedKReplicaSlots && profile.FixedKFailures < 0 {
+				return fmt.Errorf("profile %q fixed_k_failures must be >= 0", profile.Name)
 			}
 		case SamplingModeFixedKServiceSet:
 			if profile.FixedKFailures < 0 {
@@ -479,7 +483,7 @@ func resolveRelative(baseDir, target string) string {
 
 func isValidSamplingMode(mode string) bool {
 	switch mode {
-	case SamplingModeIndependentReplica, SamplingModeIndependentService, SamplingModeFixedKServiceSet:
+	case SamplingModeIndependentReplica, SamplingModeIndependentService, SamplingModeFixedKServiceSet, SamplingModeFixedKReplicaSlots:
 		return true
 	default:
 		return false

@@ -157,6 +157,62 @@ func TestRunArtifactProfiles_ReplicatedTargetSaturatesAtEdgeBottleneck(t *testin
 	}
 }
 
+func TestRunArtifactProfiles_FixedKReplicaSlots(t *testing.T) {
+	t.Parallel()
+
+	loaded := artifact.Loaded{
+		Metadata: artifact.Metadata{
+			Contract: modelcontract.SupportedContract{
+				Name:    modelcontract.BeringModelV130Name,
+				Version: modelcontract.BeringModelV130Version,
+				URI:     modelcontract.BeringModelV130URI,
+				Digest:  modelcontract.BeringModelV130Digest,
+				Kind:    modelcontract.KindModel,
+			},
+		},
+		Model: model.ResilienceModel{
+			Services: []model.Service{
+				{ID: "frontend", Name: "frontend", Replicas: 2},
+			},
+			Endpoints: []model.Endpoint{
+				{ID: "frontend:GET /health", EntryService: "frontend", SuccessPredicateRef: "frontend:GET /health"},
+			},
+			Metadata: model.Metadata{
+				SourceType:   "test",
+				SourceRef:    "fixture",
+				DiscoveredAt: "2026-07-01T00:00:00Z",
+				Confidence:   1,
+				Schema: model.Schema{
+					Name:    modelcontract.BeringModelV130Name,
+					Version: modelcontract.BeringModelV130Version,
+					URI:     modelcontract.BeringModelV130URI,
+					Digest:  modelcontract.BeringModelV130Digest,
+				},
+			},
+		},
+	}
+
+	out, err := RunArtifactProfiles(loaded, AnalysisParams{
+		Seed: 13,
+		Profiles: []ProfileParams{
+			{Name: "derived", Trials: 1000, SamplingMode: config.SamplingModeFixedKReplicaSlots, FailureProbability: 0.5},
+			{Name: "explicit", Trials: 1000, SamplingMode: config.SamplingModeFixedKReplicaSlots, FixedKFailures: 2},
+		},
+	})
+	if err != nil {
+		t.Fatalf("RunArtifactProfiles failed: %v", err)
+	}
+	if out.Profiles[0].FixedKFailures != 1 {
+		t.Fatalf("expected derived fixed_k_failures=1, got %d", out.Profiles[0].FixedKFailures)
+	}
+	if got := out.Profiles[0].EndpointAvailability["frontend:GET /health"]; got != 1 {
+		t.Fatalf("expected one failed replica slot to leave service alive, got %f", got)
+	}
+	if got := out.Profiles[1].EndpointAvailability["frontend:GET /health"]; got != 0 {
+		t.Fatalf("expected two failed replica slots to kill service, got %f", got)
+	}
+}
+
 func TestRunArtifactProfiles_EndpointSemanticsImmediateIgnoresAsyncAndEventualUsesIt(t *testing.T) {
 	t.Parallel()
 

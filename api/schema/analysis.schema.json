@@ -25,7 +25,8 @@
       "enum": [
         "independent_replica",
         "independent_service",
-        "fixed_k_service_set"
+        "fixed_k_service_set",
+        "fixed_k_replica_slots"
       ]
     },
     "failure_probability": {
@@ -91,7 +92,8 @@
             "enum": [
               "independent_replica",
               "independent_service",
-              "fixed_k_service_set"
+              "fixed_k_service_set",
+              "fixed_k_replica_slots"
             ]
           },
           "failure_probability": {
