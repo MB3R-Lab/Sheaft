@@ -32,6 +32,7 @@ type ProfileParams struct {
 	FixedKFailures     int
 	FaultProfile       string
 	EndpointWeights    map[string]float64
+	CoupledTrials      bool
 }
 
 type AnalysisParams struct {
@@ -41,6 +42,15 @@ type AnalysisParams struct {
 	DefaultWeights   map[string]float64
 	FaultContract    *faults.Contract
 	Profiles         []ProfileParams
+	Sweeps           []SweepParams
+}
+
+type SweepParams struct {
+	Name            string
+	BaseProfile     ProfileParams
+	ConfidenceLevel float64
+	Axis            config.SweepAxis
+	Targets         []config.SweepTarget
 }
 
 type Output struct {
@@ -57,6 +67,7 @@ type ProfileOutput struct {
 	FixedKFailures       int                `json:"fixed_k_failures,omitempty"`
 	FaultProfile         string             `json:"fault_profile,omitempty"`
 	EndpointAvailability map[string]float64 `json:"endpoint_availability"`
+	EndpointSuccesses    map[string]int     `json:"-"`
 	EndpointWeights      map[string]float64 `json:"endpoint_weights,omitempty"`
 	WeightedAggregate    float64            `json:"weighted_aggregate"`
 	UnweightedAggregate  float64            `json:"unweighted_aggregate"`
@@ -66,8 +77,65 @@ type ProfileOutput struct {
 
 type AnalysisOutput struct {
 	Profiles               []ProfileOutput `json:"profiles"`
+	Sweeps                 []SweepOutput   `json:"sweeps,omitempty"`
 	CrossProfileWeighted   float64         `json:"cross_profile_weighted_aggregate"`
 	CrossProfileUnweighted float64         `json:"cross_profile_unweighted_aggregate"`
+}
+
+type SweepPoint struct {
+	AxisValue             float64                     `json:"axis_value"`
+	FailureProbability    *float64                    `json:"failure_probability,omitempty"`
+	FailedReplicaSlots    *int                        `json:"failed_replica_slots,omitempty"`
+	FailedReplicaFraction *float64                    `json:"failed_replica_fraction,omitempty"`
+	EndpointAvailability  map[string]float64          `json:"endpoint_availability"`
+	EndpointConfidence    map[string]BinomialInterval `json:"endpoint_confidence"`
+}
+
+type BinomialInterval struct {
+	Successes       int     `json:"successes"`
+	Trials          int     `json:"trials"`
+	Estimate        float64 `json:"estimate"`
+	ConfidenceLevel float64 `json:"confidence_level"`
+	LowerBound      float64 `json:"lower_bound"`
+	UpperBound      float64 `json:"upper_bound"`
+}
+
+type BoundaryPoint struct {
+	AxisValue            float64 `json:"axis_value"`
+	Availability         float64 `json:"availability"`
+	ConfidenceLowerBound float64 `json:"confidence_lower_bound,omitempty"`
+	ConfidenceUpperBound float64 `json:"confidence_upper_bound,omitempty"`
+}
+
+type CrossingBracket struct {
+	LowerAxisValue float64 `json:"lower_axis_value"`
+	UpperAxisValue float64 `json:"upper_axis_value"`
+}
+
+type SweepBoundary struct {
+	EndpointID          string           `json:"endpoint_id"`
+	SLO                 float64          `json:"slo"`
+	Status              string           `json:"status"`
+	ObservedMonotonic   bool             `json:"observed_monotonic"`
+	ConfidenceLevel     float64          `json:"confidence_level"`
+	CertificationStatus string           `json:"certification_status"`
+	CertifiedTolerance  *BoundaryPoint   `json:"certified_tolerance,omitempty"`
+	LastMeetingSLO      *BoundaryPoint   `json:"last_meeting_slo,omitempty"`
+	FirstViolatingSLO   *BoundaryPoint   `json:"first_violating_slo,omitempty"`
+	CrossingBracket     *CrossingBracket `json:"crossing_bracket,omitempty"`
+}
+
+type SweepOutput struct {
+	Name              string          `json:"name"`
+	BaseProfile       string          `json:"base_profile"`
+	AxisType          string          `json:"axis_type"`
+	Trials            int             `json:"trials"`
+	Seed              int64           `json:"seed"`
+	ConfidenceLevel   float64         `json:"confidence_level"`
+	Fingerprint       string          `json:"fingerprint"`
+	TotalReplicaSlots int             `json:"total_replica_slots"`
+	Points            []SweepPoint    `json:"points"`
+	Boundaries        []SweepBoundary `json:"boundaries"`
 }
 
 type MetricFloat struct {
@@ -253,6 +321,7 @@ func runProfile(profile ProfileParams, endpointIDs []string, serviceIDs []string
 		FixedKFailures:       profile.FixedKFailures,
 		FaultProfile:         profile.FaultProfile,
 		EndpointAvailability: availability,
+		EndpointSuccesses:    successCount,
 		EndpointWeights:      weights,
 		WeightedAggregate:    weighted,
 		UnweightedAggregate:  unweighted,
@@ -267,10 +336,8 @@ func sampleAlive(profile ProfileParams, rng *rand.Rand, serviceIDs []string, ser
 			live := false
 			liveProbability := serviceLiveProbability(profile, serviceID)
 			for i := 0; i < serviceReplicas[serviceID]; i++ {
-				if rng.Float64() < liveProbability {
-					live = true
-					break
-				}
+				replicaLive := rng.Float64() < liveProbability
+				live = live || replicaLive
 			}
 			alive[serviceID] = live
 		}
@@ -584,6 +651,12 @@ func aggregateWeightedAvailability(availability map[string]float64, weights map[
 func derivedSeed(base int64, profileName string, index int) int64 {
 	h := fnv.New64a()
 	_, _ = h.Write([]byte(fmt.Sprintf("%d:%s:%d", base, profileName, index)))
+	return int64(h.Sum64())
+}
+
+func derivedEventSeed(base int64, trial int, label string) int64 {
+	h := fnv.New64a()
+	_, _ = h.Write([]byte(fmt.Sprintf("%d:%d:%s", base, trial, label)))
 	return int64(h.Sum64())
 }
 

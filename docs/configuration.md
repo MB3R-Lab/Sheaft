@@ -15,11 +15,13 @@ Use the versioned analysis config for advanced batch and service mode:
 
 - [configs/analysis.example.yaml](../configs/analysis.example.yaml)
 - [configs/analysis.v1.1.example.yaml](../configs/analysis.v1.1.example.yaml)
+- [configs/analysis.sweep.example.yaml](../configs/analysis.sweep.example.yaml)
 - [api/schema/analysis.schema.json](../api/schema/analysis.schema.json)
 
 Key sections:
 
 - `profiles`
+- `sweeps`
 - `reliability`
 - `endpoint_weights`
 - `baselines`
@@ -28,7 +30,7 @@ Key sections:
 - `contract_policy`
 - `gate`
 
-`schema_version: "1.0"` remains the simple analysis-config surface. `schema_version: "1.1"` adds fault-profile selection and artifact baselines without changing legacy `1.0` configs.
+`schema_version: "1.0"` remains the simple analysis-config surface. `schema_version: "1.1"` adds fault-profile selection and artifact baselines without changing legacy `1.0` configs. `schema_version: "1.2"` adds failure-tolerance sweeps, confidence-certified boundaries, and explicit boundary gate rules without changing ordinary profile aggregation.
 
 `failure_probability` remains a legacy shorthand for homogeneous node failures. Prefer `reliability` for stochastic connectivity analysis:
 
@@ -47,6 +49,37 @@ Sampling modes:
 - `independent_service`: each service is sampled once per trial regardless of replica count
 - `fixed_k_service_set`: exactly `fixed_k_failures` services fail per trial
 - `fixed_k_replica_slots`: exactly `k` replica slots fail per trial; when `fixed_k_failures` is omitted, `k = ceil(failure_probability * total_replica_slots)`
+
+## Failure-Tolerance Sweeps
+
+Sweeps answer an operation-specific question: at which evaluated fail-stop intensity does endpoint availability first fall below its configured SLO? They are separate from profiles: sweep points are not averaged into `cross_profile_*` and do not affect the existing profile gate.
+
+Each `sweeps[]` entry references a base profile and defines one ordered axis:
+
+- `independent_replica_failure_probability`: values in `[0,1]`; each value directly sets the homogeneous replica failure probability while retaining configured edge reliability and fault overlays
+- `failed_replica_slots`: non-negative integer values; output includes both the exact lost slot count and `k / total_replica_slots`
+
+Targets are endpoint IDs with explicit SLOs. Report output contains every evaluated point, the last point meeting SLO, the first violating point, and their crossing bracket. A curve that rises at any evaluated point is marked `non_monotonic` rather than being presented as a trustworthy boundary.
+
+`confidence_level` defaults to `0.95`. Every endpoint point includes a two-sided Wilson interval. `certified_tolerance` is the greatest contiguous evaluated stress level whose lower confidence bound remains at or above the endpoint SLO. Insufficient trials or an interval crossing the SLO is reported as `indeterminate`, never converted to a point-estimate pass.
+
+Boundary rules are explicit and independent of normal profile thresholds:
+
+```yaml
+gate:
+  mode: fail
+  default_action: fail
+  boundary_rules:
+    - sweep: checkout-independent-replica-failures
+      endpoint_id: gateway:POST /checkout
+      minimum_certified_tolerance: 0.05
+      baseline: last-release
+      max_regression: 0.02
+```
+
+The minimum must be one of the evaluated axis values. `max_regression` requires a named `analysis.baselines` entry. Raw baseline artifacts are rerun with the same sweep seed and definition; prior reports are comparable only when their sweep fingerprint matches. Missing or incompatible evidence becomes `boundary_indeterminate`. In `mode: fail`, `default_action: fail` makes that fail closed; `indeterminate_action: warn` can weaken an individual rule explicitly.
+
+These boundaries describe the configured fail-stop model. They do not model traffic redistribution, queue saturation, capacity exhaustion, or retry feedback, and must not be described as overload-cascade tipping points.
 
 ## Serve Config
 
@@ -106,4 +139,5 @@ Report output now carries both:
 - keep `--policy` when one profile and simple thresholds are enough
 - move to `--analysis` when you need profiles, weights, baselines, overlays, or contract pinning
 - move to `schema_version: "1.1"` when you need `fault_contract`, `profiles[].fault_profile`, or artifact-vs-artifact baseline comparison
+- move to `schema_version: "1.2"` when you need failure-tolerance curves and endpoint SLO crossing brackets
 - use `serve` when posture must stay current as new artifacts arrive

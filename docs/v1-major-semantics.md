@@ -20,6 +20,8 @@ For a supported Bering artifact, Sheaft v1 evaluates endpoint availability over:
 
 The implementation is deterministic for a fixed artifact, analysis config, and seed.
 
+Sheaft `v1.2.0` evaluates the same product model over an ordered fail-stop axis and reports the grid bracket where an endpoint crosses its SLO. Wilson lower bounds provide a conservative certified tolerance, and compatible baseline artifacts/reports support release-regression gates. This is repeated evaluation of `P_Node * P_Edge` and `Phi`; it does not add capacity, queue, or retry-load feedback semantics.
+
 ## Paper Mapping
 
 | Formal element | Sheaft v1 implementation | Evidence | Boundary |
@@ -73,6 +75,7 @@ These areas are not v1 release claims:
 - rich temporal workflow models
 - discovery pipeline ownership inside Sheaft
 - proof of runtime safety, failover correctness, RBAC, or multi-tenant isolation
+- overload-cascade prediction from traffic redistribution, queues, capacity saturation, or retry-generated load
 
 Use [docs/assumptions-and-limitations.md](assumptions-and-limitations.md) when deciding whether a report is strong enough for a blocking release gate.
 
@@ -102,6 +105,7 @@ The oracle suite is the formal semantic evidence for the product-baseline stocha
 - [api/schema/predicate-contract.schema.json](../api/schema/predicate-contract.schema.json)
 - [api/schema/oracle-report.schema.json](../api/schema/oracle-report.schema.json)
 - [configs/analysis.v1.1.example.yaml](../configs/analysis.v1.1.example.yaml)
+- [configs/analysis.sweep.example.yaml](../configs/analysis.sweep.example.yaml)
 - [configs/predicate-contract.example.yaml](../configs/predicate-contract.example.yaml)
 - [examples/outputs/model-v1.3.0.sample.json](../examples/outputs/model-v1.3.0.sample.json)
 - [examples/outputs/snapshot-v1.3.0.sample.json](../examples/outputs/snapshot-v1.3.0.sample.json)

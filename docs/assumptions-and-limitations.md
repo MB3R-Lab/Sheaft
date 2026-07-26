@@ -7,12 +7,16 @@
 - `1.3.0` is the current accepted Bering contract line.
 - Advanced analysis depends on explicit retry, timeout, latency, placement, and shared-resource metadata.
 - Weighted aggregates reflect configured workload mix, not observed runtime traffic by default.
+- Failure-tolerance sweeps vary configured fail-stop intensity; they do not infer the probability of overload or brownout onset.
 
 ## Current Limitations
 
 - No live chaos execution or traffic generation.
 - No automatic discovery ownership in production flow.
 - No automatic probability calibration from telemetry.
+- No traffic redistribution, queue, per-replica capacity, utilization feedback, or retry-generated load model.
+- Confidence certification controls Monte Carlo sampling uncertainty at evaluated grid points; it does not account for model misspecification, stale topology, inaccurate predicates, or unmodelled correlated failures.
+- Boundary comparison requires matching sweep fingerprints. Older reports or differently configured grids are non-comparable and must be regenerated for a blocking regression gate.
 - No arbitrary non-product `P`; the v1 stochastic baseline is `P_Node * P_Edge` plus explicit reviewed fault overlays.
 - No rich temporal workflow models for sagas, compensations, ordering constraints, or time-window completion.
 - Baseline comparison accepts prior reports and raw supported artifacts, but only overlapping metrics are directly comparable.

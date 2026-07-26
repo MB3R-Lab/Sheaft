@@ -104,3 +104,90 @@ func TestEvaluateProfiles_AssertionFailuresAffectGate(t *testing.T) {
 		t.Fatalf("expected assertion_failed why reason, got %+v", eval.Reasons)
 	}
 }
+
+func TestEvaluateAnalysis_CertifiedBoundaryRules(t *testing.T) {
+	t.Parallel()
+
+	profiles := []simulation.ProfileOutput{{Name: "steady", EndpointAvailability: map[string]float64{"checkout": 1}, WeightedAggregate: 1}}
+	sweep := certifiedSweep(0.1, simulation.BinomialInterval{Estimate: 0.995, LowerBound: 0.991, UpperBound: 0.998})
+	minimum := 0.1
+	eval, err := EvaluateAnalysis(profiles, []simulation.SweepOutput{sweep}, nil, config.GateConfig{
+		Mode: config.ModeFail, DefaultAction: config.ModeFail, GlobalThreshold: 0.9,
+		BoundaryRules: []config.BoundaryRule{{Sweep: "checkout-boundary", EndpointID: "checkout", MinimumCertifiedTolerance: &minimum}},
+	})
+	if err != nil {
+		t.Fatalf("EvaluateAnalysis failed: %v", err)
+	}
+	if eval.Decision != StatusPass || len(eval.BoundaryResults) != 1 || eval.BoundaryResults[0].Status != StatusPass {
+		t.Fatalf("expected certified boundary pass, got %+v", eval)
+	}
+}
+
+func TestEvaluateAnalysis_DistinguishesViolationAndIndeterminate(t *testing.T) {
+	t.Parallel()
+
+	profiles := []simulation.ProfileOutput{{Name: "steady", EndpointAvailability: map[string]float64{"checkout": 1}, WeightedAggregate: 1}}
+	minimum := 0.1
+	baseGate := config.GateConfig{
+		Mode: config.ModeFail, DefaultAction: config.ModeFail, GlobalThreshold: 0.9,
+		BoundaryRules: []config.BoundaryRule{{Sweep: "checkout-boundary", EndpointID: "checkout", MinimumCertifiedTolerance: &minimum}},
+	}
+	violating := certifiedSweep(0, simulation.BinomialInterval{Estimate: 0.97, LowerBound: 0.96, UpperBound: 0.98})
+	eval, err := EvaluateAnalysis(profiles, []simulation.SweepOutput{violating}, nil, baseGate)
+	if err != nil {
+		t.Fatalf("EvaluateAnalysis failed: %v", err)
+	}
+	if eval.Decision != StatusFail || eval.Reasons[len(eval.Reasons)-1].ID != "boundary_below_minimum" {
+		t.Fatalf("expected definite boundary violation, got %+v", eval)
+	}
+
+	indeterminate := certifiedSweep(0, simulation.BinomialInterval{Estimate: 0.99, LowerBound: 0.98, UpperBound: 0.995})
+	eval, err = EvaluateAnalysis(profiles, []simulation.SweepOutput{indeterminate}, nil, baseGate)
+	if err != nil {
+		t.Fatalf("EvaluateAnalysis failed: %v", err)
+	}
+	if eval.Decision != StatusFail || eval.Reasons[len(eval.Reasons)-1].ID != "boundary_indeterminate" {
+		t.Fatalf("expected fail-closed indeterminate boundary, got %+v", eval)
+	}
+	baseGate.BoundaryRules[0].IndeterminateAction = config.ModeWarn
+	eval, err = EvaluateAnalysis(profiles, []simulation.SweepOutput{indeterminate}, nil, baseGate)
+	if err != nil {
+		t.Fatalf("EvaluateAnalysis failed: %v", err)
+	}
+	if eval.Decision != StatusWarn || eval.BoundaryResults[0].Status != StatusWarn {
+		t.Fatalf("expected explicit warn action for indeterminate boundary, got %+v", eval)
+	}
+}
+
+func TestEvaluateAnalysis_BaselineRegression(t *testing.T) {
+	t.Parallel()
+
+	profiles := []simulation.ProfileOutput{{Name: "steady", EndpointAvailability: map[string]float64{"checkout": 1}, WeightedAggregate: 1}}
+	sweep := certifiedSweep(0.1, simulation.BinomialInterval{Estimate: 0.995, LowerBound: 0.991, UpperBound: 0.998})
+	maxRegression := 0.05
+	referenceTolerance := 0.2
+	eval, err := EvaluateAnalysis(profiles, []simulation.SweepOutput{sweep}, []BoundaryReference{
+		{Baseline: "last-release", Sweep: "checkout-boundary", EndpointID: "checkout", Compatible: true, CertifiedTolerance: &referenceTolerance},
+	}, config.GateConfig{
+		Mode: config.ModeFail, DefaultAction: config.ModeFail, GlobalThreshold: 0.9,
+		BoundaryRules: []config.BoundaryRule{{Sweep: "checkout-boundary", EndpointID: "checkout", Baseline: "last-release", MaxRegression: &maxRegression}},
+	})
+	if err != nil {
+		t.Fatalf("EvaluateAnalysis failed: %v", err)
+	}
+	if eval.Decision != StatusFail || eval.BoundaryResults[0].Regression == nil || *eval.BoundaryResults[0].Regression > -0.09 || eval.Reasons[len(eval.Reasons)-1].ID != "boundary_regressed" {
+		t.Fatalf("expected boundary regression failure, got %+v", eval)
+	}
+}
+
+func certifiedSweep(certifiedAxis float64, requiredInterval simulation.BinomialInterval) simulation.SweepOutput {
+	certified := &simulation.BoundaryPoint{AxisValue: certifiedAxis, Availability: 1, ConfidenceLowerBound: 0.999, ConfidenceUpperBound: 1}
+	return simulation.SweepOutput{
+		Name: "checkout-boundary", AxisType: config.SweepAxisIndependentReplicaFailureProbability, Fingerprint: "sha256:test",
+		Points: []simulation.SweepPoint{
+			{AxisValue: 0, EndpointAvailability: map[string]float64{"checkout": 1}, EndpointConfidence: map[string]simulation.BinomialInterval{"checkout": {Estimate: 1, LowerBound: 0.999, UpperBound: 1}}},
+			{AxisValue: 0.1, EndpointAvailability: map[string]float64{"checkout": requiredInterval.Estimate}, EndpointConfidence: map[string]simulation.BinomialInterval{"checkout": requiredInterval}},
+		},
+		Boundaries: []simulation.SweepBoundary{{EndpointID: "checkout", SLO: 0.99, ObservedMonotonic: true, CertifiedTolerance: certified}},
+	}
+}

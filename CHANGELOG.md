@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+## v1.2.0 - 2026-07-26
+
+- added analysis schema `1.2` failure-tolerance sweeps for independent replica failure probability and exact failed replica-slot counts
+- added endpoint SLO crossing points, Wilson confidence intervals, conservative certified tolerance, and deterministic sweep fingerprints to `report.json` and `summary.md`
+- added fail-closed boundary gates for minimum certified tolerance, maximum baseline regression, and indeterminate evidence
+- added paired raw-artifact sweep evaluation and compatible prior-report boundary diffs
+- kept sweep points outside existing profile aggregation and retained backward compatibility for analysis schemas `1.0` and `1.1`
+- documented results as fail-stop model boundaries, not capacity or overload-cascade predictions
+
 ## v1.1.0 - 2026-07-02
 
 - added `fixed_k_replica_slots` sampling for fixed-fraction experiment reproduction; when `fixed_k_failures` is omitted, Sheaft derives `k = ceil(failure_probability * total_replica_slots)`

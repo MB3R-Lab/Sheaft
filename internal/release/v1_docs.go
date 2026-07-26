@@ -55,6 +55,7 @@ func ValidateV1ReleaseDocs(root string) error {
 		"api/schema/predicate-contract.schema.json",
 		"api/schema/snapshot.v1.3.0.schema.json",
 		"configs/analysis.v1.1.example.yaml",
+		"configs/analysis.sweep.example.yaml",
 		"configs/fault-contract.example.yaml",
 		"configs/predicate-contract.example.yaml",
 		"examples/outputs/model-v1.3.0.sample.json",
@@ -98,6 +99,7 @@ func ValidateV1ReleaseDocs(root string) error {
 		"api/schema/predicate-contract.schema.json",
 		"api/schema/oracle-report.schema.json",
 		"configs/analysis.v1.1.example.yaml",
+		"configs/analysis.sweep.example.yaml",
 		"configs/predicate-contract.example.yaml",
 		"examples/outputs/model-v1.3.0.sample.json",
 		"examples/outputs/snapshot-v1.3.0.sample.json",
@@ -280,6 +282,7 @@ func validateV1DefaultPack(root string) error {
 	}
 	return requireContains(DefaultConfigPackSourceListPath, pack, []string{
 		"configs/analysis.v1.1.example.yaml",
+		"configs/analysis.sweep.example.yaml",
 		"configs/fault-contract.example.yaml",
 		"configs/predicate-contract.example.yaml",
 		"examples/outputs/model-v1.3.0.sample.json",

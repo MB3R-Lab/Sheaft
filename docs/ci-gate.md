@@ -33,6 +33,33 @@ Use the richer config when CI needs:
 - external predicate overlays
 - explicit multi-profile gate rules
 
+## Failure-Tolerance Boundary Gate
+
+Analysis schema `1.2` can gate the conservative failure-tolerance margin of a critical endpoint:
+
+```bash
+sheaft run \
+  --model path/to/artifact.json \
+  --analysis configs/analysis.sweep.example.yaml \
+  --out-dir out \
+  --why
+```
+
+The example enforces both:
+
+- an absolute minimum certified tolerance for checkout
+- a maximum allowed regression against the named `last-release` baseline
+
+Certification uses the lower bound of a Wilson interval, not the raw availability estimate. A required boundary with insufficient trials, a non-monotonic observed curve, a missing baseline, or an incompatible sweep fingerprint produces `boundary_indeterminate`. With `mode: fail` and `default_action: fail`, CI fails closed. Use `indeterminate_action: warn` only when the project explicitly accepts weaker evidence.
+
+Machine-readable decisions appear in `policy_evaluation.boundary_results` and use stable reasons:
+
+- `boundary_below_minimum`
+- `boundary_regressed`
+- `boundary_indeterminate`
+
+Baseline reports generated before `v1.2.0` do not contain certified sweep fingerprints and are intentionally non-comparable. Regenerate the baseline or supply a supported raw artifact.
+
 ## Bering Artifact Handoff Contract
 
 Use the same handoff layout in every CI system:
@@ -65,7 +92,7 @@ No extra CI flag is needed for strict checking: it is already part of artifact l
 
 ## Why Mode
 
-Every generated `report.json` includes `policy_evaluation.reasons`, a machine-readable explanation of the gate decision. Each reason includes an id, scope, status, message, and when relevant the profile, endpoint, threshold, availability, and delta.
+Every generated `report.json` includes `policy_evaluation.reasons`, a machine-readable explanation of the gate decision. Each reason includes an id, scope, status, message, and when relevant the profile, sweep, baseline, endpoint, threshold, availability, and delta.
 
 For a human-readable CLI view:
 

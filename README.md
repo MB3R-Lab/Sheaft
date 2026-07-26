@@ -1,6 +1,6 @@
 # Sheaft
 
-[![release](https://img.shields.io/badge/release-v1.1.0-blue)](https://github.com/MB3R-Lab/Sheaft/releases/tag/v1.1.0)
+[![release](https://img.shields.io/badge/release-v1.2.0-blue)](https://github.com/MB3R-Lab/Sheaft/releases/tag/v1.2.0)
 [![checks](https://img.shields.io/github/actions/workflow/status/MB3R-Lab/Sheaft/release-dry-run.yml?branch=main&label=checks)](https://github.com/MB3R-Lab/Sheaft/actions/workflows/release-dry-run.yml)
 [![bering schema](https://img.shields.io/badge/bering%20schema-1.3.0-blue)](https://github.com/MB3R-Lab/Sheaft/blob/main/docs/compatibility-matrix.md)
 
@@ -21,22 +21,27 @@ It stays downstream of topology discovery. The public surface in this repository
 
 ## Stability / Release Status
 
-The current public release line is `v1.1.0`. It is the current stable Sheaft line for the stochastic-connectivity baseline over Bering `1.3.0` model and snapshot contracts.
+The current public release line is `v1.2.0`. It is the current stable Sheaft line for failure-tolerance boundary analysis over the stochastic-connectivity baseline and Bering `1.3.0` model/snapshot contracts.
 
-Stable in `v1.1.0`:
+Stable in `v1.2.0`:
 
 - strict acceptance of the Bering v1 contract line: `io.mb3r.bering.model@1.3.0` and `io.mb3r.bering.snapshot@1.3.0`
 - batch CLI command names and core flow: `simulate`, `gate`, `run`
 - deterministic batch execution for a fixed seed and config
 - fixed replica-slot sampling through `sampling_mode: fixed_k_replica_slots` for reproducing fixed-fraction experiment protocols
+- endpoint failure-tolerance sweeps over independent replica failure probability and exact failed replica-slot count
+- Wilson confidence intervals and conservative certified tolerance at a configured confidence level
+- release gates for minimum certified tolerance and maximum regression against a compatible baseline
+- deterministic sweep fingerprints and paired raw-artifact baseline evaluation
 - baseline comparison through `analysis.baselines` for supported `1.3.0` artifacts
 - additive advanced analysis when `1.3.0` metadata exists
 - gate decision reasons in `report.json`, `summary.md`, and `sheaft gate/run --why`
 - fixed benchmark slice and release-quality `quality-report.json` generation
 - release archives for Linux and macOS on `amd64` and `arm64`
 
-Outside the stable `v1.1.0` release claim:
+Outside the stable `v1.2.0` release claim:
 
+- capacity-aware traffic redistribution, queue saturation, retry feedback, and overload-cascade prediction
 - long-running `serve` posture service as a long-term operations contract
 - richer analysis configuration ergonomics beyond the shipped examples
 - Helm chart and OCI image behavior as a managed operations platform
@@ -119,6 +124,17 @@ Analysis example:
 
 The checked-in snapshot samples use Bering `io.mb3r.bering.snapshot@1.3.0` and include typed edge IDs, reliability evidence, endpoint semantic hints, placements, shared resources, retries, timeouts, and observed latency/error metadata. The `configs/analysis.v1.1.example.yaml` example compares the `1.3.0` primary artifact against the checked-in `1.3.0` baseline through `analysis.baselines`.
 
+Failure-tolerance sweep and release-gate example:
+
+```bash
+./sheaft run \
+  --model examples/outputs/snapshot-v1.3.0.sample.json \
+  --analysis configs/analysis.sweep.example.yaml \
+  --out-dir out/failure-tolerance
+```
+
+The sweep reports a modelled fail-stop curve, Wilson confidence intervals, a conservative certified tolerance, and the evaluated bracket where each target endpoint crosses its SLO. Sweep points remain separate from profile aggregation; explicit `boundary_rules` gate only the certified boundary. They do not model overload, capacity saturation, queues, or retry feedback.
+
 On Windows from a source checkout, the same path is:
 
 ```powershell
@@ -190,6 +206,7 @@ Sheaft is intentionally downstream of Bering artifacts and schemas.
 - This release does not introduce or stabilize an upstream discovery pipeline. Discovery remains upstream; the local `discover` helper is experimental only.
 - `serve` and its watch loop are suitable for evaluation and non-critical automation, not yet for a stable long-term operational contract.
 - The richer analysis surface is available, but its configuration ergonomics and operational conventions may still change in later releases.
+- Failure-tolerance boundaries are confidence-certified within the configured fail-stop model, but they are not overload-cascade predictions and are only comparable when the report marks sweep fingerprints compatible.
 - Release automation is designed around GitHub Releases, release manifests, OCI image publication, and an OCI Helm chart; Windows release archives can be built, but Linux and macOS archives are the primary tested binary surface.
 - Before using a Sheaft report as blocking release evidence, review the do-not-trust signal catalogue in [Assumptions and Limitations](docs/assumptions-and-limitations.md).
 
@@ -247,6 +264,7 @@ go vet ./...
 - [configs/gate.policy.example.yaml](configs/gate.policy.example.yaml)
 - [configs/analysis.example.yaml](configs/analysis.example.yaml)
 - [configs/analysis.v1.1.example.yaml](configs/analysis.v1.1.example.yaml)
+- [configs/analysis.sweep.example.yaml](configs/analysis.sweep.example.yaml)
 - [configs/fault-contract.example.yaml](configs/fault-contract.example.yaml)
 - [configs/predicate-contract.example.yaml](configs/predicate-contract.example.yaml)
 - [configs/contract-policy.example.yaml](configs/contract-policy.example.yaml)

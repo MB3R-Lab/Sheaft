@@ -200,6 +200,9 @@ func (r Runner) runGate(args []string) int {
 	if len(eval.FailedProfiles) > 0 {
 		r.printf("failed profiles: %s\n", strings.Join(eval.FailedProfiles, ", "))
 	}
+	if len(eval.FailedBoundaries) > 0 {
+		r.printf("failed boundaries: %s\n", strings.Join(eval.FailedBoundaries, ", "))
+	}
 	if len(eval.FailedEndpoints) > 0 {
 		r.printf("failed endpoints: %s\n", strings.Join(eval.FailedEndpoints, ", "))
 	}
@@ -221,7 +224,29 @@ func evaluateReportProfiles(rep report.Report, analysisCfg config.AnalysisConfig
 			Assertions:           profile.Simulation.Assertions,
 		})
 	}
-	return gate.EvaluateProfiles(outputs, analysisCfg.Gate)
+	return gate.EvaluateAnalysis(outputs, rep.Sweeps, boundaryReferencesFromReport(rep), analysisCfg.Gate)
+}
+
+func boundaryReferencesFromReport(rep report.Report) []gate.BoundaryReference {
+	var references []gate.BoundaryReference
+	for _, baseline := range rep.Diffs.Baselines {
+		for _, boundary := range baseline.SweepBoundaries {
+			references = append(references, gate.BoundaryReference{
+				Baseline: baseline.Name, Sweep: boundary.Sweep, EndpointID: boundary.EndpointID,
+				Fingerprint: boundary.Fingerprint, Compatible: boundary.Status == "comparable",
+				Reason: boundary.Reason, CertifiedTolerance: cloneReportFloat(boundary.ReferenceTolerance),
+			})
+		}
+	}
+	return references
+}
+
+func cloneReportFloat(value *float64) *float64 {
+	if value == nil {
+		return nil
+	}
+	out := *value
+	return &out
 }
 
 func (r Runner) runPipeline(args []string) int {

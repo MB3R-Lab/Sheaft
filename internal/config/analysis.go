@@ -12,6 +12,7 @@ import (
 const (
 	AnalysisSchemaVersion     = "1.0"
 	AnalysisSchemaVersionV110 = "1.1"
+	AnalysisSchemaVersionV120 = "1.2"
 	ServeSchemaVersion        = "1.0"
 )
 
@@ -20,6 +21,11 @@ const (
 	SamplingModeIndependentService = "independent_service"
 	SamplingModeFixedKServiceSet   = "fixed_k_service_set"
 	SamplingModeFixedKReplicaSlots = "fixed_k_replica_slots"
+)
+
+const (
+	SweepAxisIndependentReplicaFailureProbability = "independent_replica_failure_probability"
+	SweepAxisFailedReplicaSlots                   = "failed_replica_slots"
 )
 
 type GateEvaluationRule string
@@ -42,10 +48,29 @@ type AnalysisConfig struct {
 	FaultContract      string             `json:"fault_contract,omitempty" yaml:"fault_contract,omitempty"`
 	EndpointWeights    map[string]float64 `json:"endpoint_weights,omitempty" yaml:"endpoint_weights,omitempty"`
 	Profiles           []Profile          `json:"profiles,omitempty" yaml:"profiles,omitempty"`
+	Sweeps             []Sweep            `json:"sweeps,omitempty" yaml:"sweeps,omitempty"`
 	Baselines          []BaselineRef      `json:"baselines,omitempty" yaml:"baselines,omitempty"`
 	ContractPolicy     ContractPolicy     `json:"contract_policy,omitempty" yaml:"contract_policy,omitempty"`
 	Gate               GateConfig         `json:"gate" yaml:"gate"`
 	Sources            ParameterSources   `json:"-" yaml:"-"`
+}
+
+type Sweep struct {
+	Name            string        `json:"name" yaml:"name"`
+	Profile         string        `json:"profile" yaml:"profile"`
+	ConfidenceLevel float64       `json:"confidence_level,omitempty" yaml:"confidence_level,omitempty"`
+	Axis            SweepAxis     `json:"axis" yaml:"axis"`
+	Targets         []SweepTarget `json:"targets" yaml:"targets"`
+}
+
+type SweepAxis struct {
+	Type   string    `json:"type" yaml:"type"`
+	Values []float64 `json:"values" yaml:"values"`
+}
+
+type SweepTarget struct {
+	EndpointID string  `json:"endpoint_id" yaml:"endpoint_id"`
+	SLO        float64 `json:"slo" yaml:"slo"`
 }
 
 type Profile struct {
@@ -81,6 +106,16 @@ type GateConfig struct {
 	EndpointThresholds             map[string]float64            `json:"endpoint_thresholds,omitempty" yaml:"endpoint_thresholds,omitempty"`
 	ProfileAggregateThresholds     map[string]float64            `json:"profile_aggregate_thresholds,omitempty" yaml:"profile_aggregate_thresholds,omitempty"`
 	ProfileEndpointThresholds      map[string]map[string]float64 `json:"profile_endpoint_thresholds,omitempty" yaml:"profile_endpoint_thresholds,omitempty"`
+	BoundaryRules                  []BoundaryRule                `json:"boundary_rules,omitempty" yaml:"boundary_rules,omitempty"`
+}
+
+type BoundaryRule struct {
+	Sweep                     string     `json:"sweep" yaml:"sweep"`
+	EndpointID                string     `json:"endpoint_id" yaml:"endpoint_id"`
+	MinimumCertifiedTolerance *float64   `json:"minimum_certified_tolerance,omitempty" yaml:"minimum_certified_tolerance,omitempty"`
+	Baseline                  string     `json:"baseline,omitempty" yaml:"baseline,omitempty"`
+	MaxRegression             *float64   `json:"max_regression,omitempty" yaml:"max_regression,omitempty"`
+	IndeterminateAction       PolicyMode `json:"indeterminate_action,omitempty" yaml:"indeterminate_action,omitempty"`
 }
 
 type RuntimeConfig struct {
@@ -220,12 +255,17 @@ func (c AnalysisConfig) Normalized() AnalysisConfig {
 			out.Profiles[i].EndpointWeights = map[string]float64{}
 		}
 	}
+	for i := range out.Sweeps {
+		if out.Sweeps[i].ConfidenceLevel == 0 {
+			out.Sweeps[i].ConfidenceLevel = 0.95
+		}
+	}
 	return out
 }
 
 func (c AnalysisConfig) Validate() error {
-	if c.SchemaVersion != AnalysisSchemaVersion && c.SchemaVersion != AnalysisSchemaVersionV110 {
-		return fmt.Errorf("unsupported analysis schema_version: got %q want one of %q, %q", c.SchemaVersion, AnalysisSchemaVersion, AnalysisSchemaVersionV110)
+	if c.SchemaVersion != AnalysisSchemaVersion && c.SchemaVersion != AnalysisSchemaVersionV110 && c.SchemaVersion != AnalysisSchemaVersionV120 {
+		return fmt.Errorf("unsupported analysis schema_version: got %q want one of %q, %q, %q", c.SchemaVersion, AnalysisSchemaVersion, AnalysisSchemaVersionV110, AnalysisSchemaVersionV120)
 	}
 	if len(c.Profiles) == 0 {
 		return errors.New("analysis requires at least one profile")
@@ -298,6 +338,25 @@ func (c AnalysisConfig) Validate() error {
 			return err
 		}
 	}
+	if len(c.Sweeps) > 0 && c.SchemaVersion != AnalysisSchemaVersionV120 {
+		return fmt.Errorf("analysis schema_version %q does not support sweeps; use %q", c.SchemaVersion, AnalysisSchemaVersionV120)
+	}
+	sweepNames := make(map[string]struct{}, len(c.Sweeps))
+	for _, sweep := range c.Sweeps {
+		if err := validateSweep(sweep, profileNames, sweepNames); err != nil {
+			return err
+		}
+		sweepNames[sweep.Name] = struct{}{}
+	}
+	baselineNames := make(map[string]struct{}, len(c.Baselines))
+	for _, baseline := range c.Baselines {
+		baselineNames[baseline.Name] = struct{}{}
+	}
+	for idx, rule := range c.Gate.BoundaryRules {
+		if err := validateBoundaryRule(idx, rule, c.Sweeps, baselineNames); err != nil {
+			return err
+		}
+	}
 	if !isValidPolicyMode(c.Gate.Mode) {
 		return fmt.Errorf("unsupported gate mode: %q", c.Gate.Mode)
 	}
@@ -344,6 +403,114 @@ func (c AnalysisConfig) Validate() error {
 				return fmt.Errorf("gate.profile_endpoint_thresholds[%s][%s] must be in range [0,1]", profile, endpoint)
 			}
 		}
+	}
+	return nil
+}
+
+func validateSweep(sweep Sweep, profileNames, sweepNames map[string]struct{}) error {
+	if strings.TrimSpace(sweep.Name) == "" {
+		return errors.New("sweep name cannot be empty")
+	}
+	if _, exists := sweepNames[sweep.Name]; exists {
+		return fmt.Errorf("duplicate sweep name: %s", sweep.Name)
+	}
+	if _, exists := profileNames[sweep.Profile]; !exists {
+		return fmt.Errorf("sweep %q references unknown profile %q", sweep.Name, sweep.Profile)
+	}
+	if sweep.ConfidenceLevel <= 0 || sweep.ConfidenceLevel >= 1 {
+		return fmt.Errorf("sweep %q confidence_level must be in range (0,1)", sweep.Name)
+	}
+	if len(sweep.Axis.Values) == 0 {
+		return fmt.Errorf("sweep %q axis.values must contain at least one value", sweep.Name)
+	}
+	for idx, value := range sweep.Axis.Values {
+		if idx > 0 && value <= sweep.Axis.Values[idx-1] {
+			return fmt.Errorf("sweep %q axis.values must be strictly increasing", sweep.Name)
+		}
+		switch sweep.Axis.Type {
+		case SweepAxisIndependentReplicaFailureProbability:
+			if value < 0 || value > 1 {
+				return fmt.Errorf("sweep %q axis.values[%d] must be in range [0,1]", sweep.Name, idx)
+			}
+		case SweepAxisFailedReplicaSlots:
+			if value < 0 || value != float64(int(value)) {
+				return fmt.Errorf("sweep %q axis.values[%d] must be a non-negative integer", sweep.Name, idx)
+			}
+		default:
+			return fmt.Errorf("sweep %q has unsupported axis type %q", sweep.Name, sweep.Axis.Type)
+		}
+	}
+	if len(sweep.Targets) == 0 {
+		return fmt.Errorf("sweep %q requires at least one target", sweep.Name)
+	}
+	targets := make(map[string]struct{}, len(sweep.Targets))
+	for _, target := range sweep.Targets {
+		if strings.TrimSpace(target.EndpointID) == "" {
+			return fmt.Errorf("sweep %q target endpoint_id cannot be empty", sweep.Name)
+		}
+		if _, exists := targets[target.EndpointID]; exists {
+			return fmt.Errorf("sweep %q has duplicate target %q", sweep.Name, target.EndpointID)
+		}
+		targets[target.EndpointID] = struct{}{}
+		if target.SLO < 0 || target.SLO > 1 {
+			return fmt.Errorf("sweep %q target %q slo must be in range [0,1]", sweep.Name, target.EndpointID)
+		}
+	}
+	return nil
+}
+
+func validateBoundaryRule(index int, rule BoundaryRule, sweeps []Sweep, baselines map[string]struct{}) error {
+	if strings.TrimSpace(rule.Sweep) == "" || strings.TrimSpace(rule.EndpointID) == "" {
+		return fmt.Errorf("gate.boundary_rules[%d] requires sweep and endpoint_id", index)
+	}
+	var matched *Sweep
+	for idx := range sweeps {
+		if sweeps[idx].Name == rule.Sweep {
+			matched = &sweeps[idx]
+			break
+		}
+	}
+	if matched == nil {
+		return fmt.Errorf("gate.boundary_rules[%d] references unknown sweep %q", index, rule.Sweep)
+	}
+	targetFound := false
+	for _, target := range matched.Targets {
+		if target.EndpointID == rule.EndpointID {
+			targetFound = true
+			break
+		}
+	}
+	if !targetFound {
+		return fmt.Errorf("gate.boundary_rules[%d] references endpoint %q outside sweep %q targets", index, rule.EndpointID, rule.Sweep)
+	}
+	if rule.MinimumCertifiedTolerance == nil && rule.MaxRegression == nil {
+		return fmt.Errorf("gate.boundary_rules[%d] requires minimum_certified_tolerance or max_regression", index)
+	}
+	if rule.MinimumCertifiedTolerance != nil {
+		found := false
+		for _, value := range matched.Axis.Values {
+			if value == *rule.MinimumCertifiedTolerance {
+				found = true
+				break
+			}
+		}
+		if !found {
+			return fmt.Errorf("gate.boundary_rules[%d] minimum_certified_tolerance must equal an evaluated axis value", index)
+		}
+	}
+	if rule.MaxRegression != nil {
+		if *rule.MaxRegression < 0 {
+			return fmt.Errorf("gate.boundary_rules[%d] max_regression must be >= 0", index)
+		}
+		if strings.TrimSpace(rule.Baseline) == "" {
+			return fmt.Errorf("gate.boundary_rules[%d] max_regression requires baseline", index)
+		}
+		if _, exists := baselines[rule.Baseline]; !exists {
+			return fmt.Errorf("gate.boundary_rules[%d] references unknown baseline %q", index, rule.Baseline)
+		}
+	}
+	if rule.IndeterminateAction != "" && !isValidPolicyMode(rule.IndeterminateAction) {
+		return fmt.Errorf("gate.boundary_rules[%d] has unsupported indeterminate_action %q", index, rule.IndeterminateAction)
 	}
 	return nil
 }

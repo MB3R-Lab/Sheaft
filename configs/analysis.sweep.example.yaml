@@ -1,0 +1,45 @@
+schema_version: "1.2"
+seed: 42
+trials: 20000
+
+profiles:
+  - name: topology-base
+    sampling_mode: independent_replica
+    reliability:
+      edge_live_probability: 0.995
+
+baselines:
+  - name: last-release
+    path: examples/outputs/snapshot.sample.json
+
+sweeps:
+  - name: checkout-independent-replica-failures
+    profile: topology-base
+    confidence_level: 0.95
+    axis:
+      type: independent_replica_failure_probability
+      values: [0.00, 0.01, 0.03, 0.05, 0.10, 0.15, 0.20, 0.30]
+    targets:
+      - endpoint_id: gateway:POST /checkout
+        slo: 0.90
+
+  - name: checkout-failed-replica-slots
+    profile: topology-base
+    confidence_level: 0.95
+    axis:
+      type: failed_replica_slots
+      values: [0, 1, 2, 3, 4]
+    targets:
+      - endpoint_id: gateway:POST /checkout
+        slo: 0.90
+
+gate:
+  mode: fail
+  default_action: fail
+  global_threshold: 0.90
+  boundary_rules:
+    - sweep: checkout-independent-replica-failures
+      endpoint_id: gateway:POST /checkout
+      minimum_certified_tolerance: 0.05
+      baseline: last-release
+      max_regression: 0.05

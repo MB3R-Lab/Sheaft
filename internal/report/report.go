@@ -37,7 +37,9 @@ type PolicyEvaluation struct {
 	FailedEndpoints  []string              `json:"failed_endpoints"`
 	FailedAssertions []string              `json:"failed_assertions,omitempty"`
 	FailedProfiles   []string              `json:"failed_profiles,omitempty"`
+	FailedBoundaries []string              `json:"failed_boundaries,omitempty"`
 	EvaluationRule   string                `json:"evaluation_rule,omitempty"`
+	BoundaryResults  []gate.BoundaryResult `json:"boundary_results,omitempty"`
 	Reasons          []gate.DecisionReason `json:"reasons,omitempty"`
 }
 
@@ -163,14 +165,27 @@ type MetricDiff struct {
 }
 
 type Diff struct {
-	Name                     string        `json:"name,omitempty"`
-	CurrentDigest            string        `json:"current_digest,omitempty"`
-	ReferenceDigest          string        `json:"reference_digest,omitempty"`
-	CurrentTopologyVersion   string        `json:"current_topology_version,omitempty"`
-	ReferenceTopologyVersion string        `json:"reference_topology_version,omitempty"`
-	CrossProfileWeighted     Delta         `json:"cross_profile_weighted"`
-	CrossProfileUnweighted   Delta         `json:"cross_profile_unweighted"`
-	Profiles                 []ProfileDiff `json:"profiles"`
+	Name                     string              `json:"name,omitempty"`
+	CurrentDigest            string              `json:"current_digest,omitempty"`
+	ReferenceDigest          string              `json:"reference_digest,omitempty"`
+	CurrentTopologyVersion   string              `json:"current_topology_version,omitempty"`
+	ReferenceTopologyVersion string              `json:"reference_topology_version,omitempty"`
+	CrossProfileWeighted     Delta               `json:"cross_profile_weighted"`
+	CrossProfileUnweighted   Delta               `json:"cross_profile_unweighted"`
+	Profiles                 []ProfileDiff       `json:"profiles"`
+	SweepBoundaries          []SweepBoundaryDiff `json:"sweep_boundaries,omitempty"`
+}
+
+type SweepBoundaryDiff struct {
+	Sweep              string   `json:"sweep"`
+	EndpointID         string   `json:"endpoint_id"`
+	AxisType           string   `json:"axis_type"`
+	Fingerprint        string   `json:"fingerprint,omitempty"`
+	Status             string   `json:"status"`
+	Reason             string   `json:"reason,omitempty"`
+	CurrentTolerance   *float64 `json:"current_tolerance,omitempty"`
+	ReferenceTolerance *float64 `json:"reference_tolerance,omitempty"`
+	Tolerance          *Delta   `json:"tolerance,omitempty"`
 }
 
 type Diffs struct {
@@ -179,18 +194,19 @@ type Diffs struct {
 }
 
 type Report struct {
-	Simulation          SimulationInfo        `json:"simulation"`
-	EndpointResults     []gate.EndpointResult `json:"endpoint_results"`
-	Summary             Summary               `json:"summary"`
-	PolicyEvaluation    PolicyEvaluation      `json:"policy_evaluation"`
-	InputArtifact       *InputArtifact        `json:"input_artifact,omitempty"`
-	ContractPolicy      *ContractPolicy       `json:"contract_policy,omitempty"`
-	Provenance          *Provenance           `json:"provenance,omitempty"`
-	Parameters          *Parameters           `json:"parameters,omitempty"`
-	Profiles            []ProfileSummary      `json:"profiles,omitempty"`
-	Diffs               Diffs                 `json:"diffs,omitempty"`
-	GeneratedAt         string                `json:"generated_at,omitempty"`
-	RecomputeDurationMS int64                 `json:"recompute_duration_ms,omitempty"`
+	Simulation          SimulationInfo           `json:"simulation"`
+	EndpointResults     []gate.EndpointResult    `json:"endpoint_results"`
+	Summary             Summary                  `json:"summary"`
+	PolicyEvaluation    PolicyEvaluation         `json:"policy_evaluation"`
+	InputArtifact       *InputArtifact           `json:"input_artifact,omitempty"`
+	ContractPolicy      *ContractPolicy          `json:"contract_policy,omitempty"`
+	Provenance          *Provenance              `json:"provenance,omitempty"`
+	Parameters          *Parameters              `json:"parameters,omitempty"`
+	Profiles            []ProfileSummary         `json:"profiles,omitempty"`
+	Sweeps              []simulation.SweepOutput `json:"sweeps,omitempty"`
+	Diffs               Diffs                    `json:"diffs,omitempty"`
+	GeneratedAt         string                   `json:"generated_at,omitempty"`
+	RecomputeDurationMS int64                    `json:"recompute_duration_ms,omitempty"`
 }
 
 func Compose(simOut simulation.Output, eval gate.Evaluation, params simulation.Params, confidence float64) Report {
@@ -233,7 +249,9 @@ func ComposeAnalysis(meta artifact.Loaded, simOut simulation.AnalysisOutput, eva
 			FailedEndpoints:  slices.Clone(eval.FailedEndpoints),
 			FailedAssertions: slices.Clone(eval.FailedAssertions),
 			FailedProfiles:   slices.Clone(eval.FailedProfiles),
+			FailedBoundaries: slices.Clone(eval.FailedBoundaries),
 			EvaluationRule:   string(eval.EvaluationRule),
+			BoundaryResults:  slices.Clone(eval.BoundaryResults),
 			Reasons:          slices.Clone(eval.Reasons),
 		},
 		InputArtifact: &InputArtifact{
@@ -259,6 +277,7 @@ func ComposeAnalysis(meta artifact.Loaded, simOut simulation.AnalysisOutput, eva
 		},
 		Parameters:          buildParameters(cfg, meta),
 		Profiles:            make([]ProfileSummary, 0, len(simOut.Profiles)),
+		Sweeps:              slices.Clone(simOut.Sweeps),
 		GeneratedAt:         generatedAt.UTC().Format(time.RFC3339Nano),
 		RecomputeDurationMS: duration.Milliseconds(),
 	}
@@ -506,6 +525,7 @@ func Compare(current Report, reference Report, name string) Diff {
 		CrossProfileWeighted:     delta(current.Summary.CrossProfileWeightedAvailabilityOrFallback(), reference.Summary.CrossProfileWeightedAvailabilityOrFallback()),
 		CrossProfileUnweighted:   delta(current.Summary.CrossProfileAvailabilityOrFallback(), reference.Summary.CrossProfileAvailabilityOrFallback()),
 		Profiles:                 make([]ProfileDiff, 0, len(currentProfiles)),
+		SweepBoundaries:          compareSweepBoundaries(current.Sweeps, reference.Sweeps),
 	}
 
 	for _, profile := range currentProfiles {
@@ -554,6 +574,68 @@ func Compare(current Report, reference Report, name string) Diff {
 	}
 	return diff
 }
+
+func compareSweepBoundaries(current, reference []simulation.SweepOutput) []SweepBoundaryDiff {
+	var diffs []SweepBoundaryDiff
+	for _, sweep := range current {
+		referenceSweep := reportSweepByName(reference, sweep.Name)
+		for _, boundary := range sweep.Boundaries {
+			diff := SweepBoundaryDiff{Sweep: sweep.Name, EndpointID: boundary.EndpointID, AxisType: sweep.AxisType, Fingerprint: sweep.Fingerprint}
+			if boundary.CertifiedTolerance != nil {
+				diff.CurrentTolerance = floatPointer(boundary.CertifiedTolerance.AxisValue)
+			}
+			switch {
+			case referenceSweep == nil:
+				diff.Status = "non_comparable"
+				diff.Reason = "reference report does not contain the sweep"
+			case referenceSweep.Fingerprint != sweep.Fingerprint:
+				diff.Status = "non_comparable"
+				diff.Reason = "sweep fingerprints differ"
+			default:
+				referenceBoundary := reportBoundaryByEndpoint(referenceSweep.Boundaries, boundary.EndpointID)
+				if referenceBoundary == nil {
+					diff.Status = "non_comparable"
+					diff.Reason = "reference sweep does not contain the endpoint boundary"
+				} else if boundary.CertifiedTolerance == nil || referenceBoundary.CertifiedTolerance == nil {
+					diff.Status = "non_comparable"
+					diff.Reason = "certified tolerance is unavailable in current or reference report"
+					if referenceBoundary.CertifiedTolerance != nil {
+						diff.ReferenceTolerance = floatPointer(referenceBoundary.CertifiedTolerance.AxisValue)
+					}
+				} else {
+					currentValue := boundary.CertifiedTolerance.AxisValue
+					referenceValue := referenceBoundary.CertifiedTolerance.AxisValue
+					diff.Status = "comparable"
+					diff.ReferenceTolerance = floatPointer(referenceValue)
+					difference := delta(currentValue, referenceValue)
+					diff.Tolerance = &difference
+				}
+			}
+			diffs = append(diffs, diff)
+		}
+	}
+	return diffs
+}
+
+func reportSweepByName(sweeps []simulation.SweepOutput, name string) *simulation.SweepOutput {
+	for idx := range sweeps {
+		if sweeps[idx].Name == name {
+			return &sweeps[idx]
+		}
+	}
+	return nil
+}
+
+func reportBoundaryByEndpoint(boundaries []simulation.SweepBoundary, endpointID string) *simulation.SweepBoundary {
+	for idx := range boundaries {
+		if boundaries[idx].EndpointID == endpointID {
+			return &boundaries[idx]
+		}
+	}
+	return nil
+}
+
+func floatPointer(value float64) *float64 { return &value }
 
 func (r *Report) SetPreviousDiff(previous *Report) {
 	if previous == nil {
@@ -644,12 +726,46 @@ func WriteSummaryMarkdown(path string, rep Report) error {
 			if reason.EndpointID != "" {
 				b.WriteString(fmt.Sprintf(" endpoint=`%s`", reason.EndpointID))
 			}
+			if reason.Sweep != "" {
+				b.WriteString(fmt.Sprintf(" sweep=`%s`", reason.Sweep))
+			}
+			if reason.Baseline != "" {
+				b.WriteString(fmt.Sprintf(" baseline=`%s`", reason.Baseline))
+			}
 			if reason.Delta != nil {
 				b.WriteString(fmt.Sprintf(" delta=`%.4f`", *reason.Delta))
 			}
 			b.WriteString(fmt.Sprintf(": %s\n", reason.Message))
 		}
 		b.WriteString("\n")
+	}
+
+	if len(rep.Sweeps) > 0 {
+		b.WriteString("## Failure-tolerance sweeps\n\n")
+		for _, sweep := range rep.Sweeps {
+			b.WriteString(fmt.Sprintf("### `%s`\n\n", sweep.Name))
+			b.WriteString(fmt.Sprintf("- Base profile: `%s`\n", sweep.BaseProfile))
+			b.WriteString(fmt.Sprintf("- Axis: `%s`\n", sweep.AxisType))
+			b.WriteString(fmt.Sprintf("- Trials per point: `%d`\n", sweep.Trials))
+			b.WriteString(fmt.Sprintf("- Confidence level: `%.3f`\n", sweep.ConfidenceLevel))
+			for _, boundary := range sweep.Boundaries {
+				b.WriteString(fmt.Sprintf("- Endpoint `%s`: SLO=`%.4f`, status=`%s`, certification=`%s`", boundary.EndpointID, boundary.SLO, boundary.Status, boundary.CertificationStatus))
+				if boundary.CertifiedTolerance != nil {
+					b.WriteString(fmt.Sprintf(", certified-tolerance=`%.4f` (lower=`%.4f`)", boundary.CertifiedTolerance.AxisValue, boundary.CertifiedTolerance.ConfidenceLowerBound))
+				}
+				if boundary.LastMeetingSLO != nil {
+					b.WriteString(fmt.Sprintf(", last-meeting=`%.4f` (availability=`%.4f`)", boundary.LastMeetingSLO.AxisValue, boundary.LastMeetingSLO.Availability))
+				}
+				if boundary.FirstViolatingSLO != nil {
+					b.WriteString(fmt.Sprintf(", first-violating=`%.4f` (availability=`%.4f`)", boundary.FirstViolatingSLO.AxisValue, boundary.FirstViolatingSLO.Availability))
+				}
+				if boundary.CrossingBracket != nil {
+					b.WriteString(fmt.Sprintf(", bracket=`[%.4f, %.4f]`", boundary.CrossingBracket.LowerAxisValue, boundary.CrossingBracket.UpperAxisValue))
+				}
+				b.WriteString("\n")
+			}
+			b.WriteString("\n")
+		}
 	}
 
 	b.WriteString("## Endpoint results\n\n")
@@ -692,6 +808,16 @@ func WriteSummaryMarkdown(path string, rep Report) error {
 				baseline.CrossProfileWeighted.Signed,
 				baseline.CrossProfileUnweighted.Signed,
 			))
+			for _, boundary := range baseline.SweepBoundaries {
+				if boundary.Tolerance != nil {
+					b.WriteString(fmt.Sprintf(
+						"  - Boundary `%s` / `%s`: current=`%.4f`, reference=`%.4f`, delta=`%.4f`\n",
+						boundary.Sweep, boundary.EndpointID, boundary.Tolerance.Current, boundary.Tolerance.Reference, boundary.Tolerance.Signed,
+					))
+				} else {
+					b.WriteString(fmt.Sprintf("  - Boundary `%s` / `%s`: status=`%s`, reason=%s\n", boundary.Sweep, boundary.EndpointID, boundary.Status, boundary.Reason))
+				}
+			}
 		}
 	}
 

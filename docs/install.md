@@ -1,6 +1,6 @@
 # Install
 
-The current public release line is `v1.0.0`. Prefer release assets for evaluation and automation; use `go install` or `go build` as fallback paths.
+The current public release line is `v1.2.0`. Prefer release assets for evaluation and automation; use `go install` or `go build` as fallback paths.
 
 The machine-readable entrypoint for release consumers is the `release-manifest.json` asset attached to each GitHub Release. It records exact archive names, checksums, image references, chart version, and the default config pack asset for that release.
 

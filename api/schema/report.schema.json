@@ -151,6 +151,14 @@
             "type": "string"
           }
         },
+        "failed_boundaries": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "boundary_results": {
+          "type": "array",
+          "items": { "type": "object" }
+        },
         "evaluation_rule": {
           "type": "string"
         },
@@ -172,6 +180,12 @@
                 "type": "string"
               },
               "profile": {
+                "type": "string"
+              },
+              "sweep": {
+                "type": "string"
+              },
+              "baseline": {
                 "type": "string"
               },
               "endpoint_id": {
@@ -238,6 +252,13 @@
     },
     "profiles": {
       "type": "array"
+    },
+    "sweeps": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name", "base_profile", "axis_type", "trials", "seed", "confidence_level", "fingerprint", "points", "boundaries"]
+      }
     },
     "diffs": {
       "type": "object"

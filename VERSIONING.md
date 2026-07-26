@@ -38,6 +38,7 @@ This is compatibility metadata, not ownership metadata.
 - Analysis config:
   - `1.0` is the baseline analysis surface
   - `1.1` adds `fault_contract`, `profiles[].fault_profile`, and artifact-vs-artifact baselines
+  - `1.2` adds failure-tolerance sweeps, Wilson confidence certification, boundary gate rules, and compatible baseline boundary regression
 - Fault contract:
   - `1.0` is the first separate Sheaft-owned schema for advanced faults and assertions
 

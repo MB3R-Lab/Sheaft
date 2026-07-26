@@ -14,11 +14,11 @@ GitHub issues remain the source of truth for roadmap tracking:
 - R9: https://github.com/MB3R-Lab/Sheaft/issues/39
 - R10: https://github.com/MB3R-Lab/Sheaft/issues/40
 
-This file captures the repository-side audit refreshed for the `v1.0.0` release line: current GitHub issue state versus what is actually implemented in this repository.
+This file captures the repository-side audit refreshed for the `v1.2.0` release line: current GitHub issue state versus what is actually implemented in this repository.
 
 ## Release Tracking State
 
-- Current release line: [Sheaft v1.0.0](https://github.com/MB3R-Lab/Sheaft/releases/tag/v1.0.0)
+- Current release line: [Sheaft v1.2.0](https://github.com/MB3R-Lab/Sheaft/releases/tag/v1.2.0)
 - Previous preview line: [Sheaft v0.2.4](https://github.com/MB3R-Lab/Sheaft/releases/tag/v0.2.4)
 - Historical shipped preview milestones: `v0.1.0`, `v0.1.1`, `v0.2.0`, `v0.2.1`, `v0.2.2`, `v0.2.3`, `v0.2.4`
 - Active v1 release-tracking issue: [#91](https://github.com/MB3R-Lab/Sheaft/issues/91)
@@ -92,6 +92,8 @@ The published `v0.2.4` release payload is the previous preview baseline:
 | R3.2 | open | gap | There is no plugin interface or example plugin; all analyses are wired directly into the core pipeline. |
 | R3.3 | closed | done | Reports now include resolved parameter values, source attribution (`default`/`policy`/`override`/`external`), and explicit fallback markers for missing calibration inputs. |
 | R3.4 | open | gap | No published large-snapshot workload profile, SLA, or benchmark harness exists. |
+| [R3.5](https://github.com/MB3R-Lab/Sheaft/issues/93) | closed | done | Analysis schema `1.2` ships failure-tolerance sweeps, endpoint SLO crossing brackets, and stable report output. |
+| [R3.6](https://github.com/MB3R-Lab/Sheaft/issues/96) | open | gap | No capacity-aware overload feedback solver or environment-specific capacity contract exists yet. |
 
 ### R4. Empirical validation and reproducibility
 
@@ -100,6 +102,7 @@ The published `v0.2.4` release payload is the previous preview baseline:
 | R4.1 | closed | done | `benchmarks/fixed-slice/manifest.json`, `make benchmark-slice`, and `docs/benchmark-slice.md` now provide a reproducible public benchmark slice. |
 | R4.2 | closed | done | The fixed slice now emits `.tmp/benchmark-slice/quality-report.json` with release-quality checks for repeatability, decision stability, confidence, advanced metric availability, baseline diff coverage, and cross-profile weighted availability. |
 | R4.3 | closed | done | `docs/assumptions-and-limitations.md` now publishes a concrete do-not-trust signal catalogue with detector IDs, manual heuristics, severity, and remediation guidance. |
+| [R4.4](https://github.com/MB3R-Lab/Sheaft/issues/97) | open | gap | Capacity and overload boundary predictions have not been validated against reproducible load/chaos experiments. |
 
 ### R5. Integration into engineering workflows
 
@@ -111,6 +114,8 @@ The published `v0.2.4` release payload is the previous preview baseline:
 | R5.4 | closed | done | `model.json`, `report.json`, and `summary.md` outputs are generated consistently. |
 | R5.5 | closed | done | Example templates are now backed by a template convention checker, a native/docker smoke script, and a GitHub Actions smoke workflow. |
 | R5.6 | closed | done | GitLab and Jenkins templates plus documented handoff/exit behavior now exist in-repo and are covered by the shared smoke validation flow. |
+| [R5.7](https://github.com/MB3R-Lab/Sheaft/issues/94) | closed | done | Wilson confidence intervals, coupled trials, conservative certified tolerance, and fail-closed boundary rules ship in `v1.2.0`. |
+| [R5.8](https://github.com/MB3R-Lab/Sheaft/issues/95) | closed | done | Compatible raw-artifact/report baselines produce certified boundary deltas and regression gates in `v1.2.0`. |
 
 ### R6. Standardization and interoperability
 

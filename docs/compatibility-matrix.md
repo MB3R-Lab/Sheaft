@@ -16,6 +16,7 @@ For the v1 major release claim, the `1.3.0` line is the Bering v1 contract line 
 
 | Sheaft line | Status | Bering model contract | Model URI | Model digest | Bering snapshot contract | Snapshot URI | Snapshot digest | Notes |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| `v1.2.x` | current stable | `io.mb3r.bering.model@1.3.0` | `https://mb3r-lab.github.io/Bering/schema/model/v1.3.0/model.schema.json` | `sha256:2aa8a3550a25dc626ba6d2f5833569efca2f382b9e5c9c3405be93695d7d48ae` | `io.mb3r.bering.snapshot@1.3.0` | `https://mb3r-lab.github.io/Bering/schema/snapshot/v1.3.0/snapshot.schema.json` | `sha256:cb778e5b0866d9ce5cfe7f23b8d98a339603593a0247cccd9cddaf05c7ae4bb1` | Adds Sheaft-owned analysis schema `1.2` failure-tolerance boundaries without changing accepted Bering contracts. |
 | `main` (unreleased) | active v1 line | `io.mb3r.bering.model@1.3.0` | `https://mb3r-lab.github.io/Bering/schema/model/v1.3.0/model.schema.json` | `sha256:2aa8a3550a25dc626ba6d2f5833569efca2f382b9e5c9c3405be93695d7d48ae` | `io.mb3r.bering.snapshot@1.3.0` | `https://mb3r-lab.github.io/Bering/schema/snapshot/v1.3.0/snapshot.schema.json` | `sha256:cb778e5b0866d9ce5cfe7f23b8d98a339603593a0247cccd9cddaf05c7ae4bb1` | Enables operation-aware typed edge IDs, strict positive replica counts, service/edge reliability evidence, retry/timeout metadata, placement buckets, shared resources, endpoint semantic hints, and path-aware advanced diagnostics. |
 
 ## Comparison Rule
@@ -38,4 +39,4 @@ Overlapping metrics produce diffs. Metrics that are unavailable on one side rema
 
 ## Release Note
 
-Published Sheaft releases through `v0.2.4` used Bering `1.0.0` and `1.1.0` contract pins. The current `main` row represents the pre-v1 breaking cleanup: `1.0.0`, `1.1.0`, and `1.2.0` are no longer accepted by Sheaft v1. When a future Sheaft release changes accepted upstream contracts, add one row per released line and keep `main` as the forward-looking row.
+Published Sheaft releases through `v0.2.4` used Bering `1.0.0` and `1.1.0` contract pins. Sheaft `v1.0.0` through `v1.2.x` accept only the Bering `1.3.0` v1 contract line; the Sheaft analysis-schema `1.2` number is unrelated to the retired Bering preview contract `1.2.0`. When a future Sheaft release changes accepted upstream contracts, add one row per released line and keep `main` as the forward-looking row.

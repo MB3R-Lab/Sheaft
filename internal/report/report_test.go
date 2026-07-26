@@ -2,6 +2,9 @@ package report
 
 import (
 	"math"
+	"os"
+	"path/filepath"
+	"strings"
 	"testing"
 	"time"
 
@@ -39,6 +42,10 @@ func TestCompare_BaselineDiffs(t *testing.T) {
 				},
 			},
 		},
+		Sweeps: []simulation.SweepOutput{{
+			Name: "checkout-boundary", AxisType: config.SweepAxisIndependentReplicaFailureProbability, Fingerprint: "sha256:same",
+			Boundaries: []simulation.SweepBoundary{{EndpointID: "frontend:GET /checkout", CertifiedTolerance: &simulation.BoundaryPoint{AxisValue: 0.1}}},
+		}},
 	}
 	reference := Report{
 		InputArtifact: &InputArtifact{
@@ -63,6 +70,10 @@ func TestCompare_BaselineDiffs(t *testing.T) {
 				},
 			},
 		},
+		Sweeps: []simulation.SweepOutput{{
+			Name: "checkout-boundary", AxisType: config.SweepAxisIndependentReplicaFailureProbability, Fingerprint: "sha256:same",
+			Boundaries: []simulation.SweepBoundary{{EndpointID: "frontend:GET /checkout", CertifiedTolerance: &simulation.BoundaryPoint{AxisValue: 0.2}}},
+		}},
 	}
 
 	diff := Compare(current, reference, "baseline-a")
@@ -87,6 +98,27 @@ func TestCompare_BaselineDiffs(t *testing.T) {
 	}
 	if diff.Profiles[0].Endpoints[0].Availability.Signed >= 0 {
 		t.Fatalf("expected endpoint availability to regress, got %+v", diff.Profiles[0].Endpoints[0].Availability)
+	}
+	if len(diff.SweepBoundaries) != 1 || diff.SweepBoundaries[0].Tolerance == nil || diff.SweepBoundaries[0].Tolerance.Signed >= 0 {
+		t.Fatalf("expected comparable boundary regression, got %+v", diff.SweepBoundaries)
+	}
+}
+
+func TestCompare_OlderReportWithoutSweepsIsNonComparable(t *testing.T) {
+	t.Parallel()
+
+	current := Report{Sweeps: []simulation.SweepOutput{{
+		Name: "checkout-boundary", AxisType: config.SweepAxisIndependentReplicaFailureProbability, Fingerprint: "sha256:current",
+		Boundaries: []simulation.SweepBoundary{{EndpointID: "frontend:GET /checkout", CertifiedTolerance: &simulation.BoundaryPoint{AxisValue: 0.1}}},
+	}}}
+
+	diff := Compare(current, Report{}, "pre-v1.2")
+	if len(diff.SweepBoundaries) != 1 {
+		t.Fatalf("expected one non-comparable boundary, got %+v", diff.SweepBoundaries)
+	}
+	boundary := diff.SweepBoundaries[0]
+	if boundary.Status != "non_comparable" || boundary.Reason != "reference report does not contain the sweep" || boundary.Tolerance != nil {
+		t.Fatalf("expected an explicit non-comparable result, got %+v", boundary)
 	}
 }
 
@@ -159,6 +191,12 @@ func TestComposeAnalysis_IncludesParameterSources(t *testing.T) {
 			},
 			CrossProfileWeighted:   0.99,
 			CrossProfileUnweighted: 0.99,
+			Sweeps: []simulation.SweepOutput{
+				{
+					Name: "health-boundary", BaseProfile: "steady", AxisType: config.SweepAxisIndependentReplicaFailureProbability, Trials: 100,
+					Boundaries: []simulation.SweepBoundary{{EndpointID: "frontend:GET /health", SLO: 0.98, Status: simulation.SweepBoundaryCrossed}},
+				},
+			},
 		},
 		gate.Evaluation{
 			Mode: config.ModeWarn,
@@ -221,5 +259,43 @@ func TestComposeAnalysis_IncludesParameterSources(t *testing.T) {
 	}
 	if len(rep.PolicyEvaluation.Reasons) != 1 || rep.PolicyEvaluation.Reasons[0].ID != "gate_pass" {
 		t.Fatalf("expected policy evaluation why reasons in report, got %+v", rep.PolicyEvaluation.Reasons)
+	}
+	if len(rep.Sweeps) != 1 || rep.Sweeps[0].Name != "health-boundary" {
+		t.Fatalf("expected sweep output in report, got %+v", rep.Sweeps)
+	}
+}
+
+func TestWriteSummaryMarkdown_IncludesFailureToleranceBoundary(t *testing.T) {
+	t.Parallel()
+
+	path := filepath.Join(t.TempDir(), "summary.md")
+	rep := Report{
+		PolicyEvaluation: PolicyEvaluation{Decision: "report", Mode: "report"},
+		Sweeps: []simulation.SweepOutput{
+			{
+				Name: "checkout-boundary", BaseProfile: "steady", AxisType: config.SweepAxisIndependentReplicaFailureProbability, Trials: 1000,
+				Boundaries: []simulation.SweepBoundary{
+					{
+						EndpointID: "frontend:GET /checkout", SLO: 0.99, Status: simulation.SweepBoundaryCrossed,
+						LastMeetingSLO:    &simulation.BoundaryPoint{AxisValue: 0.1, Availability: 0.995},
+						FirstViolatingSLO: &simulation.BoundaryPoint{AxisValue: 0.2, Availability: 0.97},
+						CrossingBracket:   &simulation.CrossingBracket{LowerAxisValue: 0.1, UpperAxisValue: 0.2},
+					},
+				},
+			},
+		},
+	}
+	if err := WriteSummaryMarkdown(path, rep); err != nil {
+		t.Fatalf("WriteSummaryMarkdown failed: %v", err)
+	}
+	raw, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatalf("read summary: %v", err)
+	}
+	text := string(raw)
+	for _, want := range []string{"Failure-tolerance sweeps", "checkout-boundary", "first-violating=`0.2000`", "bracket=`[0.1000, 0.2000]`"} {
+		if !strings.Contains(text, want) {
+			t.Fatalf("summary missing %q:\n%s", want, text)
+		}
 	}
 }

@@ -34,6 +34,8 @@ type DecisionReason struct {
 	ID           string   `json:"id"`
 	Scope        string   `json:"scope"`
 	Profile      string   `json:"profile,omitempty"`
+	Sweep        string   `json:"sweep,omitempty"`
+	Baseline     string   `json:"baseline,omitempty"`
 	EndpointID   string   `json:"endpoint_id,omitempty"`
 	Metric       string   `json:"metric,omitempty"`
 	Status       string   `json:"status"`
@@ -41,6 +43,29 @@ type DecisionReason struct {
 	Threshold    *float64 `json:"threshold,omitempty"`
 	Delta        *float64 `json:"delta,omitempty"`
 	Message      string   `json:"message"`
+}
+
+type BoundaryReference struct {
+	Baseline           string
+	Sweep              string
+	EndpointID         string
+	Fingerprint        string
+	Compatible         bool
+	Reason             string
+	CertifiedTolerance *float64
+}
+
+type BoundaryResult struct {
+	Sweep                     string   `json:"sweep"`
+	EndpointID                string   `json:"endpoint_id"`
+	Status                    string   `json:"status"`
+	Reason                    string   `json:"reason,omitempty"`
+	CertifiedTolerance        *float64 `json:"certified_tolerance,omitempty"`
+	MinimumCertifiedTolerance *float64 `json:"minimum_certified_tolerance,omitempty"`
+	Baseline                  string   `json:"baseline,omitempty"`
+	ReferenceTolerance        *float64 `json:"reference_tolerance,omitempty"`
+	Regression                *float64 `json:"regression,omitempty"`
+	MaxRegression             *float64 `json:"max_regression,omitempty"`
 }
 
 type ProfileEvaluation struct {
@@ -61,10 +86,178 @@ type Evaluation struct {
 	FailedEndpoints       []string                  `json:"failed_endpoints"`
 	FailedAssertions      []string                  `json:"failed_assertions,omitempty"`
 	FailedProfiles        []string                  `json:"failed_profiles,omitempty"`
+	FailedBoundaries      []string                  `json:"failed_boundaries,omitempty"`
 	EndpointResults       []EndpointResult          `json:"endpoint_results"`
 	ProfileEvaluations    []ProfileEvaluation       `json:"profile_evaluations,omitempty"`
 	CrossProfileAggregate *AggregateResult          `json:"cross_profile_aggregate,omitempty"`
+	BoundaryResults       []BoundaryResult          `json:"boundary_results,omitempty"`
 	Reasons               []DecisionReason          `json:"reasons,omitempty"`
+}
+
+func EvaluateAnalysis(outputs []simulation.ProfileOutput, sweeps []simulation.SweepOutput, references []BoundaryReference, gateCfg config.GateConfig) (Evaluation, error) {
+	eval, err := EvaluateProfiles(outputs, gateCfg)
+	if err != nil || len(gateCfg.BoundaryRules) == 0 {
+		return eval, err
+	}
+
+	for _, rule := range gateCfg.BoundaryRules {
+		result, reason := evaluateBoundaryRule(rule, sweeps, references, gateCfg)
+		eval.BoundaryResults = append(eval.BoundaryResults, result)
+		if result.Status == StatusPass {
+			continue
+		}
+		eval.FailedBoundaries = append(eval.FailedBoundaries, rule.Sweep+":"+rule.EndpointID)
+		eval.Reasons = append(eval.Reasons, reason)
+	}
+	if len(eval.FailedBoundaries) > 0 {
+		eval.Reasons = removePassReasons(eval.Reasons)
+	}
+	slices.Sort(eval.FailedBoundaries)
+	eval.Decision = mergeBoundaryDecision(eval.Decision, eval.BoundaryResults, gateCfg.Mode)
+	return eval, nil
+}
+
+func evaluateBoundaryRule(rule config.BoundaryRule, sweeps []simulation.SweepOutput, references []BoundaryReference, gateCfg config.GateConfig) (BoundaryResult, DecisionReason) {
+	result := BoundaryResult{
+		Sweep: rule.Sweep, EndpointID: rule.EndpointID, Status: StatusPass,
+		MinimumCertifiedTolerance: cloneFloatPointer(rule.MinimumCertifiedTolerance),
+		Baseline:                  rule.Baseline, MaxRegression: cloneFloatPointer(rule.MaxRegression),
+	}
+	sweep, boundary := findSweepBoundary(sweeps, rule.Sweep, rule.EndpointID)
+	if sweep == nil || boundary == nil {
+		return indeterminateBoundary(result, rule, gateCfg, "required sweep boundary is unavailable")
+	}
+	if boundary.CertifiedTolerance != nil {
+		result.CertifiedTolerance = ptrFloat64(boundary.CertifiedTolerance.AxisValue)
+	}
+	if !boundary.ObservedMonotonic {
+		return indeterminateBoundary(result, rule, gateCfg, "observed sweep is non-monotonic")
+	}
+
+	if rule.MinimumCertifiedTolerance != nil {
+		if result.CertifiedTolerance != nil && *result.CertifiedTolerance >= *rule.MinimumCertifiedTolerance {
+			// The entire evaluated prefix through the required point is certified.
+		} else {
+			point, ok := findSweepPoint(*sweep, *rule.MinimumCertifiedTolerance)
+			if !ok {
+				return indeterminateBoundary(result, rule, gateCfg, "required minimum is not an evaluated sweep point")
+			}
+			interval := point.EndpointConfidence[rule.EndpointID]
+			if interval.UpperBound < boundary.SLO {
+				result.Status = classify(gateCfg.Mode, true)
+				result.Reason = "certified tolerance is below the required minimum"
+				return result, boundaryReason("boundary_below_minimum", result, result.Reason)
+			}
+			return indeterminateBoundary(result, rule, gateCfg, "available trials do not certify the required minimum")
+		}
+	}
+
+	if rule.MaxRegression != nil {
+		reference := findBoundaryReference(references, rule.Baseline, rule.Sweep, rule.EndpointID)
+		if reference == nil || !reference.Compatible || reference.CertifiedTolerance == nil || result.CertifiedTolerance == nil {
+			reason := "compatible certified baseline boundary is unavailable"
+			if reference != nil && reference.Reason != "" {
+				reason = reference.Reason
+			}
+			return indeterminateBoundary(result, rule, gateCfg, reason)
+		}
+		result.ReferenceTolerance = cloneFloatPointer(reference.CertifiedTolerance)
+		regression := *result.CertifiedTolerance - *reference.CertifiedTolerance
+		result.Regression = ptrFloat64(regression)
+		if regression < -*rule.MaxRegression {
+			result.Status = classify(gateCfg.Mode, true)
+			result.Reason = "certified tolerance regression exceeds the configured budget"
+			return result, boundaryReason("boundary_regressed", result, result.Reason)
+		}
+	}
+	return result, DecisionReason{}
+}
+
+func indeterminateBoundary(result BoundaryResult, rule config.BoundaryRule, gateCfg config.GateConfig, message string) (BoundaryResult, DecisionReason) {
+	action := rule.IndeterminateAction
+	if action == "" {
+		action = gateCfg.DefaultAction
+	}
+	if action == "" {
+		action = gateCfg.Mode
+	}
+	result.Status = classify(action, true)
+	result.Reason = message
+	return result, boundaryReason("boundary_indeterminate", result, message)
+}
+
+func boundaryReason(id string, result BoundaryResult, message string) DecisionReason {
+	return DecisionReason{
+		ID: id, Scope: "boundary", Sweep: result.Sweep, Baseline: result.Baseline,
+		EndpointID: result.EndpointID, Status: result.Status, Delta: cloneFloatPointer(result.Regression),
+		Threshold: cloneFloatPointer(result.MinimumCertifiedTolerance), Message: message,
+	}
+}
+
+func findSweepBoundary(sweeps []simulation.SweepOutput, sweepName, endpointID string) (*simulation.SweepOutput, *simulation.SweepBoundary) {
+	for sweepIndex := range sweeps {
+		if sweeps[sweepIndex].Name != sweepName {
+			continue
+		}
+		for boundaryIndex := range sweeps[sweepIndex].Boundaries {
+			if sweeps[sweepIndex].Boundaries[boundaryIndex].EndpointID == endpointID {
+				return &sweeps[sweepIndex], &sweeps[sweepIndex].Boundaries[boundaryIndex]
+			}
+		}
+		return &sweeps[sweepIndex], nil
+	}
+	return nil, nil
+}
+
+func findSweepPoint(sweep simulation.SweepOutput, axisValue float64) (simulation.SweepPoint, bool) {
+	for _, point := range sweep.Points {
+		if point.AxisValue == axisValue {
+			return point, true
+		}
+	}
+	return simulation.SweepPoint{}, false
+}
+
+func findBoundaryReference(references []BoundaryReference, baseline, sweep, endpointID string) *BoundaryReference {
+	for idx := range references {
+		if references[idx].Baseline == baseline && references[idx].Sweep == sweep && references[idx].EndpointID == endpointID {
+			return &references[idx]
+		}
+	}
+	return nil
+}
+
+func mergeBoundaryDecision(current string, results []BoundaryResult, mode config.PolicyMode) string {
+	if mode == config.ModeReport {
+		return "report"
+	}
+	decision := current
+	for _, result := range results {
+		if result.Status == StatusFail {
+			return StatusFail
+		}
+		if result.Status == StatusWarn && decision == StatusPass {
+			decision = StatusWarn
+		}
+	}
+	return decision
+}
+
+func removePassReasons(reasons []DecisionReason) []DecisionReason {
+	out := reasons[:0]
+	for _, reason := range reasons {
+		if reason.ID != "gate_pass" {
+			out = append(out, reason)
+		}
+	}
+	return out
+}
+
+func cloneFloatPointer(value *float64) *float64 {
+	if value == nil {
+		return nil
+	}
+	return ptrFloat64(*value)
 }
 
 func Evaluate(availability map[string]float64, policy config.Policy, modeOverride string) (Evaluation, error) {

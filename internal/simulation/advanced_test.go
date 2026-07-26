@@ -213,6 +213,85 @@ func TestRunArtifactProfiles_FixedKReplicaSlots(t *testing.T) {
 	}
 }
 
+func TestRunArtifactProfiles_FailureToleranceSweeps(t *testing.T) {
+	t.Parallel()
+
+	loaded := artifact.Loaded{
+		Metadata: artifact.Metadata{
+			Contract: modelcontract.SupportedContract{
+				Name:    modelcontract.BeringModelV130Name,
+				Version: modelcontract.BeringModelV130Version,
+				URI:     modelcontract.BeringModelV130URI,
+				Digest:  modelcontract.BeringModelV130Digest,
+				Kind:    modelcontract.KindModel,
+			},
+		},
+		Model: model.ResilienceModel{
+			Services:  []model.Service{{ID: "frontend", Name: "frontend", Replicas: 2}},
+			Endpoints: []model.Endpoint{{ID: "frontend:GET /health", EntryService: "frontend", SuccessPredicateRef: "frontend:GET /health"}},
+			Metadata: model.Metadata{
+				SourceType: "test", SourceRef: "fixture", DiscoveredAt: "2026-07-01T00:00:00Z", Confidence: 1,
+				Schema: model.Schema{Name: modelcontract.BeringModelV130Name, Version: modelcontract.BeringModelV130Version, URI: modelcontract.BeringModelV130URI, Digest: modelcontract.BeringModelV130Digest},
+			},
+		},
+	}
+	base := ProfileParams{Name: "steady", Trials: 50000, SamplingMode: config.SamplingModeIndependentReplica, FailureProbability: 0.1}
+	out, err := RunArtifactProfiles(loaded, AnalysisParams{
+		Seed:     31,
+		Profiles: []ProfileParams{base},
+		Sweeps: []SweepParams{
+			{
+				Name: "probability", BaseProfile: base,
+				Axis:    config.SweepAxis{Type: config.SweepAxisIndependentReplicaFailureProbability, Values: []float64{0, 0.5, 1}},
+				Targets: []config.SweepTarget{{EndpointID: "frontend:GET /health", SLO: 0.8}},
+			},
+			{
+				Name: "slots", BaseProfile: base,
+				Axis:    config.SweepAxis{Type: config.SweepAxisFailedReplicaSlots, Values: []float64{0, 1, 2}},
+				Targets: []config.SweepTarget{{EndpointID: "frontend:GET /health", SLO: 0.5}},
+			},
+		},
+	})
+	if err != nil {
+		t.Fatalf("RunArtifactProfiles failed: %v", err)
+	}
+	if len(out.Sweeps) != 2 {
+		t.Fatalf("expected two sweeps, got %+v", out.Sweeps)
+	}
+	probability := out.Sweeps[0]
+	if got := probability.Points[0].EndpointAvailability["frontend:GET /health"]; got != 1 {
+		t.Fatalf("expected explicit zero-failure point availability 1, got %f", got)
+	}
+	if got := probability.Points[1].EndpointAvailability["frontend:GET /health"]; math.Abs(got-0.75) > 0.02 {
+		t.Fatalf("expected two-replica availability near 0.75, got %f", got)
+	}
+	if boundary := probability.Boundaries[0]; boundary.Status != SweepBoundaryCrossed || boundary.CrossingBracket == nil || boundary.CrossingBracket.LowerAxisValue != 0 || boundary.CrossingBracket.UpperAxisValue != 0.5 {
+		t.Fatalf("unexpected probability boundary: %+v", boundary)
+	}
+	if interval := probability.Points[1].EndpointConfidence["frontend:GET /health"]; interval.ConfidenceLevel != 0.95 || interval.LowerBound >= interval.Estimate || interval.UpperBound <= interval.Estimate {
+		t.Fatalf("unexpected probability confidence interval: %+v", interval)
+	}
+	if boundary := probability.Boundaries[0]; boundary.CertifiedTolerance == nil || boundary.CertifiedTolerance.AxisValue != 0 || boundary.CertificationStatus != SweepCertificationCertified {
+		t.Fatalf("unexpected certified probability tolerance: %+v", boundary)
+	}
+	slots := out.Sweeps[1]
+	if got := slots.Points[1].EndpointAvailability["frontend:GET /health"]; got != 1 {
+		t.Fatalf("expected one lost slot to leave the service live, got %f", got)
+	}
+	if slots.Points[2].FailedReplicaSlots == nil || *slots.Points[2].FailedReplicaSlots != 2 || slots.Points[2].FailedReplicaFraction == nil || *slots.Points[2].FailedReplicaFraction != 1 {
+		t.Fatalf("unexpected fixed-slot point metadata: %+v", slots.Points[2])
+	}
+	if boundary := slots.Boundaries[0]; boundary.Status != SweepBoundaryCrossed || boundary.CrossingBracket == nil || boundary.CrossingBracket.LowerAxisValue != 1 || boundary.CrossingBracket.UpperAxisValue != 2 {
+		t.Fatalf("unexpected fixed-slot boundary: %+v", boundary)
+	}
+	if boundary := slots.Boundaries[0]; boundary.CertifiedTolerance == nil || boundary.CertifiedTolerance.AxisValue != 1 {
+		t.Fatalf("unexpected certified fixed-slot tolerance: %+v", boundary)
+	}
+	if len(out.Profiles) != 1 {
+		t.Fatalf("sweeps must not be added to profile aggregation: %+v", out.Profiles)
+	}
+}
+
 func TestRunArtifactProfiles_EndpointSemanticsImmediateIgnoresAsyncAndEventualUsesIt(t *testing.T) {
 	t.Parallel()
 

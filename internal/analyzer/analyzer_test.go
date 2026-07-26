@@ -60,6 +60,43 @@ func TestAnalyzeFile_BaselineArtifactComparisonWithinCurrentContractLine(t *test
 	}
 }
 
+func TestAnalyzeFile_CompatibleBaselineBoundaryComparison(t *testing.T) {
+	t.Parallel()
+
+	root := repoRoot(t)
+	primary := filepath.Join(root, "examples", "outputs", "snapshot-v1.3.0.sample.json")
+	baseline := filepath.Join(root, "examples", "outputs", "snapshot.sample.json")
+	maxRegression := 1.0
+	result, err := AnalyzeFile(primary, config.AnalysisConfig{
+		SchemaVersion: config.AnalysisSchemaVersionV120,
+		Seed:          42,
+		Trials:        5000,
+		Baselines:     []config.BaselineRef{{Name: "last-release", Path: baseline}},
+		Profiles:      []config.Profile{{Name: "steady", Trials: 5000, SamplingMode: config.SamplingModeIndependentReplica}},
+		Sweeps: []config.Sweep{{
+			Name: "checkout-boundary", Profile: "steady", ConfidenceLevel: 0.95,
+			Axis:    config.SweepAxis{Type: config.SweepAxisIndependentReplicaFailureProbability, Values: []float64{0, 0.1, 0.3, 0.5}},
+			Targets: []config.SweepTarget{{EndpointID: "gateway:POST /checkout", SLO: 0.5}},
+		}},
+		Gate: config.GateConfig{
+			Mode: config.ModeReport, DefaultAction: config.ModeReport,
+			BoundaryRules: []config.BoundaryRule{{Sweep: "checkout-boundary", EndpointID: "gateway:POST /checkout", Baseline: "last-release", MaxRegression: &maxRegression}},
+		},
+	}, nil)
+	if err != nil {
+		t.Fatalf("AnalyzeFile failed: %v", err)
+	}
+	if len(result.Report.Diffs.Baselines) != 1 || len(result.Report.Diffs.Baselines[0].SweepBoundaries) != 1 {
+		t.Fatalf("expected baseline boundary diff, got %+v", result.Report.Diffs.Baselines)
+	}
+	if diff := result.Report.Diffs.Baselines[0].SweepBoundaries[0]; diff.Status != "comparable" || diff.Tolerance == nil {
+		t.Fatalf("expected compatible certified boundary diff, got %+v", diff)
+	}
+	if len(result.Evaluation.BoundaryResults) != 1 || result.Evaluation.BoundaryResults[0].Status != "pass" {
+		t.Fatalf("expected boundary regression rule to evaluate, got %+v", result.Evaluation)
+	}
+}
+
 func TestAnalyzeLoaded_UsesArtifactReliabilityAsProfileDefaults(t *testing.T) {
 	t.Parallel()
 

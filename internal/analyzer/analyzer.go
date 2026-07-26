@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"slices"
 	"strings"
 	"time"
 
@@ -85,6 +86,7 @@ func AnalyzeLoaded(loaded artifact.Loaded, cfg config.AnalysisConfig, previous *
 
 	artifactReliability := reliabilityFromArtifact(loaded.Model)
 	profiles := make([]simulation.ProfileParams, 0, len(cfg.Profiles))
+	profilesByName := make(map[string]simulation.ProfileParams, len(cfg.Profiles))
 	for _, profile := range cfg.Profiles {
 		reliability, usedArtifactReliability := mergeArtifactReliability(artifactReliability, profile.Reliability)
 		if usedArtifactReliability && cfg.Sources.Profiles != nil {
@@ -94,7 +96,7 @@ func AnalyzeLoaded(loaded artifact.Loaded, cfg config.AnalysisConfig, previous *
 				cfg.Sources.Profiles[profile.Name] = profileSources
 			}
 		}
-		profiles = append(profiles, simulation.ProfileParams{
+		simulationProfile := simulation.ProfileParams{
 			Name:               profile.Name,
 			Trials:             profile.Trials,
 			SamplingMode:       profile.SamplingMode,
@@ -103,6 +105,18 @@ func AnalyzeLoaded(loaded artifact.Loaded, cfg config.AnalysisConfig, previous *
 			FixedKFailures:     profile.FixedKFailures,
 			FaultProfile:       profile.FaultProfile,
 			EndpointWeights:    profile.EndpointWeights,
+		}
+		profiles = append(profiles, simulationProfile)
+		profilesByName[profile.Name] = simulationProfile
+	}
+	sweeps := make([]simulation.SweepParams, 0, len(cfg.Sweeps))
+	for _, sweep := range cfg.Sweeps {
+		sweeps = append(sweeps, simulation.SweepParams{
+			Name:            sweep.Name,
+			BaseProfile:     profilesByName[sweep.Profile],
+			ConfidenceLevel: sweep.ConfidenceLevel,
+			Axis:            sweep.Axis,
+			Targets:         sweep.Targets,
 		})
 	}
 
@@ -113,23 +127,23 @@ func AnalyzeLoaded(loaded artifact.Loaded, cfg config.AnalysisConfig, previous *
 		DefaultWeights:   mergeWeights(loaded.EndpointWeights, overlayWeights, cfg.EndpointWeights),
 		FaultContract:    faultContract,
 		Profiles:         profiles,
+		Sweeps:           sweeps,
 	})
 	if err != nil {
 		return Result{}, err
 	}
 
-	eval, err := gate.EvaluateProfiles(simOut.Profiles, cfg.Gate)
+	baselines, err := loadBaselines(cfg.Baselines, cfg)
+	if err != nil {
+		return Result{}, err
+	}
+	eval, err := gate.EvaluateAnalysis(simOut.Profiles, simOut.Sweeps, buildBoundaryReferences(simOut.Sweeps, baselines), cfg.Gate)
 	if err != nil {
 		return Result{}, err
 	}
 
 	rep := report.ComposeAnalysis(loaded, simOut, eval, cfg, contractDecision, loaded.Model.Metadata.Confidence, time.Now(), time.Since(started))
 	rep.SetPreviousDiff(previous)
-
-	baselines, err := loadBaselines(cfg.Baselines, cfg)
-	if err != nil {
-		return Result{}, err
-	}
 	rep.SetBaselineDiffs(baselines)
 
 	return Result{
@@ -165,6 +179,7 @@ func loadBaselines(refs []config.BaselineRef, cfg config.AnalysisConfig) (map[st
 			}
 			baselineCfg := cfg
 			baselineCfg.Baselines = nil
+			baselineCfg.Gate.BoundaryRules = nil
 			baselineCfg.ContractPolicy = config.ContractPolicy{}
 			result, err := AnalyzeLoaded(loaded, baselineCfg, nil)
 			if err != nil {
@@ -176,6 +191,65 @@ func loadBaselines(refs []config.BaselineRef, cfg config.AnalysisConfig) (map[st
 		}
 	}
 	return out, nil
+}
+
+func buildBoundaryReferences(current []simulation.SweepOutput, baselines map[string]report.Report) []gate.BoundaryReference {
+	if len(current) == 0 || len(baselines) == 0 {
+		return nil
+	}
+	names := make([]string, 0, len(baselines))
+	for name := range baselines {
+		names = append(names, name)
+	}
+	slices.Sort(names)
+	var references []gate.BoundaryReference
+	for _, baselineName := range names {
+		baseline := baselines[baselineName]
+		for _, sweep := range current {
+			referenceSweep := findSweep(baseline.Sweeps, sweep.Name)
+			for _, boundary := range sweep.Boundaries {
+				reference := gate.BoundaryReference{Baseline: baselineName, Sweep: sweep.Name, EndpointID: boundary.EndpointID}
+				switch {
+				case referenceSweep == nil:
+					reference.Reason = "baseline report does not contain the required sweep"
+				case referenceSweep.Fingerprint != sweep.Fingerprint:
+					reference.Reason = "baseline sweep fingerprint is incompatible"
+				default:
+					referenceBoundary := findBoundary(referenceSweep.Boundaries, boundary.EndpointID)
+					if referenceBoundary == nil {
+						reference.Reason = "baseline sweep does not contain the required endpoint boundary"
+					} else {
+						reference.Compatible = true
+						reference.Fingerprint = sweep.Fingerprint
+						if referenceBoundary.CertifiedTolerance != nil {
+							value := referenceBoundary.CertifiedTolerance.AxisValue
+							reference.CertifiedTolerance = &value
+						}
+					}
+				}
+				references = append(references, reference)
+			}
+		}
+	}
+	return references
+}
+
+func findSweep(sweeps []simulation.SweepOutput, name string) *simulation.SweepOutput {
+	for idx := range sweeps {
+		if sweeps[idx].Name == name {
+			return &sweeps[idx]
+		}
+	}
+	return nil
+}
+
+func findBoundary(boundaries []simulation.SweepBoundary, endpointID string) *simulation.SweepBoundary {
+	for idx := range boundaries {
+		if boundaries[idx].EndpointID == endpointID {
+			return &boundaries[idx]
+		}
+	}
+	return nil
 }
 
 func reliabilityFromArtifact(mdl model.ResilienceModel) config.ReliabilityConfig {

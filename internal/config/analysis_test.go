@@ -143,6 +143,105 @@ gate:
 	}
 }
 
+func TestLoadAnalysis_V120SupportsFailureToleranceSweeps(t *testing.T) {
+	t.Parallel()
+
+	path := filepath.Join(t.TempDir(), "analysis.yaml")
+	writeConfigFile(t, path, `
+schema_version: "1.2"
+profiles:
+  - name: steady
+sweeps:
+  - name: checkout-boundary
+    profile: steady
+    axis:
+      type: independent_replica_failure_probability
+      values: [0, 0.1, 0.2]
+    targets:
+      - endpoint_id: frontend:GET /checkout
+        slo: 0.99
+gate:
+  mode: report
+  default_action: report
+  boundary_rules:
+    - sweep: checkout-boundary
+      endpoint_id: frontend:GET /checkout
+      minimum_certified_tolerance: 0.1
+`)
+
+	cfg, err := LoadAnalysis(path)
+	if err != nil {
+		t.Fatalf("LoadAnalysis failed: %v", err)
+	}
+	if cfg.SchemaVersion != AnalysisSchemaVersionV120 || len(cfg.Sweeps) != 1 {
+		t.Fatalf("expected v1.2 sweep config, got %+v", cfg)
+	}
+	if got := cfg.Sweeps[0].Axis.Values[0]; got != 0 {
+		t.Fatalf("expected explicit zero axis value to be preserved, got %f", got)
+	}
+	if cfg.Sweeps[0].ConfidenceLevel != 0.95 || len(cfg.Gate.BoundaryRules) != 1 {
+		t.Fatalf("expected default confidence and boundary rule, got sweeps=%+v gate=%+v", cfg.Sweeps, cfg.Gate)
+	}
+}
+
+func TestLoadAnalysis_BoundaryRuleRequiresEvaluatedMinimum(t *testing.T) {
+	t.Parallel()
+
+	path := filepath.Join(t.TempDir(), "analysis.yaml")
+	writeConfigFile(t, path, `
+schema_version: "1.2"
+profiles:
+  - name: steady
+sweeps:
+  - name: checkout-boundary
+    profile: steady
+    axis:
+      type: independent_replica_failure_probability
+      values: [0, 0.1]
+    targets:
+      - endpoint_id: frontend:GET /checkout
+        slo: 0.99
+gate:
+  mode: fail
+  default_action: fail
+  boundary_rules:
+    - sweep: checkout-boundary
+      endpoint_id: frontend:GET /checkout
+      minimum_certified_tolerance: 0.05
+`)
+
+	if _, err := LoadAnalysis(path); err == nil {
+		t.Fatal("expected boundary minimum outside the evaluated grid to fail")
+	}
+}
+
+func TestLoadAnalysis_PreV120RejectsSweeps(t *testing.T) {
+	t.Parallel()
+
+	path := filepath.Join(t.TempDir(), "analysis.yaml")
+	writeConfigFile(t, path, `
+schema_version: "1.1"
+profiles:
+  - name: steady
+sweeps:
+  - name: checkout-boundary
+    profile: steady
+    axis:
+      type: failed_replica_slots
+      values: [0, 1]
+    targets:
+      - endpoint_id: frontend:GET /checkout
+        slo: 0.99
+gate:
+  mode: report
+  default_action: report
+`)
+
+	if _, err := LoadAnalysis(path); err == nil {
+		t.Fatal("expected pre-v1.2 analysis config to reject sweeps")
+	}
+}
+
 func writeConfigFile(t *testing.T, path string, content string) {
 	t.Helper()
 	if err := os.WriteFile(path, []byte(content), 0o644); err != nil {

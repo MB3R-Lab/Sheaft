@@ -141,6 +141,10 @@ func RunArtifactProfiles(loaded artifact.Loaded, params AnalysisParams) (Analysi
 		out.CrossProfileWeighted /= float64(len(out.Profiles))
 		out.CrossProfileUnweighted /= float64(len(out.Profiles))
 	}
+	out.Sweeps, err = runSweeps(ctx, params)
+	if err != nil {
+		return AnalysisOutput{}, err
+	}
 	return out, nil
 }
 
@@ -173,14 +177,22 @@ func runAdvancedProfile(ctx advancedContext, profile ProfileParams, defaultWeigh
 	slices.Sort(endpointIDs)
 
 	for trial := 0; trial < profile.Trials; trial++ {
-		state, err := sampleAdvancedState(ctx, profile, rng, faultState)
+		stateRNG := rng
+		if profile.CoupledTrials {
+			stateRNG = rand.New(rand.NewSource(derivedEventSeed(profile.Seed, trial, "state")))
+		}
+		state, err := sampleAdvancedState(ctx, profile, stateRNG, faultState)
 		if err != nil {
 			return ProfileOutput{}, err
 		}
 		for _, endpoint := range ctx.endpoints {
 			diagnosticResults := make(map[string]bool, len(endpoint.DiagnosticPaths))
 			for _, path := range endpoint.DiagnosticPaths {
-				ok := executePath(ctx, state, faultState, path, rng)
+				pathRNG := rng
+				if profile.CoupledTrials {
+					pathRNG = rand.New(rand.NewSource(derivedEventSeed(profile.Seed, trial, "path:"+path.ID)))
+				}
+				ok := executePath(ctx, state, faultState, path, pathRNG)
 				if ok {
 					pathSuccess[path.ID]++
 				}
@@ -237,6 +249,7 @@ func runAdvancedProfile(ctx advancedContext, profile ProfileParams, defaultWeigh
 		FixedKFailures:       profile.FixedKFailures,
 		FaultProfile:         profile.FaultProfile,
 		EndpointAvailability: availability,
+		EndpointSuccesses:    endpointSuccess,
 		EndpointWeights:      weights,
 		WeightedAggregate:    weighted,
 		UnweightedAggregate:  unweighted,
@@ -495,10 +508,8 @@ func sampleAdvancedState(ctx advancedContext, profile ProfileParams, rng *rand.R
 				live := false
 				effective := bucket.Replicas
 				for replica := 0; replica < effective; replica++ {
-					if rng.Float64() < liveProbability {
-						live = true
-						break
-					}
+					replicaLive := rng.Float64() < liveProbability
+					live = live || replicaLive
 				}
 				state.bucketAlive[bucket.ID] = live
 			}

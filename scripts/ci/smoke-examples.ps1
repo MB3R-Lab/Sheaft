@@ -12,6 +12,7 @@ if (Test-Path $OutRoot) {
 
 New-Item -ItemType Directory -Force (Join-Path $OutRoot "policy") | Out-Null
 New-Item -ItemType Directory -Force (Join-Path $OutRoot "analysis") | Out-Null
+New-Item -ItemType Directory -Force (Join-Path $OutRoot "sweep") | Out-Null
 
 $repoRoot = (Get-Location).Path.Replace('\', '/')
 $serveConfig = Join-Path $OutRoot "sheaft.serve.yaml"
@@ -44,6 +45,15 @@ history:
     --model examples/outputs/snapshot.sample.json `
     --analysis configs/analysis.example.yaml `
     --out-dir (Join-Path $OutRoot "analysis")
+
+& $BinPath run `
+    --model examples/outputs/snapshot.sample.json `
+    --analysis configs/analysis.sweep.example.yaml `
+    --out-dir (Join-Path $OutRoot "sweep")
+
+& $BinPath gate `
+    --report (Join-Path $OutRoot "sweep/report.json") `
+    --analysis configs/analysis.sweep.example.yaml
 
 $serveOut = Join-Path $OutRoot "serve.stdout.log"
 $serveErr = Join-Path $OutRoot "serve.stderr.log"

@@ -39,6 +39,7 @@ Before publishing the v1 major line, `make release-dry-run` must pass with:
 - fixed benchmark slice
 - synthetic oracle suite
 - report/gate compatibility through the existing sample policy and analysis configs
+- failure-tolerance sweep, confidence-certified boundary gate, and compatible baseline regression smoke coverage for `v1.2.0`
 
 Release notes for v1 must point at [v1-major-semantics.md](v1-major-semantics.md) and must not claim automatic probability calibration, arbitrary non-product `P`, live chaos execution, or rich temporal workflow models.
 
@@ -80,5 +81,6 @@ Use it when:
 - bootstrapping CI gates
 - building a first Kubernetes values override
 - creating a baseline report bundle for tests
+- bootstrapping a confidence-certified failure-tolerance release gate from `configs/analysis.sweep.example.yaml`
 - running the fixed benchmark slice manifest that ships with the default examples
 - running the synthetic oracle suite for release semantic evidence

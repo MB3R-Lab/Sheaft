@@ -31,6 +31,22 @@ For each configured profile Sheaft:
 
 When `1.3.0` placement buckets exist, replica-based modes sample those buckets explicitly. A service remains effectively alive while at least one bucket still has a live replica.
 
+## Failure-Tolerance Boundaries
+
+Analysis schema `1.2` can evaluate an ordered sweep independently of ordinary scenario profiles. For every configured axis value, Sheaft reruns the base profile and records target endpoint availability. It then reports:
+
+- the last evaluated point whose availability meets the target SLO
+- the first evaluated point below the SLO
+- the closed grid bracket between those points
+
+The first supported axes vary homogeneous independent replica failure probability or the exact number of failed replica slots. Sweep points do not participate in profile aggregates. A result is a grid-bounded, modelled failure-tolerance boundary, not an interpolated exact threshold.
+
+For each endpoint point Sheaft reports a two-sided Wilson binomial confidence interval at the configured confidence level. The certified tolerance is the largest contiguous evaluated stress value whose lower confidence bound meets the endpoint SLO. A point whose interval overlaps the SLO is indeterminate. A point whose upper bound is below SLO is a statistically supported violation at that confidence level.
+
+Ordered sweeps use coupled trials. Replica live/dead decisions are generated from the same per-trial random variables across all axis points, and exact fixed-k points use prefixes of the same random permutation. Per-path degradation/retry randomness is keyed by trial and path. This preserves nested fail-stop samples and avoids avoidable Monte Carlo curve inversions; any remaining observed non-monotonic result is surfaced and cannot certify a blocking boundary.
+
+Boundary comparisons require identical sweep fingerprints covering the axis, targets/SLOs, confidence, trial count, base profile identity, and seed semantics. Raw baseline artifacts are evaluated with paired sweep seeds. Fingerprint mismatch or missing certified evidence is non-comparable and reaches the gate as indeterminate.
+
 ## Stochastic Connectivity Parameters
 
 The baseline stochastic connectivity model is controlled through `analysis.reliability` and `profiles[].reliability`:
@@ -81,3 +97,4 @@ For a fixed artifact, seed, and analysis config:
 - profile seeds are derived deterministically
 - profile execution order is stable
 - report JSON ordering is stable enough for CI artifact diffing
+- sweep seeds and ordered axis evaluation are derived deterministically
