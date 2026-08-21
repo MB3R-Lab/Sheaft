@@ -245,13 +245,18 @@ func RunProfiles(mdl model.ResilienceModel, params AnalysisParams) (AnalysisOutp
 		return AnalysisOutput{}, err
 	}
 	serviceReplicas := make(map[string]int, len(mdl.Services))
+	failureCandidateIDs := make([]string, 0, len(mdl.Services))
 	for _, svc := range mdl.Services {
 		replicas := svc.Replicas
 		if replicas <= 0 {
 			return AnalysisOutput{}, fmt.Errorf("service %q replicas must be >= 1", svc.ID)
 		}
 		serviceReplicas[svc.ID] = replicas
+		if svc.Metadata == nil || svc.Metadata.FailureEligible == nil || *svc.Metadata.FailureEligible {
+			failureCandidateIDs = append(failureCandidateIDs, svc.ID)
+		}
 	}
+	slices.Sort(failureCandidateIDs)
 
 	out := AnalysisOutput{
 		Profiles: make([]ProfileOutput, 0, len(params.Profiles)),
@@ -261,7 +266,7 @@ func RunProfiles(mdl model.ResilienceModel, params AnalysisParams) (AnalysisOutp
 		if err != nil {
 			return AnalysisOutput{}, err
 		}
-		profileOutput, err := runProfile(normalized, endpointIDs, serviceIDs, serviceReplicas, resolved, params.DefaultWeights)
+		profileOutput, err := runProfile(normalized, endpointIDs, serviceIDs, failureCandidateIDs, serviceReplicas, resolved, params.DefaultWeights)
 		if err != nil {
 			return AnalysisOutput{}, fmt.Errorf("profile %q: %w", normalized.Name, err)
 		}
@@ -276,18 +281,18 @@ func RunProfiles(mdl model.ResilienceModel, params AnalysisParams) (AnalysisOutp
 	return out, nil
 }
 
-func runProfile(profile ProfileParams, endpointIDs []string, serviceIDs []string, serviceReplicas map[string]int, resolved map[string]predicates.Definition, defaultWeights map[string]float64) (ProfileOutput, error) {
+func runProfile(profile ProfileParams, endpointIDs []string, serviceIDs []string, failureCandidateIDs []string, serviceReplicas map[string]int, resolved map[string]predicates.Definition, defaultWeights map[string]float64) (ProfileOutput, error) {
 	if err := validateLegacyReliability(profile, serviceIDs); err != nil {
 		return ProfileOutput{}, err
 	}
-	profile, err := resolveDerivedFixedKProfile(profile, totalReplicaSlots(serviceIDs, serviceReplicas))
+	profile, err := resolveDerivedFixedKProfile(profile, totalReplicaSlots(failureCandidateIDs, serviceReplicas))
 	if err != nil {
 		return ProfileOutput{}, err
 	}
 	rng := rand.New(rand.NewSource(profile.Seed))
 	successCount := make(map[string]int, len(endpointIDs))
 	for trial := 0; trial < profile.Trials; trial++ {
-		alive, err := sampleAlive(profile, rng, serviceIDs, serviceReplicas)
+		alive, err := sampleAlive(profile, rng, serviceIDs, failureCandidateIDs, serviceReplicas)
 		if err != nil {
 			return ProfileOutput{}, err
 		}
@@ -328,11 +333,14 @@ func runProfile(profile ProfileParams, endpointIDs []string, serviceIDs []string
 	}, nil
 }
 
-func sampleAlive(profile ProfileParams, rng *rand.Rand, serviceIDs []string, serviceReplicas map[string]int) (map[string]bool, error) {
+func sampleAlive(profile ProfileParams, rng *rand.Rand, serviceIDs []string, failureCandidateIDs []string, serviceReplicas map[string]int) (map[string]bool, error) {
 	alive := make(map[string]bool, len(serviceIDs))
+	for _, serviceID := range serviceIDs {
+		alive[serviceID] = true
+	}
 	switch profile.SamplingMode {
 	case config.SamplingModeIndependentReplica:
-		for _, serviceID := range serviceIDs {
+		for _, serviceID := range failureCandidateIDs {
 			live := false
 			liveProbability := serviceLiveProbability(profile, serviceID)
 			for i := 0; i < serviceReplicas[serviceID]; i++ {
@@ -342,30 +350,24 @@ func sampleAlive(profile ProfileParams, rng *rand.Rand, serviceIDs []string, ser
 			alive[serviceID] = live
 		}
 	case config.SamplingModeIndependentService:
-		for _, serviceID := range serviceIDs {
+		for _, serviceID := range failureCandidateIDs {
 			alive[serviceID] = rng.Float64() < serviceLiveProbability(profile, serviceID)
 		}
 	case config.SamplingModeFixedKServiceSet:
-		if profile.FixedKFailures > len(serviceIDs) {
-			return nil, fmt.Errorf("fixed_k_failures %d exceeds service count %d", profile.FixedKFailures, len(serviceIDs))
-		}
-		for _, serviceID := range serviceIDs {
-			alive[serviceID] = true
+		if profile.FixedKFailures > len(failureCandidateIDs) {
+			return nil, fmt.Errorf("fixed_k_failures %d exceeds failure-eligible service count %d", profile.FixedKFailures, len(failureCandidateIDs))
 		}
 		if profile.FixedKFailures == 0 {
 			return alive, nil
 		}
-		indices := rng.Perm(len(serviceIDs))
+		indices := rng.Perm(len(failureCandidateIDs))
 		for _, idx := range indices[:profile.FixedKFailures] {
-			alive[serviceIDs[idx]] = false
+			alive[failureCandidateIDs[idx]] = false
 		}
 	case config.SamplingModeFixedKReplicaSlots:
-		slotServiceIDs := replicaSlotServiceIDs(serviceIDs, serviceReplicas)
+		slotServiceIDs := replicaSlotServiceIDs(failureCandidateIDs, serviceReplicas)
 		if profile.FixedKFailures > len(slotServiceIDs) {
 			return nil, fmt.Errorf("fixed_k_failures %d exceeds replica slot count %d", profile.FixedKFailures, len(slotServiceIDs))
-		}
-		for _, serviceID := range serviceIDs {
-			alive[serviceID] = true
 		}
 		if profile.FixedKFailures == 0 {
 			return alive, nil
@@ -375,7 +377,7 @@ func sampleAlive(profile ProfileParams, rng *rand.Rand, serviceIDs []string, ser
 		for _, idx := range indices[:profile.FixedKFailures] {
 			failedByService[slotServiceIDs[idx]]++
 		}
-		for _, serviceID := range serviceIDs {
+		for _, serviceID := range failureCandidateIDs {
 			if failedByService[serviceID] >= serviceReplicas[serviceID] {
 				alive[serviceID] = false
 			}

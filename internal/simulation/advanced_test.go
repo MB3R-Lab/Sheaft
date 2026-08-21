@@ -83,6 +83,41 @@ func TestRunArtifactProfiles_StochasticConnectivityChainMatchesClosedForm(t *tes
 	}
 }
 
+func TestRunArtifactProfiles_ExplicitlyIneligibleServiceIsExcludedFromBaselineSampling(t *testing.T) {
+	t.Parallel()
+
+	ineligible := false
+	loaded := edgeAwareFixtureLoaded([]model.Endpoint{{
+		ID:                  "frontend:GET /health",
+		EntryService:        "frontend",
+		SuccessPredicateRef: "frontend:GET /health",
+		SuccessPredicate: &predicates.Definition{
+			Type:     predicates.TypeAllOf,
+			Services: []string{"frontend"},
+		},
+	}})
+	loaded.Model.Services[0].Metadata = &model.ServiceMetadata{FailureEligible: &ineligible}
+
+	out, err := RunArtifactProfiles(loaded, AnalysisParams{
+		Seed: 23,
+		Profiles: []ProfileParams{
+			{Name: "fixed-service", Trials: 20, SamplingMode: config.SamplingModeFixedKServiceSet, FixedKFailures: 2},
+			{Name: "fixed-slots", Trials: 20, SamplingMode: config.SamplingModeFixedKReplicaSlots, FailureProbability: 0.5},
+		},
+	})
+	if err != nil {
+		t.Fatalf("RunArtifactProfiles failed: %v", err)
+	}
+	for _, profile := range out.Profiles {
+		if profile.WeightedAggregate != 1 {
+			t.Fatalf("expected excluded frontend to remain live in %s, got %f", profile.Name, profile.WeightedAggregate)
+		}
+	}
+	if out.Profiles[1].FixedKFailures != 1 {
+		t.Fatalf("expected derived k from two eligible replica slots, got %d", out.Profiles[1].FixedKFailures)
+	}
+}
+
 func TestRunArtifactProfiles_ReplicatedTargetSaturatesAtEdgeBottleneck(t *testing.T) {
 	t.Parallel()
 

@@ -41,6 +41,7 @@ type normalizedService struct {
 	Labels             map[string]string
 	SharedResourceRefs []string
 	FailureEligible    bool
+	SamplingEligible   bool
 	Buckets            []replicaBucket
 }
 
@@ -503,6 +504,12 @@ func sampleAdvancedState(ctx advancedContext, profile ProfileParams, rng *rand.R
 	case config.SamplingModeIndependentReplica:
 		for _, serviceID := range ctx.serviceIDs {
 			svc := ctx.services[serviceID]
+			if !svc.SamplingEligible {
+				for _, bucket := range svc.Buckets {
+					state.bucketAlive[bucket.ID] = true
+				}
+				continue
+			}
 			liveProbability := serviceLiveProbability(profile, serviceID)
 			for _, bucket := range svc.Buckets {
 				live := false
@@ -516,20 +523,24 @@ func sampleAdvancedState(ctx advancedContext, profile ProfileParams, rng *rand.R
 		}
 	case config.SamplingModeIndependentService:
 		for _, serviceID := range ctx.serviceIDs {
-			alive := rng.Float64() < serviceLiveProbability(profile, serviceID)
+			alive := true
+			if ctx.services[serviceID].SamplingEligible {
+				alive = rng.Float64() < serviceLiveProbability(profile, serviceID)
+			}
 			for _, bucket := range ctx.services[serviceID].Buckets {
 				state.bucketAlive[bucket.ID] = alive
 			}
 		}
 	case config.SamplingModeFixedKServiceSet:
-		if profile.FixedKFailures > len(ctx.serviceIDs) {
-			return sampledState{}, fmt.Errorf("fixed_k_failures %d exceeds service count %d", profile.FixedKFailures, len(ctx.serviceIDs))
+		failureCandidateIDs := advancedFailureCandidateServiceIDs(ctx)
+		if profile.FixedKFailures > len(failureCandidateIDs) {
+			return sampledState{}, fmt.Errorf("fixed_k_failures %d exceeds failure-eligible service count %d", profile.FixedKFailures, len(failureCandidateIDs))
 		}
 		failedServices := map[string]struct{}{}
 		if profile.FixedKFailures > 0 {
-			indices := rng.Perm(len(ctx.serviceIDs))
+			indices := rng.Perm(len(failureCandidateIDs))
 			for _, idx := range indices[:profile.FixedKFailures] {
-				failedServices[ctx.serviceIDs[idx]] = struct{}{}
+				failedServices[failureCandidateIDs[idx]] = struct{}{}
 			}
 		}
 		for _, serviceID := range ctx.serviceIDs {
@@ -1088,10 +1099,14 @@ func buildAdvancedContext(loaded artifact.Loaded, predicateSet map[string]predic
 		labels := map[string]string{}
 		sharedRefs := []string{}
 		failureEligible := false
+		samplingEligible := true
 		if svc.Metadata != nil {
 			labels = mergeStringMap(labels, svc.Metadata.Labels)
 			sharedRefs = append(sharedRefs, svc.Metadata.SharedResourceRefs...)
 			failureEligible = svc.Metadata.FailureEligible != nil && *svc.Metadata.FailureEligible
+			if svc.Metadata.FailureEligible != nil {
+				samplingEligible = *svc.Metadata.FailureEligible
+			}
 		}
 		if len(record.Metadata.Labels) > 0 {
 			labels = mergeStringMap(labels, record.Metadata.Labels)
@@ -1101,6 +1116,9 @@ func buildAdvancedContext(loaded artifact.Loaded, predicateSet map[string]predic
 		}
 		if !failureEligible && record.Metadata.FailureEligible != nil && *record.Metadata.FailureEligible {
 			failureEligible = true
+		}
+		if (svc.Metadata == nil || svc.Metadata.FailureEligible == nil) && record.Metadata.FailureEligible != nil {
+			samplingEligible = *record.Metadata.FailureEligible
 		}
 		buckets, err := normalizeBuckets(svc, record)
 		if err != nil {
@@ -1112,6 +1130,7 @@ func buildAdvancedContext(loaded artifact.Loaded, predicateSet map[string]predic
 			Labels:             labels,
 			SharedResourceRefs: sortedUnique(sharedRefs),
 			FailureEligible:    failureEligible,
+			SamplingEligible:   samplingEligible,
 			Buckets:            buckets,
 		}
 		ctx.serviceIDs = append(ctx.serviceIDs, svc.ID)
@@ -1562,6 +1581,9 @@ func normalizeBuckets(svc model.Service, record artifact.SnapshotDiscoveryServic
 func totalAdvancedReplicaSlots(ctx advancedContext) int {
 	total := 0
 	for _, serviceID := range ctx.serviceIDs {
+		if !ctx.services[serviceID].SamplingEligible {
+			continue
+		}
 		for _, bucket := range ctx.services[serviceID].Buckets {
 			total += bucket.Replicas
 		}
@@ -1572,10 +1594,23 @@ func totalAdvancedReplicaSlots(ctx advancedContext) int {
 func advancedReplicaSlotBucketIDs(ctx advancedContext) []string {
 	out := make([]string, 0, totalAdvancedReplicaSlots(ctx))
 	for _, serviceID := range ctx.serviceIDs {
+		if !ctx.services[serviceID].SamplingEligible {
+			continue
+		}
 		for _, bucket := range ctx.services[serviceID].Buckets {
 			for replica := 0; replica < bucket.Replicas; replica++ {
 				out = append(out, bucket.ID)
 			}
+		}
+	}
+	return out
+}
+
+func advancedFailureCandidateServiceIDs(ctx advancedContext) []string {
+	out := make([]string, 0, len(ctx.serviceIDs))
+	for _, serviceID := range ctx.serviceIDs {
+		if ctx.services[serviceID].SamplingEligible {
+			out = append(out, serviceID)
 		}
 	}
 	return out

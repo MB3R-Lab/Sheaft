@@ -29,6 +29,8 @@ For each configured profile Sheaft:
 - `fixed_k_service_set`: exactly `k` services fail per trial
 - `fixed_k_replica_slots`: exactly `k` replica slots fail per trial; when `fixed_k_failures` is omitted, `k = ceil(failure_probability * total_replica_slots)`
 
+An explicit Bering service metadata value `failure_eligible: false` removes that service from baseline failure sampling. The service remains live in baseline trials, fixed-k population sizes exclude it, and explicit fault contracts can still target it. If the metadata is absent, the service remains eligible for backward compatibility.
+
 When `1.3.0` placement buckets exist, replica-based modes sample those buckets explicitly. A service remains effectively alive while at least one bucket still has a live replica.
 
 ## Failure-Tolerance Boundaries

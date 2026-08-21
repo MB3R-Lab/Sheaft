@@ -50,6 +50,8 @@ Sampling modes:
 - `fixed_k_service_set`: exactly `fixed_k_failures` services fail per trial
 - `fixed_k_replica_slots`: exactly `k` replica slots fail per trial; when `fixed_k_failures` is omitted, `k = ceil(failure_probability * total_replica_slots)`
 
+Services with an explicit Bering `metadata.failure_eligible: false` are excluded from baseline sampling in every mode and remain live unless an explicit fault profile targets them. Omitted `failure_eligible` retains the backward-compatible default: the service participates in baseline sampling. Fixed-k counts and derived replica-slot totals include only failure-eligible services.
+
 ## Failure-Tolerance Sweeps
 
 Sweeps answer an operation-specific question: at which evaluated fail-stop intensity does endpoint availability first fall below its configured SLO? They are separate from profiles: sweep points are not averaged into `cross_profile_*` and do not affect the existing profile gate.

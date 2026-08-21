@@ -6,6 +6,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/MB3R-Lab/Sheaft/internal/config"
 	"github.com/MB3R-Lab/Sheaft/internal/model"
 	"github.com/MB3R-Lab/Sheaft/internal/modelcontract"
 	"github.com/MB3R-Lab/Sheaft/internal/predicates"
@@ -324,6 +325,44 @@ func TestRunProfiles_SamplingModes(t *testing.T) {
 	}
 	if replicaSlotOut.Profiles[1].WeightedAggregate != 0 {
 		t.Fatalf("expected two failed replica slots to kill service, got %f", replicaSlotOut.Profiles[1].WeightedAggregate)
+	}
+}
+
+func TestRunProfiles_ExplicitlyIneligibleServiceIsExcludedFromBaselineSampling(t *testing.T) {
+	t.Parallel()
+
+	ineligible := false
+	mdl := testModel(
+		[]model.Service{
+			{ID: "frontend", Name: "frontend", Replicas: 1, Metadata: &model.ServiceMetadata{FailureEligible: &ineligible}},
+			{ID: "worker", Name: "worker", Replicas: 2},
+		},
+		nil,
+		[]model.Endpoint{{ID: "frontend:GET /health", EntryService: "frontend", SuccessPredicateRef: "frontend:GET /health"}},
+	)
+
+	out, err := RunProfiles(mdl, AnalysisParams{
+		Seed: 17,
+		PredicateSet: map[string]predicates.Definition{
+			"frontend:GET /health": {Type: predicates.TypeAllOf, Services: []string{"frontend"}},
+		},
+		Profiles: []ProfileParams{
+			{Name: "independent-replica", Trials: 20, SamplingMode: config.SamplingModeIndependentReplica, FailureProbability: 1},
+			{Name: "independent-service", Trials: 20, SamplingMode: config.SamplingModeIndependentService, FailureProbability: 1},
+			{Name: "fixed-service", Trials: 20, SamplingMode: config.SamplingModeFixedKServiceSet, FixedKFailures: 1},
+			{Name: "fixed-slots", Trials: 20, SamplingMode: config.SamplingModeFixedKReplicaSlots, FailureProbability: 0.5},
+		},
+	})
+	if err != nil {
+		t.Fatalf("RunProfiles failed: %v", err)
+	}
+	for _, profile := range out.Profiles {
+		if profile.WeightedAggregate != 1 {
+			t.Fatalf("expected excluded frontend to remain live in %s, got %f", profile.Name, profile.WeightedAggregate)
+		}
+	}
+	if out.Profiles[3].FixedKFailures != 1 {
+		t.Fatalf("expected derived k from two eligible worker slots, got %d", out.Profiles[3].FixedKFailures)
 	}
 }
 

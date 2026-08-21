@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- baseline sampling now honors explicit Bering service metadata `failure_eligible: false`; excluded services stay live and do not contribute to fixed-k service or replica-slot populations
+
 ## v1.2.0 - 2026-07-26
 
 - added analysis schema `1.2` failure-tolerance sweeps for independent replica failure probability and exact failed replica-slot counts
