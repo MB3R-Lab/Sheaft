@@ -8,29 +8,30 @@ The machine-readable entrypoint for release consumers is the `release-manifest.j
 
 1. Download the archive for your platform.
 2. Download the matching default config pack archive.
-3. Verify both against `sheaft_X.Y.Z_checksums.txt` and, if needed, `release-manifest.json`.
+3. Verify the binary archive against `sheaft_X.Y.Z_checksums.txt` and the config pack against its SHA-256 in `release-manifest.json`.
 4. Extract the binary and the config pack.
 
-Example `v1.0.0` asset names:
+Example `v1.3.0` asset names:
 
-- `sheaft_1.0.0_linux_amd64.tar.gz`
-- `sheaft_1.0.0_linux_arm64.tar.gz`
-- `sheaft_1.0.0_darwin_amd64.tar.gz`
-- `sheaft_1.0.0_darwin_arm64.tar.gz`
-- `sheaft-default-config-pack_1.0.0.tar.gz`
+- `sheaft_1.3.0_linux_amd64.tar.gz`
+- `sheaft_1.3.0_linux_arm64.tar.gz`
+- `sheaft_1.3.0_darwin_amd64.tar.gz`
+- `sheaft_1.3.0_darwin_arm64.tar.gz`
+- `sheaft_1.3.0_windows_amd64.zip`
+- `sheaft-default-config-pack_1.3.0.tar.gz`
 
 Minimal first run after extraction:
 
 ```bash
-tar -xzf sheaft_1.0.0_linux_amd64.tar.gz
-tar -xzf sheaft-default-config-pack_1.0.0.tar.gz
+tar -xzf sheaft_1.3.0_linux_amd64.tar.gz
+tar -xzf sheaft-default-config-pack_1.3.0.tar.gz
 ./sheaft run --model examples/outputs/model.sample.json --policy configs/gate.policy.example.yaml --out-dir out/quickstart --seed 42
 ```
 
 ## Fallback: `go install`
 
 ```bash
-go install github.com/MB3R-Lab/Sheaft/cmd/sheaft@v1.0.0
+go install github.com/MB3R-Lab/Sheaft/cmd/sheaft@v1.3.0
 sheaft help
 ```
 
@@ -46,21 +47,21 @@ go build ./cmd/sheaft
 ## OCI Image
 
 ```bash
-docker pull ghcr.io/mb3r-lab/sheaft:v1.0.0
-docker run --rm ghcr.io/mb3r-lab/sheaft:v1.0.0 help
+docker pull ghcr.io/mb3r-lab/sheaft:v1.3.0
+docker run --rm ghcr.io/mb3r-lab/sheaft:v1.3.0 help
 ```
 
 The image keeps the same CLI entrypoint behavior:
 
 ```bash
-docker run --rm ghcr.io/mb3r-lab/sheaft:v1.0.0 run --model /data/input.json --analysis /config/analysis.yaml --out-dir /out
+docker run --rm ghcr.io/mb3r-lab/sheaft:v1.3.0 run --model /data/input.json --analysis /config/analysis.yaml --out-dir /out
 ```
 
 ## OCI Helm Chart
 
 ```bash
-helm pull oci://ghcr.io/mb3r-lab/charts/sheaft --version 1.0.0
-helm install sheaft oci://ghcr.io/mb3r-lab/charts/sheaft --version 1.0.0
+helm pull oci://ghcr.io/mb3r-lab/charts/sheaft --version 1.3.0
+helm install sheaft oci://ghcr.io/mb3r-lab/charts/sheaft --version 1.3.0
 ```
 
 Chart modes:
@@ -74,6 +75,7 @@ Each release includes a versioned default config pack archive with checked-in ex
 
 - example baseline analysis config
 - example versioned advanced analysis config
+- endpoint-specific Birnbaum importance analysis config
 - example fault contract
 - example gate policy
 - example predicate contract
