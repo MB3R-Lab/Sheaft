@@ -160,6 +160,37 @@ func TestBirnbaumPreservesObservedRetriesAndExcludedServiceCounterfactual(t *tes
 	}
 }
 
+func TestBirnbaumKeepsDistinctEdgePathsBetweenEndpoints(t *testing.T) {
+	t.Parallel()
+	loaded := importanceFixture()
+	one := 1.0
+	loaded.Model.Edges = append(loaded.Model.Edges, model.Edge{
+		ID: "frontend->checkout:async", From: "frontend", To: "checkout", Kind: model.EdgeKindAsync,
+		Observed: &model.ObservedEdge{ErrorRate: &one},
+	})
+	loaded.Model.Endpoints = []model.Endpoint{
+		{ID: "async", EntryService: "frontend", SuccessPredicateRef: "async", SuccessPredicate: &predicates.Definition{
+			Type: predicates.TypeEdgeAware, EntryService: "frontend", MandatoryTargets: []string{"checkout"}, EdgeModes: []string{"async"},
+		}},
+		{ID: "sync", EntryService: "frontend", SuccessPredicateRef: "sync", SuccessPredicate: &predicates.Definition{
+			Type: predicates.TypeEdgeAware, EntryService: "frontend", MandatoryTargets: []string{"checkout"}, EdgeModes: []string{"sync"},
+		}},
+	}
+	profile := ProfileParams{Name: "steady", Trials: 20, SamplingMode: config.SamplingModeIndependentService,
+		Reliability: config.ReliabilityConfig{NodeLiveProbability: &one, EdgeLiveProbability: &one}}
+	out := runTestImportance(t, loaded, importanceRequest(profile, "async", "sync"))
+	for _, endpoint := range []string{"async", "sync"} {
+		want := 1.0
+		if endpoint == "async" {
+			want = 0
+		}
+		got := importanceComponent(t, out, endpoint, "service", "frontend")
+		if got.BirnbaumImportance != want {
+			t.Fatalf("%s importance=%f want %f; paths with different edges must not share execution viability", endpoint, got.BirnbaumImportance, want)
+		}
+	}
+}
+
 func TestBirnbaumSelectionTopKAndInvalidInputs(t *testing.T) {
 	t.Parallel()
 	loaded := importanceFixture()

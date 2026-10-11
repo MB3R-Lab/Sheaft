@@ -100,10 +100,16 @@ func runBirnbaum(ctx advancedContext, seed int64, request ImportanceParams) (Imp
 	}
 	slices.SortFunc(endpoints, func(a, b endpointPlan) int { return strings.Compare(a.ID, b.ID) })
 	paths := map[string]journeyPath{}
-	for _, endpoint := range endpoints {
+	pathKeys := make([]map[string]string, len(endpoints))
+	for i, endpoint := range endpoints {
+		pathKeys[i] = map[string]string{}
 		if endpoint.Mode != endpointModePredicate {
 			for _, path := range endpoint.DiagnosticPaths {
-				paths[path.ID] = path
+				// Display IDs contain only services. Endpoint modes can select different
+				// edges along the same service chain, so execution identity includes both.
+				key := fmt.Sprintf("%q/%q", path.Services, path.EdgeIDs)
+				pathKeys[i][path.ID] = key
+				paths[key] = path
 			}
 		}
 	}
@@ -136,7 +142,7 @@ func runBirnbaum(ctx advancedContext, seed int64, request ImportanceParams) (Imp
 			viable[id] = executePath(ctx, allUp, faultState, path, pathRNG)
 		}
 		for i, endpoint := range endpoints {
-			if importanceEndpointSuccess(endpoint, state, viable) {
+			if importanceEndpointSuccess(endpoint, state, viable, pathKeys[i]) {
 				baseline[i]++
 			}
 		}
@@ -148,9 +154,9 @@ func runBirnbaum(ctx advancedContext, seed int64, request ImportanceParams) (Imp
 			original := states[component.ID]
 			for endpointIndex, endpoint := range endpoints {
 				states[component.ID] = true
-				up := importanceEndpointSuccess(endpoint, state, viable)
+				up := importanceEndpointSuccess(endpoint, state, viable, pathKeys[endpointIndex])
 				states[component.ID] = false
-				down := importanceEndpointSuccess(endpoint, state, viable)
+				down := importanceEndpointSuccess(endpoint, state, viable, pathKeys[endpointIndex])
 				if down && !up {
 					return ImportanceOutput{}, fmt.Errorf("non-monotonic component %q for endpoint %q", component.ID, endpoint.ID)
 				}
@@ -205,12 +211,12 @@ func runBirnbaum(ctx advancedContext, seed int64, request ImportanceParams) (Imp
 	return output, nil
 }
 
-func importanceEndpointSuccess(endpoint endpointPlan, state sampledState, viable map[string]bool) bool {
+func importanceEndpointSuccess(endpoint endpointPlan, state sampledState, viable map[string]bool, pathKeys map[string]string) bool {
 	if endpoint.Mode == endpointModePredicate {
 		return predicates.Evaluate(endpoint.Predicate, func(id string) bool { return state.serviceAlive[id] })
 	}
 	pathSuccess := func(path journeyPath) bool {
-		if !viable[path.ID] {
+		if !viable[pathKeys[path.ID]] {
 			return false
 		}
 		for _, id := range path.Services {
