@@ -194,19 +194,20 @@ type Diffs struct {
 }
 
 type Report struct {
-	Simulation          SimulationInfo           `json:"simulation"`
-	EndpointResults     []gate.EndpointResult    `json:"endpoint_results"`
-	Summary             Summary                  `json:"summary"`
-	PolicyEvaluation    PolicyEvaluation         `json:"policy_evaluation"`
-	InputArtifact       *InputArtifact           `json:"input_artifact,omitempty"`
-	ContractPolicy      *ContractPolicy          `json:"contract_policy,omitempty"`
-	Provenance          *Provenance              `json:"provenance,omitempty"`
-	Parameters          *Parameters              `json:"parameters,omitempty"`
-	Profiles            []ProfileSummary         `json:"profiles,omitempty"`
-	Sweeps              []simulation.SweepOutput `json:"sweeps,omitempty"`
-	Diffs               Diffs                    `json:"diffs,omitempty"`
-	GeneratedAt         string                   `json:"generated_at,omitempty"`
-	RecomputeDurationMS int64                    `json:"recompute_duration_ms,omitempty"`
+	Simulation          SimulationInfo                `json:"simulation"`
+	EndpointResults     []gate.EndpointResult         `json:"endpoint_results"`
+	Summary             Summary                       `json:"summary"`
+	PolicyEvaluation    PolicyEvaluation              `json:"policy_evaluation"`
+	InputArtifact       *InputArtifact                `json:"input_artifact,omitempty"`
+	ContractPolicy      *ContractPolicy               `json:"contract_policy,omitempty"`
+	Provenance          *Provenance                   `json:"provenance,omitempty"`
+	Parameters          *Parameters                   `json:"parameters,omitempty"`
+	Profiles            []ProfileSummary              `json:"profiles,omitempty"`
+	Sweeps              []simulation.SweepOutput      `json:"sweeps,omitempty"`
+	Importance          []simulation.ImportanceOutput `json:"importance,omitempty"`
+	Diffs               Diffs                         `json:"diffs,omitempty"`
+	GeneratedAt         string                        `json:"generated_at,omitempty"`
+	RecomputeDurationMS int64                         `json:"recompute_duration_ms,omitempty"`
 }
 
 func Compose(simOut simulation.Output, eval gate.Evaluation, params simulation.Params, confidence float64) Report {
@@ -278,6 +279,7 @@ func ComposeAnalysis(meta artifact.Loaded, simOut simulation.AnalysisOutput, eva
 		Parameters:          buildParameters(cfg, meta),
 		Profiles:            make([]ProfileSummary, 0, len(simOut.Profiles)),
 		Sweeps:              slices.Clone(simOut.Sweeps),
+		Importance:          slices.Clone(simOut.Importance),
 		GeneratedAt:         generatedAt.UTC().Format(time.RFC3339Nano),
 		RecomputeDurationMS: duration.Milliseconds(),
 	}
@@ -768,6 +770,7 @@ func WriteSummaryMarkdown(path string, rep Report) error {
 		}
 	}
 
+	writeImportanceSummary(&b, rep.Importance)
 	b.WriteString("## Endpoint results\n\n")
 	for _, endpoint := range rep.EndpointResults {
 		if endpoint.Profile != "" {

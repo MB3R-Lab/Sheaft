@@ -13,6 +13,7 @@ const (
 	AnalysisSchemaVersion     = "1.0"
 	AnalysisSchemaVersionV110 = "1.1"
 	AnalysisSchemaVersionV120 = "1.2"
+	AnalysisSchemaVersionV130 = "1.3"
 	ServeSchemaVersion        = "1.0"
 )
 
@@ -49,6 +50,7 @@ type AnalysisConfig struct {
 	EndpointWeights    map[string]float64 `json:"endpoint_weights,omitempty" yaml:"endpoint_weights,omitempty"`
 	Profiles           []Profile          `json:"profiles,omitempty" yaml:"profiles,omitempty"`
 	Sweeps             []Sweep            `json:"sweeps,omitempty" yaml:"sweeps,omitempty"`
+	Importance         []Importance       `json:"importance,omitempty" yaml:"importance,omitempty"`
 	Baselines          []BaselineRef      `json:"baselines,omitempty" yaml:"baselines,omitempty"`
 	ContractPolicy     ContractPolicy     `json:"contract_policy,omitempty" yaml:"contract_policy,omitempty"`
 	Gate               GateConfig         `json:"gate" yaml:"gate"`
@@ -260,12 +262,24 @@ func (c AnalysisConfig) Normalized() AnalysisConfig {
 			out.Sweeps[i].ConfidenceLevel = 0.95
 		}
 	}
+	out.Importance = slices.Clone(out.Importance)
+	for i := range out.Importance {
+		if out.Importance[i].Method == "" {
+			out.Importance[i].Method = ImportanceMethodBirnbaum
+		}
+		if out.Importance[i].ConfidenceLevel == 0 {
+			out.Importance[i].ConfidenceLevel = 0.95
+		}
+		if len(out.Importance[i].Components.Kinds) == 0 {
+			out.Importance[i].Components.Kinds = []string{ImportanceKindService, ImportanceKindEdge}
+		}
+	}
 	return out
 }
 
 func (c AnalysisConfig) Validate() error {
-	if c.SchemaVersion != AnalysisSchemaVersion && c.SchemaVersion != AnalysisSchemaVersionV110 && c.SchemaVersion != AnalysisSchemaVersionV120 {
-		return fmt.Errorf("unsupported analysis schema_version: got %q want one of %q, %q, %q", c.SchemaVersion, AnalysisSchemaVersion, AnalysisSchemaVersionV110, AnalysisSchemaVersionV120)
+	if c.SchemaVersion != AnalysisSchemaVersion && c.SchemaVersion != AnalysisSchemaVersionV110 && c.SchemaVersion != AnalysisSchemaVersionV120 && c.SchemaVersion != AnalysisSchemaVersionV130 {
+		return fmt.Errorf("unsupported analysis schema_version: got %q want one of %q, %q, %q, %q", c.SchemaVersion, AnalysisSchemaVersion, AnalysisSchemaVersionV110, AnalysisSchemaVersionV120, AnalysisSchemaVersionV130)
 	}
 	if len(c.Profiles) == 0 {
 		return errors.New("analysis requires at least one profile")
@@ -338,7 +352,7 @@ func (c AnalysisConfig) Validate() error {
 			return err
 		}
 	}
-	if len(c.Sweeps) > 0 && c.SchemaVersion != AnalysisSchemaVersionV120 {
+	if len(c.Sweeps) > 0 && c.SchemaVersion != AnalysisSchemaVersionV120 && c.SchemaVersion != AnalysisSchemaVersionV130 {
 		return fmt.Errorf("analysis schema_version %q does not support sweeps; use %q", c.SchemaVersion, AnalysisSchemaVersionV120)
 	}
 	sweepNames := make(map[string]struct{}, len(c.Sweeps))
@@ -347,6 +361,9 @@ func (c AnalysisConfig) Validate() error {
 			return err
 		}
 		sweepNames[sweep.Name] = struct{}{}
+	}
+	if err := validateImportance(c); err != nil {
+		return err
 	}
 	baselineNames := make(map[string]struct{}, len(c.Baselines))
 	for _, baseline := range c.Baselines {

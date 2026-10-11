@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## v1.3.0 - 2026-10-11
+
+- added analysis schema `1.3` opt-in Birnbaum importance for service liveness and edge connectivity, with paired counterfactual trials, Wilson intervals, endpoint rankings, forced-down impact, and perfect-component gain
+- added a component-criticality example, JSON report schema, Markdown tables, and closed-form series/fallback/async regression coverage
 - baseline sampling now honors explicit Bering service metadata `failure_eligible: false`; excluded services stay live and do not contribute to fixed-k service or replica-slot populations
 
 ## v1.2.0 - 2026-07-26

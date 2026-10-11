@@ -146,6 +146,10 @@ func RunArtifactProfiles(loaded artifact.Loaded, params AnalysisParams) (Analysi
 	if err != nil {
 		return AnalysisOutput{}, err
 	}
+	out.Importance, err = runImportance(ctx, params)
+	if err != nil {
+		return AnalysisOutput{}, err
+	}
 	return out, nil
 }
 

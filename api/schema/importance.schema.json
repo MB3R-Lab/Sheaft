@@ -1,0 +1,59 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/MB3R-Lab/Sheaft/api/schema/importance.schema.json",
+  "title": "SheaftBirnbaumImportance",
+  "type": "object",
+  "required": ["name", "method", "base_profile", "sampling_mode", "trials", "seed", "confidence_level", "evaluated_components", "endpoints"],
+  "properties": {
+    "name": { "type": "string", "minLength": 1 },
+    "method": { "const": "birnbaum" },
+    "base_profile": { "type": "string", "minLength": 1 },
+    "sampling_mode": { "enum": ["independent_service", "independent_replica"] },
+    "trials": { "type": "integer", "minimum": 1 },
+    "seed": { "type": "integer" },
+    "confidence_level": { "type": "number", "exclusiveMinimum": 0, "exclusiveMaximum": 1 },
+    "evaluated_components": { "type": "integer", "minimum": 1 },
+    "top_k": { "type": "integer", "minimum": 0 },
+    "endpoints": {
+      "type": "array", "minItems": 1,
+      "items": {
+        "type": "object", "required": ["endpoint_id", "baseline_availability", "components"],
+        "properties": {
+          "endpoint_id": { "type": "string", "minLength": 1 },
+          "baseline_availability": { "$ref": "#/$defs/probability" },
+          "components": {
+            "type": "array", "minItems": 1,
+            "items": {
+              "type": "object",
+              "required": ["kind", "id", "state_semantics", "rank", "live_probability", "availability_if_up", "availability_if_down", "birnbaum_importance", "confidence", "forced_down_impact", "perfect_component_gain"],
+              "properties": {
+                "kind": { "enum": ["service", "edge"] },
+                "id": { "type": "string", "minLength": 1 },
+                "state_semantics": { "enum": ["service_liveness", "edge_connectivity"] },
+                "rank": { "type": "integer", "minimum": 1 },
+                "live_probability": { "$ref": "#/$defs/probability" },
+                "availability_if_up": { "$ref": "#/$defs/probability" },
+                "availability_if_down": { "$ref": "#/$defs/probability" },
+                "birnbaum_importance": { "$ref": "#/$defs/probability" },
+                "forced_down_impact": { "$ref": "#/$defs/probability" },
+                "perfect_component_gain": { "$ref": "#/$defs/probability" },
+                "confidence": {
+                  "type": "object", "required": ["successes", "trials", "confidence_level", "estimate", "lower_bound", "upper_bound"],
+                  "properties": {
+                    "successes": { "type": "integer", "minimum": 0 },
+                    "trials": { "type": "integer", "minimum": 1 },
+                    "confidence_level": { "type": "number", "exclusiveMinimum": 0, "exclusiveMaximum": 1 },
+                    "estimate": { "$ref": "#/$defs/probability" },
+                    "lower_bound": { "$ref": "#/$defs/probability" },
+                    "upper_bound": { "$ref": "#/$defs/probability" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "$defs": { "probability": { "type": "number", "minimum": 0, "maximum": 1 } }
+}

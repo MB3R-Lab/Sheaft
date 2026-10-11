@@ -120,6 +120,12 @@ func AnalyzeLoaded(loaded artifact.Loaded, cfg config.AnalysisConfig, previous *
 		})
 	}
 
+	importance := make([]simulation.ImportanceParams, 0, len(cfg.Importance))
+	for _, spec := range cfg.Importance {
+		importance = append(importance, simulation.ImportanceParams{
+			Spec: spec, BaseProfile: profilesByName[spec.Profile],
+		})
+	}
 	simOut, err := simulation.RunArtifactProfiles(loaded, simulation.AnalysisParams{
 		Seed:             cfg.Seed,
 		JourneyOverrides: journeyOverrides,
@@ -128,6 +134,7 @@ func AnalyzeLoaded(loaded artifact.Loaded, cfg config.AnalysisConfig, previous *
 		FaultContract:    faultContract,
 		Profiles:         profiles,
 		Sweeps:           sweeps,
+		Importance:       importance,
 	})
 	if err != nil {
 		return Result{}, err

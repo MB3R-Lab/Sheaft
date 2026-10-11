@@ -9,7 +9,7 @@ repo_root="$(pwd)"
 serve_config="${out_root}/sheaft.serve.yaml"
 
 rm -rf "${out_root}"
-mkdir -p "${out_root}/policy" "${out_root}/analysis" "${out_root}/sweep"
+mkdir -p "${out_root}/policy" "${out_root}/analysis" "${out_root}/sweep" "${out_root}/importance"
 
 cat >"${serve_config}" <<EOF
 schema_version: "1.0"
@@ -49,6 +49,11 @@ EOF
 "${bin_path}" gate \
   --report "${out_root}/sweep/report.json" \
   --analysis configs/analysis.sweep.example.yaml
+
+"${bin_path}" run \
+  --model examples/outputs/snapshot.sample.json \
+  --analysis configs/analysis.importance.example.yaml \
+  --out-dir "${out_root}/importance"
 
 "${bin_path}" serve --config "${serve_config}" >"${serve_log}" 2>&1 &
 pid=$!

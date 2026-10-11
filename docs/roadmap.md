@@ -14,11 +14,12 @@ GitHub issues remain the source of truth for roadmap tracking:
 - R9: https://github.com/MB3R-Lab/Sheaft/issues/39
 - R10: https://github.com/MB3R-Lab/Sheaft/issues/40
 
-This file captures the repository-side audit refreshed for the `v1.2.0` release line: current GitHub issue state versus what is actually implemented in this repository.
+This file captures the repository-side audit refreshed for the `v1.3.0` release line: current GitHub issue state versus what is actually implemented in this repository.
 
 ## Release Tracking State
 
-- Current release line: [Sheaft v1.2.0](https://github.com/MB3R-Lab/Sheaft/releases/tag/v1.2.0)
+- Current release line: [Sheaft v1.3.0](https://github.com/MB3R-Lab/Sheaft/releases/tag/v1.3.0)
+- Component criticality tracking: [#98](https://github.com/MB3R-Lab/Sheaft/issues/98); docs: [component-criticality.md](component-criticality.md).
 - Previous preview line: [Sheaft v0.2.4](https://github.com/MB3R-Lab/Sheaft/releases/tag/v0.2.4)
 - Historical shipped preview milestones: `v0.1.0`, `v0.1.1`, `v0.2.0`, `v0.2.1`, `v0.2.2`, `v0.2.3`, `v0.2.4`
 - Active v1 release-tracking issue: [#91](https://github.com/MB3R-Lab/Sheaft/issues/91)
@@ -94,6 +95,7 @@ The published `v0.2.4` release payload is the previous preview baseline:
 | R3.4 | open | gap | No published large-snapshot workload profile, SLA, or benchmark harness exists. |
 | [R3.5](https://github.com/MB3R-Lab/Sheaft/issues/93) | closed | done | Analysis schema `1.2` ships failure-tolerance sweeps, endpoint SLO crossing brackets, and stable report output. |
 | [R3.6](https://github.com/MB3R-Lab/Sheaft/issues/96) | open | gap | No capacity-aware overload feedback solver or environment-specific capacity contract exists yet. |
+| [R3.7](https://github.com/MB3R-Lab/Sheaft/issues/98) | closed | done | `v1.3.0` adds service/edge Birnbaum importance, paired endpoint counterfactuals, Wilson intervals, and impact/gain rankings; group/zone importance and importance regression gates remain future work. |
 
 ### R4. Empirical validation and reproducibility
 

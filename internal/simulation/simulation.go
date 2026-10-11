@@ -43,6 +43,7 @@ type AnalysisParams struct {
 	FaultContract    *faults.Contract
 	Profiles         []ProfileParams
 	Sweeps           []SweepParams
+	Importance       []ImportanceParams
 }
 
 type SweepParams struct {
@@ -76,10 +77,11 @@ type ProfileOutput struct {
 }
 
 type AnalysisOutput struct {
-	Profiles               []ProfileOutput `json:"profiles"`
-	Sweeps                 []SweepOutput   `json:"sweeps,omitempty"`
-	CrossProfileWeighted   float64         `json:"cross_profile_weighted_aggregate"`
-	CrossProfileUnweighted float64         `json:"cross_profile_unweighted_aggregate"`
+	Profiles               []ProfileOutput    `json:"profiles"`
+	Sweeps                 []SweepOutput      `json:"sweeps,omitempty"`
+	Importance             []ImportanceOutput `json:"importance,omitempty"`
+	CrossProfileWeighted   float64            `json:"cross_profile_weighted_aggregate"`
+	CrossProfileUnweighted float64            `json:"cross_profile_unweighted_aggregate"`
 }
 
 type SweepPoint struct {

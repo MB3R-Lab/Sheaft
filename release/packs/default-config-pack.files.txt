@@ -2,6 +2,7 @@
 configs/analysis.example.yaml
 configs/analysis.v1.1.example.yaml
 configs/analysis.sweep.example.yaml
+configs/analysis.importance.example.yaml
 configs/fault-contract.example.yaml
 configs/gate.policy.example.yaml
 configs/predicate-contract.example.yaml

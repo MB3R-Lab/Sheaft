@@ -260,6 +260,10 @@
         "required": ["name", "base_profile", "axis_type", "trials", "seed", "confidence_level", "fingerprint", "points", "boundaries"]
       }
     },
+    "importance": {
+      "type": "array",
+      "items": { "$ref": "importance.schema.json" }
+    },
     "diffs": {
       "type": "object"
     },

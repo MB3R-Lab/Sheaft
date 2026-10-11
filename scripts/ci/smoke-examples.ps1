@@ -13,6 +13,7 @@ if (Test-Path $OutRoot) {
 New-Item -ItemType Directory -Force (Join-Path $OutRoot "policy") | Out-Null
 New-Item -ItemType Directory -Force (Join-Path $OutRoot "analysis") | Out-Null
 New-Item -ItemType Directory -Force (Join-Path $OutRoot "sweep") | Out-Null
+New-Item -ItemType Directory -Force (Join-Path $OutRoot "importance") | Out-Null
 
 $repoRoot = (Get-Location).Path.Replace('\', '/')
 $serveConfig = Join-Path $OutRoot "sheaft.serve.yaml"
@@ -55,12 +56,19 @@ history:
     --report (Join-Path $OutRoot "sweep/report.json") `
     --analysis configs/analysis.sweep.example.yaml
 
+& $BinPath run `
+    --model examples/outputs/snapshot.sample.json `
+    --analysis configs/analysis.importance.example.yaml `
+    --out-dir (Join-Path $OutRoot "importance")
+if ($LASTEXITCODE -ne 0) { throw "importance example failed" }
+
 $serveOut = Join-Path $OutRoot "serve.stdout.log"
 $serveErr = Join-Path $OutRoot "serve.stderr.log"
 $readyOut = Join-Path $OutRoot "readyz.json"
 $reportOut = Join-Path $OutRoot "current-report.json"
 
 $proc = Start-Process -FilePath $BinPath `
+    -WindowStyle Hidden `
     -ArgumentList @("serve", "--config", $serveConfig) `
     -PassThru `
     -RedirectStandardOutput $serveOut `

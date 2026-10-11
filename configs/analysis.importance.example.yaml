@@ -1,0 +1,25 @@
+schema_version: "1.3"
+seed: 42
+trials: 12000
+sampling_mode: independent_replica
+reliability:
+  node_live_probability: 0.97
+  edge_live_probability: 0.995
+
+profiles:
+  - name: steady-state
+
+importance:
+  - name: checkout-critical-components
+    profile: steady-state
+    method: birnbaum
+    targets:
+      - endpoint_id: "gateway:POST /checkout"
+    components:
+      kinds: [service, edge]
+    confidence_level: 0.95
+    top_k: 20
+
+gate:
+  mode: report
+  default_action: report

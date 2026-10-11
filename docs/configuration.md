@@ -16,12 +16,14 @@ Use the versioned analysis config for advanced batch and service mode:
 - [configs/analysis.example.yaml](../configs/analysis.example.yaml)
 - [configs/analysis.v1.1.example.yaml](../configs/analysis.v1.1.example.yaml)
 - [configs/analysis.sweep.example.yaml](../configs/analysis.sweep.example.yaml)
+- [configs/analysis.importance.example.yaml](../configs/analysis.importance.example.yaml)
 - [api/schema/analysis.schema.json](../api/schema/analysis.schema.json)
 
 Key sections:
 
 - `profiles`
 - `sweeps`
+- `importance`
 - `reliability`
 - `endpoint_weights`
 - `baselines`
@@ -31,6 +33,8 @@ Key sections:
 - `gate`
 
 `schema_version: "1.0"` remains the simple analysis-config surface. `schema_version: "1.1"` adds fault-profile selection and artifact baselines without changing legacy `1.0` configs. `schema_version: "1.2"` adds failure-tolerance sweeps, confidence-certified boundaries, and explicit boundary gate rules without changing ordinary profile aggregation.
+
+`schema_version: "1.3"` additionally supports `importance[]` for paired Birnbaum component analysis. Existing `1.2` sweep and gate configs remain supported on `1.3`. This is a Sheaft analysis version, independent of the Bering `1.3.0` artifact schema.
 
 `failure_probability` remains a legacy shorthand for homogeneous node failures. Prefer `reliability` for stochastic connectivity analysis:
 
@@ -82,6 +86,12 @@ gate:
 The minimum must be one of the evaluated axis values. `max_regression` requires a named `analysis.baselines` entry. Raw baseline artifacts are rerun with the same sweep seed and definition; prior reports are comparable only when their sweep fingerprint matches. Missing or incompatible evidence becomes `boundary_indeterminate`. In `mode: fail`, `default_action: fail` makes that fail closed; `indeterminate_action: warn` can weaken an individual rule explicitly.
 
 These boundaries describe the configured fail-stop model. They do not model traffic redistribution, queue saturation, capacity exhaustion, or retry feedback, and must not be described as overload-cascade tipping points.
+
+## Component Criticality
+
+Each `importance[]` entry names a baseline `profile` and explicit endpoint `targets`. `method: birnbaum` evaluates paired forced-up/forced-down states for selected `components.kinds: [service, edge]`. Optional `service_ids` and `edge_ids` restrict the computation; `top_k` only limits report rows after ranking. `confidence_level` defaults to `0.95`.
+
+The baseline profile must use independent service or replica sampling and have no `fault_profile`. Importance results are separate from profile aggregation and release gates. See [component-criticality.md](component-criticality.md) for the full configuration and statistical semantics.
 
 ## Serve Config
 
@@ -142,4 +152,5 @@ Report output now carries both:
 - move to `--analysis` when you need profiles, weights, baselines, overlays, or contract pinning
 - move to `schema_version: "1.1"` when you need `fault_contract`, `profiles[].fault_profile`, or artifact-vs-artifact baseline comparison
 - move to `schema_version: "1.2"` when you need failure-tolerance curves and endpoint SLO crossing brackets
+- move to `schema_version: "1.3"` when you need endpoint-specific component importance and rankings
 - use `serve` when posture must stay current as new artifacts arrive

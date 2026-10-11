@@ -102,6 +102,10 @@ The Sheaft-owned fault contract adds:
 
 Assertion failures feed the normal gate result instead of creating a parallel gate subsystem.
 
+## Component Criticality
+
+Opt-in Sheaft analysis schema `1.3` calculates Birnbaum importance with paired service-liveness and edge-connectivity counterfactuals. It uses the same endpoint predicates and path semantics, preserving immediate/eventual distinctions and existing retry/timeout behavior. It requires independent sampling without a fault overlay. Report rankings and intervals are described in [component-criticality.md](component-criticality.md); Bering contract acceptance remains unchanged.
+
 ## Baselines
 
 The existing `analysis.baselines` flow now accepts either:

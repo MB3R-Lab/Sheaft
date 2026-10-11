@@ -40,6 +40,7 @@ Before publishing the v1 major line, `make release-dry-run` must pass with:
 - synthetic oracle suite
 - report/gate compatibility through the existing sample policy and analysis configs
 - failure-tolerance sweep, confidence-certified boundary gate, and compatible baseline regression smoke coverage for `v1.2.0`
+- paired Birnbaum service/edge criticality, JSON/Markdown report coverage, and default-pack example smoke coverage for `v1.3.0`
 
 Release notes for v1 must point at [v1-major-semantics.md](v1-major-semantics.md) and must not claim automatic probability calibration, arbitrary non-product `P`, live chaos execution, or rich temporal workflow models.
 

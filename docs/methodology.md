@@ -49,6 +49,12 @@ Ordered sweeps use coupled trials. Replica live/dead decisions are generated fro
 
 Boundary comparisons require identical sweep fingerprints covering the axis, targets/SLOs, confidence, trial count, base profile identity, and seed semantics. Raw baseline artifacts are evaluated with paired sweep seeds. Fingerprint mismatch or missing certified evidence is non-comparable and reaches the gate as indeterminate.
 
+## Birnbaum Component Importance
+
+Analysis schema `1.3` optionally evaluates each selected service or edge in paired counterfactual worlds. Other component states and execution randomness stay fixed within a trial. For monotone binary endpoint success under independent component sampling, the probability of an up-success/down-failure pair estimates `I_B(i) = R(i up) - R(i down) = dR/dq_i`. The interval is a Wilson interval for pivotal trial counts.
+
+For a replicated service, `q_i` is aggregate service liveness, not per-replica reliability. The report also derives `q_i * I_B(i)` as forced-down impact and `(1-q_i) * I_B(i)` as perfect-component gain. Fixed-k and correlated-fault profiles are not eligible for classical Birnbaum analysis. See [component-criticality.md](component-criticality.md).
+
 ## Stochastic Connectivity Parameters
 
 The baseline stochastic connectivity model is controlled through `analysis.reliability` and `profiles[].reliability`:

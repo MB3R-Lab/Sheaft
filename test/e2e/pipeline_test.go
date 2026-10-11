@@ -35,6 +35,60 @@ func TestRunPipelineGeneratesArtifacts(t *testing.T) {
 	}
 }
 
+func TestRunPipelineReportsBirnbaumImportance(t *testing.T) {
+	t.Parallel()
+	root := filepath.Clean(filepath.Join("..", ".."))
+	outDir := t.TempDir()
+	analysisPath := filepath.Join(outDir, "analysis.yaml")
+	analysis := `schema_version: "1.3"
+seed: 42
+trials: 100
+profiles:
+  - name: steady
+importance:
+  - name: health-criticality
+    profile: steady
+    targets:
+      - endpoint_id: frontend:GET /health
+    components:
+      kinds: [service]
+gate:
+  mode: report
+  default_action: report
+`
+	if err := os.WriteFile(analysisPath, []byte(analysis), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	var stdout, stderr bytes.Buffer
+	runner := app.NewRunner(&stdout, &stderr)
+	args := []string{"run", "--model", filepath.Join(root, "test", "fixtures", "model.disconnected.json"), "--analysis", analysisPath, "--out-dir", outDir}
+	if code := runner.Run(args); code != app.ExitOK {
+		t.Fatalf("run code=%d stderr=%s", code, stderr.String())
+	}
+	rep, err := report.Load(filepath.Join(outDir, "report.json"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(rep.Importance) != 1 || rep.Importance[0].EvaluatedComponents != 2 {
+		t.Fatalf("importance did not survive report serialization: %+v", rep.Importance)
+	}
+	components := rep.Importance[0].Endpoints[0].Components
+	if components[0].ID != "frontend" || components[0].BirnbaumImportance != 1 || components[1].BirnbaumImportance != 0 {
+		t.Fatalf("unexpected disconnected-model importance: %+v", components)
+	}
+	raw, err := os.ReadFile(filepath.Join(outDir, "summary.md"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(string(raw), "Component criticality (Birnbaum importance)") || !strings.Contains(string(raw), "service/frontend") {
+		t.Fatal("summary missing importance ranking")
+	}
+	// Importance is explanatory evidence; reading it must preserve the normal gate.
+	if code := runner.Run([]string{"gate", "--report", filepath.Join(outDir, "report.json"), "--analysis", analysisPath}); code != app.ExitOK {
+		t.Fatalf("gate code=%d stderr=%s", code, stderr.String())
+	}
+}
+
 func TestRunPipelineReportsFailureToleranceSweep(t *testing.T) {
 	t.Parallel()
 
