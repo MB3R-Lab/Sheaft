@@ -1373,8 +1373,18 @@ func buildEdgeAwarePaths(ctx advancedContext, def predicates.Definition, service
 		if !allowed {
 			return nil, nil, fmt.Errorf("required edge %q is excluded by edge_modes", edgeID)
 		}
-		if edge.From != def.EntryService && len(discoverJourneyPathsToTarget(def.EntryService, edge.From, adj)) == 0 {
-			return nil, nil, fmt.Errorf("required edge %q has a source unreachable from the entry service", edgeID)
+		if edge.From != def.EntryService {
+			sourcePaths := discoverJourneyPathsToTarget(def.EntryService, edge.From, adj)
+			if len(sourcePaths) == 0 {
+				return nil, nil, fmt.Errorf("required edge %q has a source unreachable from the entry service", edgeID)
+			}
+			targetPaths["\x00required-source:"+edgeID] = sourcePaths
+			for _, path := range sourcePaths {
+				if _, exists := seen[path.ID]; !exists {
+					seen[path.ID] = struct{}{}
+					diagnostic = append(diagnostic, path)
+				}
+			}
 		}
 		path := journeyPath{ID: "required-edge:" + edgeID, Services: []string{edge.From, edge.To}, EdgeIDs: []string{edgeID}}
 		targetPaths["\x00required-edge:"+edgeID] = []journeyPath{path}

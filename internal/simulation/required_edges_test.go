@@ -86,3 +86,20 @@ func TestRequiredCallsRejectUnknownEdges(t *testing.T) {
 		t.Fatalf("got %v", err)
 	}
 }
+
+func TestRequiredCallAlsoRequiresItsCallerToBeReachable(t *testing.T) {
+	loaded := requiredCallsFixture(true)
+	d := loaded.Model.Endpoints[0].SuccessPredicate
+	d.MandatoryTargets = []string{"payment"}
+	d.RequiredEdges = []string{mandatoryCallIDs[1]}
+	p := ProfileParams{Name: "disconnected-caller", Trials: 1, SamplingMode: config.SamplingModeIndependentReplica,
+		Reliability: config.ReliabilityConfig{Services: map[string]float64{"frontend": 1, "checkout": 1, "payment": 1},
+			Edges: map[string]float64{mandatoryCallIDs[0]: 0, mandatoryCallIDs[1]: 1, mandatoryCallIDs[2]: 1}}}
+	out, err := RunArtifactProfiles(loaded, AnalysisParams{Profiles: []ProfileParams{p}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if out.Profiles[0].EndpointAvailability["operation"] != 0 {
+		t.Fatal("a live call from an unreachable caller must not satisfy the operation")
+	}
+}
