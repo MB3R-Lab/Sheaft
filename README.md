@@ -8,7 +8,7 @@
 
 [Procrustes](https://github.com/MB3R-Lab/Procrustes) is the static preflight at the start of the toolchain: it verifies that deployment, observability, operation-scenario, and replica evidence is sufficient for model discovery. [Bering](https://github.com/MB3R-Lab/Bering) then validates real trace evidence and publishes the model and snapshot artifacts consumed by Sheaft.
 
-The ownership chain is `Procrustes -> Bering -> Sheaft`: static eligibility, runtime model discovery, then resilience analysis and CI/CD gating. [mb3r-stack](https://github.com/MB3R-Lab/mb3r-stack) bundles compatible Bering and Sheaft releases for integration and deployment.
+The ownership chain is `Procrustes -> Bering -> Sheaft`: static eligibility, runtime model discovery, then resilience analysis and CI/CD gating. [mb3r-stack](https://github.com/MB3R-Lab/mb3r-stack) integrates all three: a source-pinned Procrustes preflight launcher plus digest-pinned Bering and Sheaft deployment. Procrustes is invoked before trace collection, not deployed as a persistent service. The [separate reproduction repository](https://github.com/MB3R-Lab/mb3r-software-complex-repro) owns the demonstration, experiment inputs, and reference results.
 
 Sheaft is a downstream resilience posture engine and CI/CD gate for model artifacts produced by Bering or another compatible upstream producer.
 
