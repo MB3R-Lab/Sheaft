@@ -63,6 +63,12 @@ history:
 if ($LASTEXITCODE -ne 0) { throw "importance example failed" }
 
 $serveOut = Join-Path $OutRoot "serve.stdout.log"
+& $BinPath run `
+    --model examples/outputs/model.required-calls.sample.json `
+    --analysis configs/analysis.required-calls.example.yaml `
+    --out-dir (Join-Path $OutRoot "required-calls")
+if ($LASTEXITCODE -ne 0) { throw "required-calls example failed" }
+
 $serveErr = Join-Path $OutRoot "serve.stderr.log"
 $readyOut = Join-Path $OutRoot "readyz.json"
 $reportOut = Join-Path $OutRoot "current-report.json"

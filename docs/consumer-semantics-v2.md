@@ -34,6 +34,7 @@ For each profile and trial, Sheaft applies:
 
 - legacy explicit predicates (`all_of`, `any_of`, `k_of_n`) stay service-based
 - `edge_aware` predicates evaluate reachability from `entry_service` to every `mandatory_target` over the selected `edge_modes`
+- external predicate contract `1.1` optionally adds conjunctive `required_edges`: each exact call and its reachable live caller must succeed, even when another path reaches the target; see [required-calls.md](required-calls.md)
 - edge fail-stop and edge brownout faults do not mutate the success meaning of old explicit service predicates
 - advanced graph diagnostics can still be emitted alongside the predicate result
 

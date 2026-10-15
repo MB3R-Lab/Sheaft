@@ -1,0 +1,22 @@
+schema_version: "1.3"
+seed: 42
+trials: 2000
+predicate_contract: predicate-contract.required-calls.example.yaml
+profiles:
+  - name: independent
+    sampling_mode: independent_replica
+    failure_probability: 0.05
+    reliability:
+      edge_live_probability: 0.995
+importance:
+  - name: required-call-components
+    profile: independent
+    method: birnbaum
+    confidence_level: 0.95
+    targets:
+      - endpoint_id: 'gateway:GET /explicit'
+    components:
+      kinds: [service, edge]
+gate:
+  mode: report
+  global_threshold: 0.0

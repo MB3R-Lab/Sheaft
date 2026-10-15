@@ -22,6 +22,11 @@ For the v1 major release claim, the `1.3.0` line is the Bering v1 contract line 
 
 ## Comparison Rule
 
+Sheaft `v1.3.1` also supports Sheaft-owned external predicate contract `1.1`
+(`required_edges`) alongside legacy `1.0`. Sheaft `v1.3.0` supports only predicate
+contract `1.0` and rejects `1.1`. This is not a Bering artifact-schema migration;
+the upstream pins and digests in the matrix are unchanged.
+
 The existing `analysis.baselines` flow can compare supported artifacts on the current `1.3.0` line:
 
 - primary `1.3.0` artifact vs baseline `1.3.0` artifact

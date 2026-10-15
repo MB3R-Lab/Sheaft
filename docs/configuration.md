@@ -85,6 +85,8 @@ gate:
 
 The minimum must be one of the evaluated axis values. `max_regression` requires a named `analysis.baselines` entry. Raw baseline artifacts are rerun with the same sweep seed and definition; prior reports are comparable only when their sweep fingerprint matches. Missing or incompatible evidence becomes `boundary_indeterminate`. In `mode: fail`, `default_action: fail` makes that fail closed; `indeterminate_action: warn` can weaken an individual rule explicitly.
 
+Ordinary endpoint thresholds compare point estimates. Sweep certification uses pointwise Wilson intervals; `max_regression` compares two discrete `certified_tolerance` values, not a confidence bound on the change of a continuous threshold. No simultaneous 95% coverage for the complete gate is claimed. In a single boundary rule, a failed minimum check returns before regression evaluation. Use separate minimum and regression rules for the same endpoint/sweep when both diagnoses should be retained.
+
 These boundaries describe the configured fail-stop model. They do not model traffic redistribution, queue saturation, capacity exhaustion, or retry feedback, and must not be described as overload-cascade tipping points.
 
 ## Component Criticality
@@ -102,10 +104,11 @@ Use the versioned serve config for long-running posture mode:
 
 ## Predicate Overlay Contract
 
-For legacy models that only expose `success_predicate_ref`, supply:
+For an explicit endpoint predicate selected by `success_predicate_ref`, supply:
 
 - [configs/predicate-contract.example.yaml](../configs/predicate-contract.example.yaml)
 - [api/schema/predicate-contract.schema.json](../api/schema/predicate-contract.schema.json)
+- [configs/predicate-contract.required-calls.example.yaml](../configs/predicate-contract.required-calls.example.yaml): contract `1.1` mandatory-call example
 
 The overlay can also carry endpoint weights.
 
@@ -113,6 +116,10 @@ Predicate types are:
 
 - `all_of`, `any_of`, and `k_of_n` for legacy service-availability predicates
 - `edge_aware` with `entry_service`, `mandatory_targets`, and `edge_modes` for path-aware immediate or eventual predicates
+
+Since Sheaft `v1.3.1`, external predicate contract `schema_version: "1.1"` additionally permits `required_edges` on `edge_aware`. Supply exact model edge IDs. Every listed call must succeed, with live endpoints and a reachable caller, in addition to mandatory-target reachability. A surviving alternative path does not replace that call. Contract `1.0` retains its behavior and rejects nonempty `required_edges`; older Sheaft versions reject contract `1.1` explicitly. The predicate-contract version is independent of analysis schema `1.3` and Bering schema `1.3.0`.
+
+Run [analysis.required-calls.example.yaml](../configs/analysis.required-calls.example.yaml) with `examples/outputs/model.required-calls.sample.json`. Its explicit endpoint uses `predicate_mode: external_predicate`; immediate/eventual producer hints otherwise take precedence. See [required-calls.md](required-calls.md) for migration, failure-state scope, and limitations.
 
 ## Fault Contract
 

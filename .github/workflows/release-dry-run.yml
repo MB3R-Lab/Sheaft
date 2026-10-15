@@ -55,3 +55,4 @@ jobs:
             .tmp/smoke-examples/**
             .tmp/benchmark-slice/**
           if-no-files-found: error
+          retention-days: 3

@@ -3,12 +3,15 @@ configs/analysis.example.yaml
 configs/analysis.v1.1.example.yaml
 configs/analysis.sweep.example.yaml
 configs/analysis.importance.example.yaml
+configs/analysis.required-calls.example.yaml
 configs/fault-contract.example.yaml
 configs/gate.policy.example.yaml
 configs/predicate-contract.example.yaml
+configs/predicate-contract.required-calls.example.yaml
 configs/sheaft.example.yaml
 examples/otel/journeys.sample.json
 examples/outputs/model.sample.json
+examples/outputs/model.required-calls.sample.json
 examples/outputs/model-v1.3.0.sample.json
 examples/outputs/snapshot.sample.json
 examples/outputs/snapshot-v1.3.0.sample.json

@@ -22,6 +22,8 @@ The implementation is deterministic for a fixed artifact, analysis config, and s
 
 Sheaft `v1.2.0` evaluates the same product model over an ordered fail-stop axis and reports the grid bracket where an endpoint crosses its SLO. Wilson lower bounds provide a conservative certified tolerance, and compatible baseline artifacts/reports support release-regression gates. This is repeated evaluation of `P_Node * P_Edge` and `Phi`; it does not add capacity, queue, or retry-load feedback semantics.
 
+Sheaft `v1.3.1` adds optional exact mandatory-call obligations to `Phi` through external predicate contract `1.1`. In addition to target reachability, every `required_edges` call must succeed and its caller must be live and reachable. Legacy predicates are unchanged. This does not infer call order, payload validity, caching, or execution conditions from topology; see [required-calls.md](required-calls.md).
+
 ## Paper Mapping
 
 | Formal element | Sheaft v1 implementation | Evidence | Boundary |

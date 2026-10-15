@@ -1,0 +1,10 @@
+schema_version: "1.1"
+predicates:
+  explicit.flow:
+    type: edge_aware
+    entry_service: gateway
+    mandatory_targets: [checkout, payment]
+    edge_modes: [sync]
+    required_edges:
+      - 'gateway|checkout|sync|true|protocol=http|operation=POST|route=%2Fcheckout'
+      - 'checkout|payment|sync|true|protocol=http|operation=POST|route=%2Fcharge'

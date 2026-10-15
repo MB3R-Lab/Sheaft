@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+## v1.3.1 - 2026-10-15
+
+- added optional `required_edges` in external predicate contract `1.1`, requiring exact calls with live reachable callers in addition to mandatory-target reachability
+- retained legacy contract `1.0` and unchanged Bering schema pins; validated required-call availability and nontrivial Birnbaum values against state enumeration and series oracles
+- added a packaged runnable example, migration guidance, and anonymous release-download/checksum/launch verification
+- clarified point-estimate endpoint gates, pointwise Wilson grid certification, and discrete baseline-regression semantics
+
 ## v1.3.0 - 2026-10-11
 
 - added analysis schema `1.3` opt-in Birnbaum importance for service liveness and edge connectivity, with paired counterfactual trials, Wilson intervals, endpoint rankings, forced-down impact, and perfect-component gain

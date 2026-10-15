@@ -1,6 +1,6 @@
 # Releasing Sheaft
 
-Sheaft release automation is tag-driven and platform-neutral. The `v1.0.0` line established the stochastic-connectivity baseline; `v1.2.0` adds confidence-certified failure-tolerance boundaries and `v1.3.0` adds paired Birnbaum component criticality. Release notes and README language must stay explicit about the stable v1 claim and the operational surfaces that remain outside it.
+Sheaft release automation is tag-driven and platform-neutral. The `v1.0.0` line established the stochastic-connectivity baseline; `v1.2.0` adds confidence-certified failure-tolerance boundaries, `v1.3.0` adds paired Birnbaum component criticality, and `v1.3.1` adds optional mandatory calls in external predicate contract `1.1`. Release notes and README language must stay explicit about the stable v1 claim and the operational surfaces that remain outside it.
 
 The canonical release contract is the generated payload:
 

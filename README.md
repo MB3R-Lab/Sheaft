@@ -1,6 +1,6 @@
 # Sheaft
 
-[![release](https://img.shields.io/badge/release-v1.3.0-blue)](https://github.com/MB3R-Lab/Sheaft/releases/tag/v1.3.0)
+[![release](https://img.shields.io/badge/release-v1.3.1-blue)](https://github.com/MB3R-Lab/Sheaft/releases/tag/v1.3.1)
 [![checks](https://img.shields.io/github/actions/workflow/status/MB3R-Lab/Sheaft/release-dry-run.yml?branch=main&label=checks)](https://github.com/MB3R-Lab/Sheaft/actions/workflows/release-dry-run.yml)
 [![bering schema](https://img.shields.io/badge/bering%20schema-1.3.0-blue)](https://github.com/MB3R-Lab/Sheaft/blob/main/docs/compatibility-matrix.md)
 
@@ -23,9 +23,9 @@ It stays downstream of topology discovery. The public surface in this repository
 
 ## Stability / Release Status
 
-The current public release line is `v1.3.0`. It adds endpoint-specific Birnbaum component criticality to failure-tolerance analysis over the stochastic-connectivity baseline and Bering `1.3.0` model/snapshot contracts.
+The current public release line is `v1.3.1`. It adds explicit mandatory calls to endpoint predicates, alongside the Birnbaum component criticality introduced in `v1.3.0`. Bering `1.3.0` model/snapshot contracts and their digests remain unchanged. See [release notes](release/v1.3.1.md).
 
-Stable in `v1.3.0`:
+Stable in `v1.3.1`:
 
 - strict acceptance of the Bering v1 contract line: `io.mb3r.bering.model@1.3.0` and `io.mb3r.bering.snapshot@1.3.0`
 - batch CLI command names and core flow: `simulate`, `gate`, `run`
@@ -36,13 +36,14 @@ Stable in `v1.3.0`:
 - release gates for minimum certified tolerance and maximum regression against a compatible baseline
 - deterministic sweep fingerprints and paired raw-artifact baseline evaluation
 - paired service/edge Birnbaum importance, endpoint rankings, Wilson intervals, and component impact/gain estimates
+- external predicate contract `1.1` with optional `required_edges`: exact calls must succeed even when an alternative graph path reaches the target; legacy predicate contract `1.0` remains supported
 - baseline comparison through `analysis.baselines` for supported `1.3.0` artifacts
 - additive advanced analysis when `1.3.0` metadata exists
 - gate decision reasons in `report.json`, `summary.md`, and `sheaft gate/run --why`
 - fixed benchmark slice and release-quality `quality-report.json` generation
 - release archives for Linux and macOS on `amd64` and `arm64`
 
-Outside the stable `v1.3.0` release claim:
+Outside the stable `v1.3.1` release claim:
 
 - capacity-aware traffic redistribution, queue saturation, retry feedback, and overload-cascade prediction
 - long-running `serve` posture service as a long-term operations contract
@@ -137,6 +138,17 @@ Failure-tolerance sweep and release-gate example:
 ```
 
 The sweep reports a modelled fail-stop curve, Wilson confidence intervals, a conservative certified tolerance, and the evaluated bracket where each target endpoint crosses its SLO. Sweep points remain separate from profile aggregation; explicit `boundary_rules` gate only the certified boundary. They do not model overload, capacity saturation, queues, or retry feedback.
+
+Mandatory-call example (included in the default config pack):
+
+```bash
+./sheaft run \
+  --model examples/outputs/model.required-calls.sample.json \
+  --analysis configs/analysis.required-calls.example.yaml \
+  --out-dir out/required-calls
+```
+
+Reachability and execution obligations are different: when an operation requires a specific call, declare its exact discovered edge ID in predicate contract `1.1`. The caller must also be live and reachable. Availability, sweeps, and Birnbaum share this predicate. See [mandatory-call semantics and migration](docs/required-calls.md); call order, payload validity, cache behavior, and operational probability calibration are not inferred.
 
 Component criticality and Birnbaum importance:
 

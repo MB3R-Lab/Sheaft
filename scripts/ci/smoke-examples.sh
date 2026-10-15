@@ -55,6 +55,11 @@ EOF
   --analysis configs/analysis.importance.example.yaml \
   --out-dir "${out_root}/importance"
 
+"${bin_path}" run \
+  --model examples/outputs/model.required-calls.sample.json \
+  --analysis configs/analysis.required-calls.example.yaml \
+  --out-dir "${out_root}/required-calls"
+
 "${bin_path}" serve --config "${serve_config}" >"${serve_log}" 2>&1 &
 pid=$!
 

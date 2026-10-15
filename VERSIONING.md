@@ -39,6 +39,10 @@ This is compatibility metadata, not ownership metadata.
   - `1.0` is the baseline analysis surface
   - `1.1` adds `fault_contract`, `profiles[].fault_profile`, and artifact-vs-artifact baselines
   - `1.2` adds failure-tolerance sweeps, Wilson confidence certification, boundary gate rules, and compatible baseline boundary regression
+  - `1.3` adds paired service/edge Birnbaum component importance
+- External predicate contract:
+  - `1.0` retains service-only and target-reachability predicates
+  - `1.1` adds optional `required_edges` on `edge_aware`, supported since app `v1.3.1`
 - Fault contract:
   - `1.0` is the first separate Sheaft-owned schema for advanced faults and assertions
 

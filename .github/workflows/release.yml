@@ -45,6 +45,9 @@ jobs:
       - name: Generate compatibility manifest
         run: make compatibility-manifest
 
+      - name: Validate release documentation and run closed-form oracles
+        run: make validate-v1-release-docs oracle-suite
+
       - name: Build release archives
         run: make release-build APP_VERSION=${APP_VERSION#v}
 
@@ -120,6 +123,49 @@ jobs:
           if [ -f dist/benchmark-slice/quality-report.json ]; then
             files+=("dist/benchmark-slice/quality-report.json")
           fi
+          if [ -f .tmp/oracle-suite/oracle-report.json ]; then
+            files+=(".tmp/oracle-suite/oracle-report.json")
+          fi
           files+=("compatibility-manifest.json")
           files+=("release-manifest.json")
           gh release upload "${TAG}" "${files[@]}" --clobber
+
+  verify-public-release:
+    name: Download and run published assets without authentication
+    needs: publish-release
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    env:
+      RELEASE_TAG: ${{ github.ref_name }}
+    steps:
+      - name: Download and verify the public binary and config pack
+        shell: bash
+        run: |
+          set -euo pipefail
+          base="https://github.com/${GITHUB_REPOSITORY}/releases/download/${RELEASE_TAG}"
+          curl --fail --location --retry 3 "$base/release-manifest.json" -o release-manifest.json
+          test "$(jq -r .git_commit release-manifest.json)" = "$GITHUB_SHA"
+          binary=$(jq -r '.binaries[] | select(.os == "linux" and .arch == "amd64") | .archive.path | split("/")[-1]' release-manifest.json)
+          binary_hash=$(jq -r '.binaries[] | select(.os == "linux" and .arch == "amd64") | .archive.sha256' release-manifest.json)
+          pack=$(jq -r '.default_config_packs[0].archive.path | split("/")[-1]' release-manifest.json)
+          pack_hash=$(jq -r '.default_config_packs[0].archive.sha256' release-manifest.json)
+          curl --fail --location --retry 3 "$base/$binary" -o "$binary"
+          curl --fail --location --retry 3 "$base/$pack" -o "$pack"
+          echo "$binary_hash  $binary" | sha256sum -c -
+          echo "$pack_hash  $pack" | sha256sum -c -
+          tar -xzf "$binary"
+          tar -xzf "$pack" --strip-components=1
+          ./sheaft help
+          ./sheaft run --model examples/outputs/model.required-calls.sample.json --analysis configs/analysis.required-calls.example.yaml --out-dir out/binary
+      - name: Pull and execute the published image anonymously
+        shell: bash
+        run: |
+          set -euo pipefail
+          image=$(jq -r '.oci_images[0] | .repository + "@" + .digest' release-manifest.json)
+          docker pull "$image"
+          docker run --rm --user 0:0 --mount "type=bind,source=$PWD,target=/data" "$image" run --model /data/examples/outputs/model.required-calls.sample.json --analysis /data/configs/analysis.required-calls.example.yaml --out-dir /data/out/image
+          jq -S '.endpoint_results' out/binary/report.json > binary-endpoints.json
+          jq -S '.endpoint_results' out/image/report.json > image-endpoints.json
+          diff -u binary-endpoints.json image-endpoints.json
