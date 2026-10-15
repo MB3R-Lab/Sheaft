@@ -9,7 +9,7 @@
   "properties": {
     "schema_version": {
       "type": "string",
-      "const": "1.0"
+      "enum": ["1.0", "1.1"]
     },
     "predicates": {
       "type": "object",
@@ -25,7 +25,18 @@
       }
     }
   },
+  "allOf": [{
+    "if": {"properties": {"schema_version": {"const": "1.0"}}},
+    "then": {"properties": {"predicates": {"additionalProperties": {"$ref": "#/$defs/legacyPredicate"}}}}
+  }],
   "$defs": {
+    "legacyPredicate": {
+      "allOf": [{"$ref": "#/$defs/predicate"}],
+      "properties": {
+        "required_edges": {"maxItems": 0},
+        "children": {"items": {"$ref": "#/$defs/legacyPredicate"}}
+      }
+    },
     "predicate": {
       "type": "object",
       "required": [
@@ -64,6 +75,11 @@
           "items": {
             "type": "string"
           }
+        },
+        "required_edges": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {"type": "string", "minLength": 1}
         },
         "edge_modes": {
           "type": "array",

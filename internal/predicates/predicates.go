@@ -9,11 +9,12 @@ import (
 )
 
 const (
-	SchemaVersion = "1.0"
-	TypeAllOf     = "all_of"
-	TypeAnyOf     = "any_of"
-	TypeKOfN      = "k_of_n"
-	TypeEdgeAware = "edge_aware"
+	SchemaVersion              = "1.0"
+	SchemaVersionRequiredEdges = "1.1"
+	TypeAllOf                  = "all_of"
+	TypeAnyOf                  = "any_of"
+	TypeKOfN                   = "k_of_n"
+	TypeEdgeAware              = "edge_aware"
 )
 
 const (
@@ -30,6 +31,7 @@ type Definition struct {
 	EntryService     string       `json:"entry_service,omitempty" yaml:"entry_service,omitempty"`
 	MandatoryTargets []string     `json:"mandatory_targets,omitempty" yaml:"mandatory_targets,omitempty"`
 	EdgeModes        []string     `json:"edge_modes,omitempty" yaml:"edge_modes,omitempty"`
+	RequiredEdges    []string     `json:"required_edges,omitempty" yaml:"required_edges,omitempty"`
 }
 
 type Set map[string]Definition
@@ -58,8 +60,8 @@ func Load(path string) (Contract, error) {
 }
 
 func (c Contract) Validate() error {
-	if c.SchemaVersion != SchemaVersion {
-		return fmt.Errorf("unsupported predicate contract schema_version: got %q want %q", c.SchemaVersion, SchemaVersion)
+	if c.SchemaVersion != SchemaVersion && c.SchemaVersion != SchemaVersionRequiredEdges {
+		return fmt.Errorf("unsupported predicate contract schema_version: got %q want %q or %q", c.SchemaVersion, SchemaVersion, SchemaVersionRequiredEdges)
 	}
 	if len(c.Predicates) == 0 && len(c.EndpointWeights) == 0 {
 		return errors.New("predicate contract must define predicates or endpoint_weights")
@@ -70,6 +72,9 @@ func (c Contract) Validate() error {
 		}
 		if err := def.Validate(); err != nil {
 			return fmt.Errorf("predicate %q: %w", name, err)
+		}
+		if c.SchemaVersion == SchemaVersion && containsRequiredEdges(def) {
+			return fmt.Errorf("predicate %q: required_edges requires predicate contract schema_version 1.1", name)
 		}
 	}
 	for endpoint, weight := range c.EndpointWeights {
@@ -86,6 +91,16 @@ func (c Contract) Validate() error {
 func (d Definition) Validate() error {
 	if strings.TrimSpace(d.Type) == "" {
 		return errors.New("type cannot be empty")
+	}
+	if len(d.RequiredEdges) > 0 && d.Type != TypeEdgeAware {
+		return errors.New("required_edges is only supported by edge_aware predicates")
+	}
+	seenEdges := map[string]bool{}
+	for idx, id := range d.RequiredEdges {
+		if strings.TrimSpace(id) == "" || seenEdges[id] {
+			return fmt.Errorf("required_edges[%d] must be a nonempty unique edge ID", idx)
+		}
+		seenEdges[id] = true
 	}
 	operandCount := len(d.Services) + len(d.Children)
 	switch d.Type {
@@ -191,4 +206,16 @@ func Evaluate(def Definition, alive func(string) bool) bool {
 
 func configLoad(path string, dst any) error {
 	return config.LoadStructured(path, dst)
+}
+
+func containsRequiredEdges(d Definition) bool {
+	if len(d.RequiredEdges) > 0 {
+		return true
+	}
+	for _, child := range d.Children {
+		if containsRequiredEdges(child) {
+			return true
+		}
+	}
+	return false
 }

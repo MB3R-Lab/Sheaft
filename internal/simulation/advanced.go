@@ -1354,6 +1354,32 @@ func buildEdgeAwarePaths(ctx advancedContext, def predicates.Definition, service
 			diagnostic = append(diagnostic, path)
 		}
 	}
+	// Reachability permits alternative paths. A declared mandatory call instead
+	// requires this particular edge to execute successfully, even if its target
+	// remains reachable through another caller. Both the sweep and Birnbaum
+	// evaluators consume these conjunctive path groups.
+	for _, edgeID := range sortedUnique(def.RequiredEdges) {
+		edge, exists := ctx.edges[edgeID]
+		if !exists {
+			return nil, nil, fmt.Errorf("required edge %q is absent from the model", edgeID)
+		}
+		allowed := false
+		for _, step := range adj[edge.From] {
+			if step.EdgeID == edgeID {
+				allowed = true
+				break
+			}
+		}
+		if !allowed {
+			return nil, nil, fmt.Errorf("required edge %q is excluded by edge_modes", edgeID)
+		}
+		if edge.From != def.EntryService && len(discoverJourneyPathsToTarget(def.EntryService, edge.From, adj)) == 0 {
+			return nil, nil, fmt.Errorf("required edge %q has a source unreachable from the entry service", edgeID)
+		}
+		path := journeyPath{ID: "required-edge:" + edgeID, Services: []string{edge.From, edge.To}, EdgeIDs: []string{edgeID}}
+		targetPaths["\x00required-edge:"+edgeID] = []journeyPath{path}
+		diagnostic = append(diagnostic, path)
+	}
 	slices.SortFunc(diagnostic, func(a, b journeyPath) int {
 		return strings.Compare(a.ID, b.ID)
 	})
