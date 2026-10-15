@@ -44,6 +44,8 @@ Sheaft `v1.3.1` ships `configs/analysis.required-calls.example.yaml` and
 pack. Run them against `examples/outputs/model.required-calls.sample.json` as shown in the README.
 This generic checkout example uses actual edge IDs in the packaged model; it is
 not a reproduction of a paper experiment.
+Run the batch example from the checkout or extracted pack root: relative paths
+inside a batch analysis config are resolved against the working directory.
 
 Existing configurations need no migration unless they intend to require calls.
 For those endpoints, use predicate contract `1.1`, add the exact required IDs,
