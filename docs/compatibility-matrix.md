@@ -6,14 +6,14 @@ The machine-readable equivalent of this page is the repo-root `compatibility-man
 
 ## Current App-Level Sync
 
-The current `main` line has been synced against the Bering `v1.0.0` release/package. This is recorded in `compatibility-manifest.json` as `tested_bering_app_versions: ["v1.0.0"]`.
+The current `main` line has been synced against the published Bering `v1.1.0` release/package. This is recorded in `compatibility-manifest.json` as `tested_bering_app_versions: ["v1.1.0"]`.
 
 That package sync does not widen or narrow the accepted upstream schema contracts. The strict contract pins are the `1.3.0` Bering model/snapshot lines below.
 
-Bering `v1.1.0` is pending release-asset verification for a Sheaft `v1.3.2`
-patch. Until that verification passes, the machine-readable tested list remains
-`["v1.0.0"]`; a candidate source tree or locally assembled archive is not a
-published compatibility checkpoint.
+Bering `v1.1.0` passed release-asset verification for Sheaft `v1.3.2`. The
+checkpoint used the published release manifest and contracts archive; a source
+tree or locally assembled archive is not sufficient for the machine-readable
+tested-version claim.
 
 For the v1 major release claim, the `1.3.0` line is the Bering v1 contract line used for typed topology `G=(V,E,tau)`, strict positive replica counts `R:V -> N_{>0}`, reliability evidence, operation-aware edge identity, and producer endpoint semantic hints. Pre-v1 preview lines `1.0.0`, `1.1.0`, and `1.2.0` are retired on the current main line. See [v1-major-semantics.md](v1-major-semantics.md).
 
@@ -21,7 +21,7 @@ For the v1 major release claim, the `1.3.0` line is the Bering v1 contract line 
 
 | Sheaft line | Status | Bering model contract | Model URI | Model digest | Bering snapshot contract | Snapshot URI | Snapshot digest | Notes |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| `v1.3.x` | current stable | `io.mb3r.bering.model@1.3.0` | `https://mb3r-lab.github.io/Bering/schema/model/v1.3.0/model.schema.json` | `sha256:2aa8a3550a25dc626ba6d2f5833569efca2f382b9e5c9c3405be93695d7d48ae` | `io.mb3r.bering.snapshot@1.3.0` | `https://mb3r-lab.github.io/Bering/schema/snapshot/v1.3.0/snapshot.schema.json` | `sha256:cb778e5b0866d9ce5cfe7f23b8d98a339603593a0247cccd9cddaf05c7ae4bb1` | Adds Sheaft-owned analysis schema `1.3` endpoint-specific Birnbaum service/edge importance without changing accepted Bering contracts. |
+| `v1.3.x` | current stable | `io.mb3r.bering.model@1.3.0` | `https://mb3r-lab.github.io/Bering/schema/model/v1.3.0/model.schema.json` | `sha256:2aa8a3550a25dc626ba6d2f5833569efca2f382b9e5c9c3405be93695d7d48ae` | `io.mb3r.bering.snapshot@1.3.0` | `https://mb3r-lab.github.io/Bering/schema/snapshot/v1.3.0/snapshot.schema.json` | `sha256:cb778e5b0866d9ce5cfe7f23b8d98a339603593a0247cccd9cddaf05c7ae4bb1` | Sheaft `v1.3.2` verifies the published Bering `v1.1.0` app/package while retaining analysis schema `1.3` and unchanged accepted Bering contracts. |
 | `v1.2.x` | previous stable | `io.mb3r.bering.model@1.3.0` | `https://mb3r-lab.github.io/Bering/schema/model/v1.3.0/model.schema.json` | `sha256:2aa8a3550a25dc626ba6d2f5833569efca2f382b9e5c9c3405be93695d7d48ae` | `io.mb3r.bering.snapshot@1.3.0` | `https://mb3r-lab.github.io/Bering/schema/snapshot/v1.3.0/snapshot.schema.json` | `sha256:cb778e5b0866d9ce5cfe7f23b8d98a339603593a0247cccd9cddaf05c7ae4bb1` | Adds Sheaft-owned analysis schema `1.2` failure-tolerance boundaries without changing accepted Bering contracts. |
 | `main` (unreleased) | active v1 line | `io.mb3r.bering.model@1.3.0` | `https://mb3r-lab.github.io/Bering/schema/model/v1.3.0/model.schema.json` | `sha256:2aa8a3550a25dc626ba6d2f5833569efca2f382b9e5c9c3405be93695d7d48ae` | `io.mb3r.bering.snapshot@1.3.0` | `https://mb3r-lab.github.io/Bering/schema/snapshot/v1.3.0/snapshot.schema.json` | `sha256:cb778e5b0866d9ce5cfe7f23b8d98a339603593a0247cccd9cddaf05c7ae4bb1` | Enables operation-aware typed edge IDs, strict positive replica counts, service/edge reliability evidence, retry/timeout metadata, placement buckets, shared resources, endpoint semantic hints, and path-aware advanced diagnostics. |
 

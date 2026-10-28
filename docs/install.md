@@ -1,6 +1,6 @@
 # Install
 
-The current public release line is `v1.3.1`. Prefer release assets for evaluation and automation; use `go install` or `go build` as fallback paths.
+The current public release line is `v1.3.2`. Prefer release assets for evaluation and automation; use `go install` or `go build` as fallback paths.
 
 The machine-readable entrypoint for release consumers is the `release-manifest.json` asset attached to each GitHub Release. It records exact archive names, checksums, image references, chart version, and the default config pack asset for that release.
 
@@ -11,27 +11,27 @@ The machine-readable entrypoint for release consumers is the `release-manifest.j
 3. Verify the binary archive against `sheaft_X.Y.Z_checksums.txt` and the config pack against its SHA-256 in `release-manifest.json`.
 4. Extract the binary and the config pack.
 
-Example `v1.3.1` asset names:
+Example `v1.3.2` asset names:
 
-- `sheaft_1.3.1_linux_amd64.tar.gz`
-- `sheaft_1.3.1_linux_arm64.tar.gz`
-- `sheaft_1.3.1_darwin_amd64.tar.gz`
-- `sheaft_1.3.1_darwin_arm64.tar.gz`
-- `sheaft_1.3.1_windows_amd64.zip`
-- `sheaft-default-config-pack_1.3.1.tar.gz`
+- `sheaft_1.3.2_linux_amd64.tar.gz`
+- `sheaft_1.3.2_linux_arm64.tar.gz`
+- `sheaft_1.3.2_darwin_amd64.tar.gz`
+- `sheaft_1.3.2_darwin_arm64.tar.gz`
+- `sheaft_1.3.2_windows_amd64.zip`
+- `sheaft-default-config-pack_1.3.2.tar.gz`
 
 Minimal first run after extraction:
 
 ```bash
-tar -xzf sheaft_1.3.1_linux_amd64.tar.gz
-tar -xzf sheaft-default-config-pack_1.3.1.tar.gz --strip-components=1
+tar -xzf sheaft_1.3.2_linux_amd64.tar.gz
+tar -xzf sheaft-default-config-pack_1.3.2.tar.gz --strip-components=1
 ./sheaft run --model examples/outputs/model.sample.json --policy configs/gate.policy.example.yaml --out-dir out/quickstart --seed 42
 ```
 
 ## Fallback: `go install`
 
 ```bash
-go install github.com/MB3R-Lab/Sheaft/cmd/sheaft@v1.3.1
+go install github.com/MB3R-Lab/Sheaft/cmd/sheaft@v1.3.2
 sheaft help
 ```
 
@@ -47,21 +47,21 @@ go build ./cmd/sheaft
 ## OCI Image
 
 ```bash
-docker pull ghcr.io/mb3r-lab/sheaft:v1.3.1
-docker run --rm ghcr.io/mb3r-lab/sheaft:v1.3.1 help
+docker pull ghcr.io/mb3r-lab/sheaft:v1.3.2
+docker run --rm ghcr.io/mb3r-lab/sheaft:v1.3.2 help
 ```
 
 The image keeps the same CLI entrypoint behavior:
 
 ```bash
-docker run --rm ghcr.io/mb3r-lab/sheaft:v1.3.1 run --model /data/input.json --analysis /config/analysis.yaml --out-dir /out
+docker run --rm ghcr.io/mb3r-lab/sheaft:v1.3.2 run --model /data/input.json --analysis /config/analysis.yaml --out-dir /out
 ```
 
 ## OCI Helm Chart
 
 ```bash
-helm pull oci://ghcr.io/mb3r-lab/charts/sheaft --version 1.3.1
-helm install sheaft oci://ghcr.io/mb3r-lab/charts/sheaft --version 1.3.1
+helm pull oci://ghcr.io/mb3r-lab/charts/sheaft --version 1.3.2
+helm install sheaft oci://ghcr.io/mb3r-lab/charts/sheaft --version 1.3.2
 ```
 
 Chart modes:

@@ -21,7 +21,7 @@ Published remote schema sync is verified separately for every supported versione
 
 The current app-level Bering release/package sync target is:
 
-- Release: `https://github.com/MB3R-Lab/Bering/releases/tag/v1.0.0`
+- Release: `https://github.com/MB3R-Lab/Bering/releases/tag/v1.1.0`
 - Schema contract pins consumed by Sheaft remain explicit in `internal/modelcontract/contract.go` and currently include only `1.3.0`.
 
 ## Release Policy
@@ -56,7 +56,7 @@ When Bering publishes a product release that keeps the same schema contract line
 5. regenerate `compatibility-manifest.json`;
 6. run the compatibility-manifest check and `go test ./...`.
 
-For the pending Bering `v1.1.0` checkpoint, use:
+The Bering `v1.1.0` checkpoint was verified with:
 
 ```bash
 make check-bering-app-compatibility \
@@ -65,8 +65,8 @@ make check-bering-app-compatibility \
   BERING_CONTRACTS_ARCHIVE=/path/to/bering-contracts_1.1.0.tar.gz
 ```
 
-Do not add `v1.1.0` to `tested_bering_app_versions` until this command passes
-with assets downloaded from the published release.
+The release dry-run repeats this check against assets downloaded from the Bering
+GitHub release named by `tested_bering_app_versions`.
 
 ### Breaking upstream schema release
 
