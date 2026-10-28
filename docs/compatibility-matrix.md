@@ -10,6 +10,11 @@ The current `main` line has been synced against the Bering `v1.0.0` release/pack
 
 That package sync does not widen or narrow the accepted upstream schema contracts. The strict contract pins are the `1.3.0` Bering model/snapshot lines below.
 
+Bering `v1.1.0` is pending release-asset verification for a Sheaft `v1.3.2`
+patch. Until that verification passes, the machine-readable tested list remains
+`["v1.0.0"]`; a candidate source tree or locally assembled archive is not a
+published compatibility checkpoint.
+
 For the v1 major release claim, the `1.3.0` line is the Bering v1 contract line used for typed topology `G=(V,E,tau)`, strict positive replica counts `R:V -> N_{>0}`, reliability evidence, operation-aware edge identity, and producer endpoint semantic hints. Pre-v1 preview lines `1.0.0`, `1.1.0`, and `1.2.0` are retired on the current main line. See [v1-major-semantics.md](v1-major-semantics.md).
 
 ## Current Matrix

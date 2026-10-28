@@ -68,6 +68,10 @@ Unknown or mismatched contracts are rejected. There is no silent fallback for un
 
 The current `main` line has also been app-level synced against the Bering `v1.0.0` release/package. That sync does not change the accepted Bering schema contract pins.
 
+Bering `v1.1.0` is the next compatibility candidate for a Sheaft `v1.3.2`
+patch. It will be recorded as tested only after the published Bering release
+manifest and contracts archive pass the downstream release-asset check.
+
 The v1 major release claim is documented in [docs/v1-major-semantics.md](docs/v1-major-semantics.md): product-baseline `P_Node * P_Edge` stochastic connectivity over Bering topology `G`, replication map `R`, and endpoint predicates `Phi`, with explicit boundaries for what remains future work.
 
 ## Research and Evidence

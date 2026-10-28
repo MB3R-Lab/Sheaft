@@ -29,6 +29,11 @@ Runtime truth lives in `internal/modelcontract/contract.go`.
 
 An empty `tested_bering_app_versions` array would mean Sheaft has not published an app-level Bering compatibility statement beyond the schema pins that are already required.
 
+Bering `v1.1.0` is the next app-level compatibility candidate. It is not listed
+as tested until its published release manifest and contracts archive pass the
+release-asset check in [contract-release-workflow.md](contract-release-workflow.md).
+The candidate does not change the accepted Bering `1.3.0` schema pins.
+
 ## How Downstream CI Should Use It
 
 Use `compatibility-manifest.json` before or alongside a Sheaft invocation when you need explicit policy around upstream artifact acceptance.
