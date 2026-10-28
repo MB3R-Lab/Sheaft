@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+## v1.3.2 - 2026-10-28
+
+- added a fail-closed Bering app-release compatibility check that verifies the
+  published release manifest, contracts archive digest, strict schema pins,
+  canonical fixture hashes, and model/snapshot consumption before a new tested
+  Bering app version is recorded
+- recorded verified app/package compatibility with Bering `v1.1.0` without
+  changing the accepted Bering `1.3.0` model/snapshot contract pins
+- added the published Bering compatibility check to every release dry-run
+
 ## v1.3.1 - 2026-10-15
 
 - added optional `required_edges` in external predicate contract `1.1`, requiring exact calls with live reachable callers in addition to mandatory-target reachability

@@ -21,7 +21,7 @@ Published remote schema sync is verified separately for every supported versione
 
 The current app-level Bering release/package sync target is:
 
-- Release: `https://github.com/MB3R-Lab/Bering/releases/tag/v1.0.0`
+- Release: `https://github.com/MB3R-Lab/Bering/releases/tag/v1.1.0`
 - Schema contract pins consumed by Sheaft remain explicit in `internal/modelcontract/contract.go` and currently include only `1.3.0`.
 
 ## Release Policy
@@ -48,11 +48,25 @@ When Bering publishes a new contract line that Sheaft wants to support:
 
 When Bering publishes a product release that keeps the same schema contract lines:
 
-1. confirm the Bering release and package assets are published;
-2. update `tested_bering_app_versions` through the compatibility manifest generator;
-3. update `README.md`, [compatibility matrix](compatibility-matrix.md), and this workflow note with the Bering release/package checkpoint;
-4. regenerate `compatibility-manifest.json`;
-5. run the compatibility-manifest check and `go test ./...`.
+1. confirm the Bering release manifest and contracts archive are published;
+2. run `scripts/ci/check-bering-app-compatibility.sh` against those exact
+   release assets; a source checkout or draft package is not a tested release;
+3. update `tested_bering_app_versions` through the compatibility manifest generator;
+4. update `README.md`, [compatibility matrix](compatibility-matrix.md), and this workflow note with the Bering release/package checkpoint;
+5. regenerate `compatibility-manifest.json`;
+6. run the compatibility-manifest check and `go test ./...`.
+
+The Bering `v1.1.0` checkpoint was verified with:
+
+```bash
+make check-bering-app-compatibility \
+  BERING_APP_VERSION=1.1.0 \
+  BERING_RELEASE_MANIFEST=/path/to/release-manifest.json \
+  BERING_CONTRACTS_ARCHIVE=/path/to/bering-contracts_1.1.0.tar.gz
+```
+
+The release dry-run repeats this check against assets downloaded from the Bering
+GitHub release named by `tested_bering_app_versions`.
 
 ### Breaking upstream schema release
 

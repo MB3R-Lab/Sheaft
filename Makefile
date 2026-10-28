@@ -32,8 +32,11 @@ DIST_DIR ?= dist
 PLATFORMS ?= linux/amd64,linux/arm64
 BENCHMARK_OUT_DIR ?= .tmp/benchmark-slice
 ORACLE_OUT_DIR ?= .tmp/oracle-suite
+BERING_APP_VERSION ?= 1.1.0
+BERING_RELEASE_MANIFEST ?=
+BERING_CONTRACTS_ARCHIVE ?=
 
-.PHONY: help build test lint smoke-examples benchmark-slice oracle-suite docker-build docker-run-sample sample compatibility-manifest validate-compatibility-manifest validate-v1-release-docs validate-chart default-config-pack release-tools release-build image-dry-run image-local chart-package chart-publish-local release-manifest validate-release-manifest validate-release-assets release-dry-run release-local clean clean-dist
+.PHONY: help build test lint smoke-examples benchmark-slice oracle-suite docker-build docker-run-sample sample compatibility-manifest validate-compatibility-manifest check-bering-app-compatibility validate-v1-release-docs validate-chart default-config-pack release-tools release-build image-dry-run image-local chart-package chart-publish-local release-manifest validate-release-manifest validate-release-assets release-dry-run release-local clean clean-dist
 
 ifeq ($(OS),Windows_NT)
 define MKDIR_P
@@ -64,6 +67,7 @@ help:
 	@echo "  docker-build               Build the local container image"
 	@echo "  docker-run-sample          Run sample pipeline in the container image"
 	@echo "  compatibility-manifest     Generate compatibility-manifest.json from strict contract pins"
+	@echo "  check-bering-app-compatibility  Verify a published Bering release manifest and contracts archive"
 	@echo "  validate-v1-release-docs   Validate v1 docs/schema/example consistency"
 	@echo "  chart-package              Lint and package charts/sheaft into dist/charts"
 	@echo "  release-build              Produce binaries, archives, checksums, SBOM, and source archive with GoReleaser"
@@ -110,6 +114,9 @@ compatibility-manifest:
 
 validate-compatibility-manifest:
 	go run ./cmd/releasectl validate-compatibility-manifest --manifest compatibility-manifest.json
+
+check-bering-app-compatibility:
+	"$(POSIX_SH)" scripts/ci/check-bering-app-compatibility.sh . "$(BERING_RELEASE_MANIFEST)" "$(BERING_CONTRACTS_ARCHIVE)" "$(BERING_APP_VERSION)"
 
 validate-v1-release-docs:
 	go run ./cmd/releasectl validate-v1-release-docs --root .

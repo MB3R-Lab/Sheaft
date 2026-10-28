@@ -1,6 +1,6 @@
 # Sheaft
 
-[![release](https://img.shields.io/badge/release-v1.3.1-blue)](https://github.com/MB3R-Lab/Sheaft/releases/tag/v1.3.1)
+[![release](https://img.shields.io/badge/release-v1.3.2-blue)](https://github.com/MB3R-Lab/Sheaft/releases/tag/v1.3.2)
 [![checks](https://img.shields.io/github/actions/workflow/status/MB3R-Lab/Sheaft/release-dry-run.yml?branch=main&label=checks)](https://github.com/MB3R-Lab/Sheaft/actions/workflows/release-dry-run.yml)
 [![bering schema](https://img.shields.io/badge/bering%20schema-1.3.0-blue)](https://github.com/MB3R-Lab/Sheaft/blob/main/docs/compatibility-matrix.md)
 
@@ -23,9 +23,9 @@ It stays downstream of topology discovery. The public surface in this repository
 
 ## Stability / Release Status
 
-The current public release line is `v1.3.1`. It adds explicit mandatory calls to endpoint predicates, alongside the Birnbaum component criticality introduced in `v1.3.0`. Bering `1.3.0` model/snapshot contracts and their digests remain unchanged. See [release notes](release/v1.3.1.md).
+The current public release line is `v1.3.2`. It verifies app/package compatibility with Bering `v1.1.0`; accepted Bering `1.3.0` model/snapshot contracts and their digests remain unchanged. See [release notes](release/v1.3.2.md).
 
-Stable in `v1.3.1`:
+Stable in `v1.3.2`:
 
 - strict acceptance of the Bering v1 contract line: `io.mb3r.bering.model@1.3.0` and `io.mb3r.bering.snapshot@1.3.0`
 - batch CLI command names and core flow: `simulate`, `gate`, `run`
@@ -43,7 +43,7 @@ Stable in `v1.3.1`:
 - fixed benchmark slice and release-quality `quality-report.json` generation
 - release archives for Linux and macOS on `amd64` and `arm64`
 
-Outside the stable `v1.3.1` release claim:
+Outside the stable `v1.3.2` release claim:
 
 - capacity-aware traffic redistribution, queue saturation, retry feedback, and overload-cascade prediction
 - long-running `serve` posture service as a long-term operations contract
@@ -66,7 +66,7 @@ Unknown or mismatched contracts are rejected. There is no silent fallback for un
 
 `1.3.0` is the strict v1 line for positive replica counts, reliability evidence, endpoint semantic hints, timeout, retry, placement, shared-resource, and edge-scoped analysis when the artifact provides it. Pre-v1 preview contract lines `1.0.0`, `1.1.0`, and `1.2.0` are retired on the current main line and must be regenerated before use with Sheaft v1.
 
-The current `main` line has also been app-level synced against the Bering `v1.0.0` release/package. That sync does not change the accepted Bering schema contract pins.
+The current `main` line has also been app-level synced against the published Bering `v1.1.0` release/package. The release manifest, contracts archive digest, strict contract metadata, canonical fixture hashes, and actual model/snapshot consumption passed the downstream compatibility check. That sync does not change the accepted Bering schema contract pins.
 
 The v1 major release claim is documented in [docs/v1-major-semantics.md](docs/v1-major-semantics.md): product-baseline `P_Node * P_Edge` stochastic connectivity over Bering topology `G`, replication map `R`, and endpoint predicates `Phi`, with explicit boundaries for what remains future work.
 
@@ -221,7 +221,7 @@ Sheaft is intentionally downstream of Bering artifacts and schemas.
 - It accepts only the checked-in contract pins listed above.
 - `1.3.0` enables path-aware diagnostics and fault-profile analysis when metadata exists.
 - Compatibility metadata is published in [compatibility-manifest.json](compatibility-manifest.json).
-- The current app-level Bering release/package sync target is `v1.0.0`; schema acceptance still comes only from the pinned contracts above.
+- The current app-level Bering release/package sync target is `v1.1.0`; schema acceptance still comes only from the pinned contracts above.
 - Schema ownership stays with Bering; Sheaft does not redefine those schema versions.
 - `--contract-policy` can narrow or deprecate accepted contracts for a specific project, but it cannot expand support beyond the built-in whitelist.
 

@@ -35,6 +35,53 @@ jobs:
       - name: Smoke checked-in examples
         run: make smoke-examples
 
+      - name: Resolve tested Bering app version
+        id: bering-compatibility
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY' >> "${GITHUB_OUTPUT}"
+          import json
+          from pathlib import Path
+
+          manifest = json.loads(Path("compatibility-manifest.json").read_text(encoding="utf-8"))
+          versions = manifest.get("tested_bering_app_versions", [])
+          if len(versions) != 1 or not isinstance(versions[0], str):
+              raise SystemExit("compatibility manifest must declare exactly one tested Bering app version")
+          tag = versions[0]
+          if not tag.startswith("v") or len(tag) == 1:
+              raise SystemExit(f"invalid tested Bering app version: {tag!r}")
+          print(f"tag={tag}")
+          print(f"version={tag[1:]}")
+          PY
+
+      - name: Download published Bering compatibility assets
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BERING_TAG: ${{ steps.bering-compatibility.outputs.tag }}
+          BERING_VERSION: ${{ steps.bering-compatibility.outputs.version }}
+        run: |
+          set -euo pipefail
+          destination=".tmp/bering-app-compatibility"
+          mkdir -p "${destination}"
+          gh release download "${BERING_TAG}" \
+            --repo MB3R-Lab/Bering \
+            --pattern release-manifest.json \
+            --pattern "bering-contracts_${BERING_VERSION}.tar.gz" \
+            --dir "${destination}"
+
+      - name: Verify published Bering app compatibility
+        shell: bash
+        env:
+          BERING_VERSION: ${{ steps.bering-compatibility.outputs.version }}
+        run: |
+          set -euo pipefail
+          make check-bering-app-compatibility \
+            BERING_APP_VERSION="${BERING_VERSION}" \
+            BERING_RELEASE_MANIFEST=.tmp/bering-app-compatibility/release-manifest.json \
+            BERING_CONTRACTS_ARCHIVE=".tmp/bering-app-compatibility/bering-contracts_${BERING_VERSION}.tar.gz"
+
       - name: Validate release dry-run
         run: |
           OWNER_LC="$(printf '%s' "${GITHUB_REPOSITORY_OWNER}" | tr '[:upper:]' '[:lower:]')"
@@ -52,6 +99,7 @@ jobs:
             compatibility-manifest.json
             release-manifest.json
             charts/sheaft/**
+            .tmp/bering-app-compatibility/**
             .tmp/smoke-examples/**
             .tmp/benchmark-slice/**
           if-no-files-found: error

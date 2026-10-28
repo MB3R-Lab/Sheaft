@@ -26,7 +26,7 @@ This file captures the repository-side audit refreshed for the `v1.3.0` release 
 - Previous release-tracking issue: [#82](https://github.com/MB3R-Lab/Sheaft/issues/82)
 - Post-v1 product backlog milestone: `Post-v1.0.0 product backlog`
 - Post-v1 product backlog index: [#71](https://github.com/MB3R-Lab/Sheaft/issues/71)
-- Current upstream Bering app/package sync target: [Bering v1.0.0](https://github.com/MB3R-Lab/Bering/releases/tag/v1.0.0), with accepted `1.3.0` schema contract pins tracked in the compatibility matrix.
+- Current upstream Bering app/package sync target: [Bering v1.1.0](https://github.com/MB3R-Lab/Bering/releases/tag/v1.1.0), with accepted `1.3.0` schema contract pins tracked in the compatibility matrix.
 - GitHub issue and milestone sync was refreshed for the `v1.0.0` release preparation on 2026-07-02.
 
 ## Current V1 Release Checkpoint
@@ -34,7 +34,7 @@ This file captures the repository-side audit refreshed for the `v1.3.0` release 
 - Release URL: https://github.com/MB3R-Lab/Sheaft/releases/tag/v1.0.0
 - Release notes: [release/v1.0.0.md](../release/v1.0.0.md)
 - V1 semantics: [docs/v1-major-semantics.md](v1-major-semantics.md)
-- Bering app/package sync target: `v1.0.0`
+- Bering app/package sync target: `v1.1.0`
 - Accepted Bering contract line: `io.mb3r.bering.model@1.3.0` and `io.mb3r.bering.snapshot@1.3.0`
 - Compatibility manifest: [compatibility-manifest.json](../compatibility-manifest.json)
 
