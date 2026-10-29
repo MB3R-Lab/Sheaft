@@ -34,7 +34,7 @@ This file captures the repository-side audit refreshed for the `v1.3.0` release 
 - Release URL: https://github.com/MB3R-Lab/Sheaft/releases/tag/v1.0.0
 - Release notes: [release/v1.0.0.md](../release/v1.0.0.md)
 - V1 semantics: [docs/v1-major-semantics.md](v1-major-semantics.md)
-- Bering app/package sync target: `v1.2.0`
+- Bering app/package sync target at this historical checkpoint: `v1.1.0`
 - Accepted Bering contract line: `io.mb3r.bering.model@1.3.0` and `io.mb3r.bering.snapshot@1.3.0`
 - Compatibility manifest: [compatibility-manifest.json](../compatibility-manifest.json)
 
