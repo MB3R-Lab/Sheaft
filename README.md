@@ -66,7 +66,7 @@ Unknown or mismatched contracts are rejected. There is no silent fallback for un
 
 `1.3.0` is the strict v1 line for positive replica counts, reliability evidence, endpoint semantic hints, timeout, retry, placement, shared-resource, and edge-scoped analysis when the artifact provides it. Pre-v1 preview contract lines `1.0.0`, `1.1.0`, and `1.2.0` are retired on the current main line and must be regenerated before use with Sheaft v1.
 
-The current `main` line has also been app-level synced against the published Bering `v1.1.0` release/package. The release manifest, contracts archive digest, strict contract metadata, canonical fixture hashes, and actual model/snapshot consumption passed the downstream compatibility check. That sync does not change the accepted Bering schema contract pins.
+The current `main` line has also been app-level synced against the published Bering `v1.2.0` release/package. The release manifest, contracts archive digest, strict contract metadata, canonical fixture hashes, and actual model/snapshot consumption passed the downstream compatibility check. That sync does not change the accepted Bering schema contract pins.
 
 The v1 major release claim is documented in [docs/v1-major-semantics.md](docs/v1-major-semantics.md): product-baseline `P_Node * P_Edge` stochastic connectivity over Bering topology `G`, replication map `R`, and endpoint predicates `Phi`, with explicit boundaries for what remains future work.
 
@@ -221,7 +221,7 @@ Sheaft is intentionally downstream of Bering artifacts and schemas.
 - It accepts only the checked-in contract pins listed above.
 - `1.3.0` enables path-aware diagnostics and fault-profile analysis when metadata exists.
 - Compatibility metadata is published in [compatibility-manifest.json](compatibility-manifest.json).
-- The current app-level Bering release/package sync target is `v1.1.0`; schema acceptance still comes only from the pinned contracts above.
+- The current app-level Bering release/package sync target is `v1.2.0`; schema acceptance still comes only from the pinned contracts above.
 - Schema ownership stays with Bering; Sheaft does not redefine those schema versions.
 - `--contract-policy` can narrow or deprecate accepted contracts for a specific project, but it cannot expand support beyond the built-in whitelist.
 
