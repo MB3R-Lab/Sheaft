@@ -6,9 +6,9 @@ The machine-readable equivalent of this page is the repo-root `compatibility-man
 
 ## Current App-Level Sync
 
-The current `main` line has been synced against the published Bering `v1.2.0` release/package. This is recorded in `compatibility-manifest.json` as `tested_bering_app_versions: ["v1.2.0"]`.
+The current `main` line has been synced against the published Bering `v1.3.0` release/package. This is recorded in `compatibility-manifest.json` as `tested_bering_app_versions: ["v1.3.0"]`.
 
-The v1.2.0 check updates current main only; the published Sheaft v1.3.2 release retains its v1.1.0 verification record. That package sync does not widen or narrow the accepted upstream schema contracts. The strict contract pins are the `1.3.0` Bering model/snapshot lines below.
+The v1.3.0 check updates current main only; the published Sheaft v1.3.2 release retains its v1.1.0 verification record. That package sync does not widen or narrow the accepted upstream schema contracts. The strict contract pins are the `1.3.0` Bering model/snapshot lines below.
 
 Bering `v1.1.0` passed release-asset verification for Sheaft `v1.3.2`. The
 checkpoint used the published release manifest and contracts archive; a source

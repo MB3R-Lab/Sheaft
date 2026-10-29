@@ -26,7 +26,7 @@ This file captures the repository-side audit refreshed for the `v1.3.0` release 
 - Previous release-tracking issue: [#82](https://github.com/MB3R-Lab/Sheaft/issues/82)
 - Post-v1 product backlog milestone: `Post-v1.0.0 product backlog`
 - Post-v1 product backlog index: [#71](https://github.com/MB3R-Lab/Sheaft/issues/71)
-- Current upstream Bering app/package sync target: [Bering v1.2.0](https://github.com/MB3R-Lab/Bering/releases/tag/v1.2.0), with accepted `1.3.0` schema contract pins tracked in the compatibility matrix.
+- Current upstream Bering app/package sync target: [Bering v1.3.0](https://github.com/MB3R-Lab/Bering/releases/tag/v1.3.0), with accepted `1.3.0` schema contract pins tracked in the compatibility matrix.
 - GitHub issue and milestone sync was refreshed for the `v1.0.0` release preparation on 2026-07-02.
 
 ## Current V1 Release Checkpoint
