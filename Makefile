@@ -32,7 +32,7 @@ DIST_DIR ?= dist
 PLATFORMS ?= linux/amd64,linux/arm64
 BENCHMARK_OUT_DIR ?= .tmp/benchmark-slice
 ORACLE_OUT_DIR ?= .tmp/oracle-suite
-BERING_APP_VERSION ?= 1.2.0
+BERING_APP_VERSION ?= 1.3.0
 BERING_RELEASE_MANIFEST ?=
 BERING_CONTRACTS_ARCHIVE ?=
 

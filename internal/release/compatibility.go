@@ -22,7 +22,7 @@ const (
 	DefaultReleaseSchemaPath            = "api/schema/release-manifest.schema.json"
 	DefaultConfigPackSourceListPath     = "release/packs/default-config-pack.files.txt"
 	DefaultConfigPackMetadataOutputPath = "dist/default-config-pack.json"
-	CurrentTestedBeringAppVersion       = "v1.2.0"
+	CurrentTestedBeringAppVersion       = "v1.3.0"
 )
 
 type CompatibilityContract struct {

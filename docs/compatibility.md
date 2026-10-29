@@ -25,7 +25,7 @@ Runtime truth lives in `internal/modelcontract/contract.go`.
 - required schema digests
 - tested Bering app versions, if known
 
-`tested_bering_app_versions` lists Bering product tags this Sheaft line has been app-level synced against. The current line records Bering `v1.2.0`; schema acceptance is still controlled only by `supported_contracts`.
+`tested_bering_app_versions` lists Bering product tags this Sheaft line has been app-level synced against. The current line records Bering `v1.3.0`; schema acceptance is still controlled only by `supported_contracts`.
 
 An empty `tested_bering_app_versions` array would mean Sheaft has not published an app-level Bering compatibility statement beyond the schema pins that are already required.
 
@@ -91,7 +91,7 @@ When a contract is still supported globally but deprecated for a given project, 
 - Sheaft v1 declares compatibility with the Bering `1.3.0` model/snapshot release line.
 - Pre-v1 preview lines `1.0.0`, `1.1.0`, and `1.2.0` are retired on the current main line.
 - `1.3.0` is the current v1 line for path-aware timeout, retry, placement, shared-resource, reliability evidence, endpoint semantics, and edge-scoped analysis when the artifact carries that metadata.
-- The current app-level Bering release/package sync target is `v1.2.0`; the accepted Bering schema contract pins are tracked separately in the compatibility matrix.
+- The current app-level Bering release/package sync target is `v1.3.0`; the accepted Bering schema contract pins are tracked separately in the compatibility matrix.
 - Missing advanced metadata is surfaced as unavailable rather than guessed.
 - Changing the Sheaft app version does not automatically widen or narrow compatibility.
 
